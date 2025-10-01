@@ -17,9 +17,9 @@ class BomaViewModel : ViewModel() {
     private val _customerName = mutableStateOf("")
     var customerName: State<String> = _customerName
     private val _priceChangeProducts = MutableStateFlow<List<Product>>(emptyList())
-    val priceChangeProducts: StateFlow<List<Product>> = getProductList()
+    val priceChangeProducts: StateFlow<List<Product>> = _priceChangeProducts
 
-    private fun addToPriceChangeList(product: Product, newPrice: String ){
+    fun addToPriceChangeList(product: Product, newPrice: String ){
         val current = _priceChangeProducts.value.toMutableList()
         product.stringPrice = newPrice
         current.add(product)
