@@ -31,14 +31,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.guvnoh.boma.R
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.getImage
+import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.hero
 
 @Composable
-fun PriceChangeCard(product: Product) {
+fun PriceChangeCard(product: Product, vm : BomaViewModel) {
     var newPrice by remember { mutableStateOf("") }
 
     val context = LocalContext.current
@@ -106,6 +108,7 @@ fun PriceChangeCard(product: Product) {
                     if (checkNewPrice!=null) {
                         if (checkNewPrice > 0.0) {
                             product.stringPrice = it
+                            vm.addToPriceChangeList(product, it)
                         }
                     }
                                 },
@@ -121,6 +124,6 @@ fun PriceChangeCard(product: Product) {
 @Preview(showBackground = true)
 @Composable
 fun ShowCard() {
-    PriceChangeCard(hero[1])
+    PriceChangeCard(hero[1], viewModel())
 }
 

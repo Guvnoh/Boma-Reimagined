@@ -39,7 +39,7 @@ fun PriceChangePage(
         LazyColumn (modifier = Modifier.padding(paddingValues).weight(1.8f)){
             items(productList.let { list -> list.sortedBy { it.sortCategory } }){
                     product ->
-                PriceChangeCard(product)
+                PriceChangeCard(product, vm)
             }
         }
         //done button
