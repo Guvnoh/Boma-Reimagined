@@ -23,19 +23,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.guvnoh.boma.R
 import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.getImage
 import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.productList
+import com.guvnoh.boma.models.hero
 
 @Composable
 fun PriceChangeCard(product: Product) {
     var newPrice by remember { mutableStateOf("") }
+
+    val context = LocalContext.current
+    val resId =
+        if (getImage(context,product.imageName) !=0) {
+            getImage(context,product.imageName)
+        }else R.drawable.bottle
 
 
     Card(
@@ -53,11 +63,12 @@ fun PriceChangeCard(product: Product) {
         ) {
             // Product image
             Image(
-                painter = painterResource(product.image),
+                painter = painterResource(resId),
                 contentDescription = product.name,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(CircleShape)
+                    .clip(CircleShape),
             )
 
             // Product details
@@ -78,7 +89,7 @@ fun PriceChangeCard(product: Product) {
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = nairaFormat(product.intPrice), // Nigerian currency since you're in NG
+                    text = nairaFormat(product.doublePrice),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.primary,
                         fontSize = 14.sp
@@ -89,7 +100,15 @@ fun PriceChangeCard(product: Product) {
             }
             OutlinedTextField(
                 value = newPrice,
-                onValueChange = { newPrice = it },
+                onValueChange = {
+                    newPrice = it
+                    val checkNewPrice = it.toDoubleOrNull()
+                    if (checkNewPrice!=null) {
+                        if (checkNewPrice > 0.0) {
+                            product.stringPrice = it
+                        }
+                    }
+                                },
                 label = { Text("New Price") },
                 singleLine = true,
                 modifier = Modifier.width(90.dp)
@@ -102,6 +121,6 @@ fun PriceChangeCard(product: Product) {
 @Preview(showBackground = true)
 @Composable
 fun ShowCard() {
-    PriceChangeCard(product = productList[0])
+    PriceChangeCard(hero[1])
 }
 

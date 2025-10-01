@@ -1,59 +1,43 @@
 package com.guvnoh.boma.models
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.guvnoh.boma.getDatabaseProductList
+import com.guvnoh.boma.getUpdatedDisplayList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-//class BomaViewModel:ViewModel() {
-////    private  val _totals: MutableStateFlow<Map<String,Int>>(em)
-////    fun addTotal(key: String, value: Int){
-////        _totals[key] = value
-////    }
-////    fun removeTotal(key: String){
-////        val totals = _totals
-////        totals.remove(key)
-////        _totals = totals
-////    }
-////    fun clearTotals(){
-////        _totals = mutableMapOf()
-////    }
-////    fun getTotalsMap(): MutableMap<String, Int>{
-////        val totals = _totals
-////        return totals
-////    }
-////    fun getGrandTotal():Int{
-////        return  _totals.map { it.value }.sum()
-////    }
-//    private val _totals = MutableStateFlow<MutableMap<String, Int>>(mutableMapOf())
-//    val totals: StateFlow<MutableMap<String, Int>> = _totals
-//
-//    fun addTotal(key: String, value: Int) {
-////        _totals.update { current ->
-////            current.toMutableMap().apply { this[key] = value }
-////        }
-//        val totals = _totals.value
-//        totals [key] = value
-//        _totals.value = totals
-//    }
-//
-//    fun removeTotal(key: String) {
-//        val totals = _totals.value
-//        totals.remove(key)
-//        _totals.value = totals
-//    }
-//
-//    fun clearTotals() {
-//        _totals.value = mutableMapOf()
-//    }
-//
-//    fun getGrandTotal(): Int {
-//        return _totals.value.values.sum()
-//    }
-//
-//}
+
 class BomaViewModel : ViewModel() {
+    private val _products = MutableStateFlow<List<Product>>(emptyList())
+    val products: StateFlow<List<Product>> = getProductList()
     private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
     val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
+    private val _customerName = mutableStateOf("")
+    var customerName: State<String> = _customerName
+    private val _priceChangeProducts = MutableStateFlow<List<Product>>(emptyList())
+    val priceChangeProducts: StateFlow<List<Product>> = getProductList()
+
+    private fun addToPriceChangeList(product: Product, newPrice: String ){
+        val current = _priceChangeProducts.value.toMutableList()
+        product.stringPrice = newPrice
+        current.add(product)
+        _priceChangeProducts.value = current
+    }
+
+
+    private fun getProductList(): StateFlow<List<Product>>{
+        getDatabaseProductList {
+            dbList ->
+            getUpdatedDisplayList(dbList)
+            _products.value = dbList
+        }
+        return _products
+    }
+    fun updateCustomerName(name: String){
+        _customerName.value = name
+    }
 
     fun addProduct(soldProduct: SoldProduct) {
         val current = _soldProducts.value.toMutableList()
@@ -77,6 +61,10 @@ class BomaViewModel : ViewModel() {
 
     fun clearTotals() {
         _soldProducts.value = emptyList()
+    }
+
+    fun clearName(){
+        _customerName.value = ""
     }
 
     fun getGrandTotal(): Int {

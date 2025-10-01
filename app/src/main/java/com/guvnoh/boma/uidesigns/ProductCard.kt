@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -29,20 +30,31 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.productList
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import com.guvnoh.boma.R
+import com.guvnoh.boma.getImage
 import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.models.hero
 
 @Composable
 fun ProductCard(product: Product, viewModel: BomaViewModel) {
 
     val soldProducts = viewModel.soldProducts.collectAsState()
 
-    val soldProduct = soldProducts.value.find { it.product.name == product.name }?:SoldProduct(product)
+    val soldProduct = soldProducts.value.find { it.product.name == product.name }
 
-    val quantity = soldProduct.stringQuantity
+    var quantity = soldProduct?.stringQuantity?:""
 
-    val total = soldProduct.intTotal?:0
+    val total = soldProduct?.intTotal?:0
+    val context = LocalContext.current
+    val resId =
+        if (getImage(context,product.imageName)!=0) {
+            getImage(context,product.imageName)
+        }else R.drawable.bottle
+
 
     Card(
         modifier = Modifier
@@ -59,11 +71,12 @@ fun ProductCard(product: Product, viewModel: BomaViewModel) {
         ) {
             // Product image
             Image(
-                painter = painterResource(product.image),
+                painter = painterResource(resId),
                 contentDescription = product.name,
                 modifier = Modifier
                     .size(64.dp)
-                    .clip(CircleShape)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
 
             // Product details
@@ -72,6 +85,8 @@ fun ProductCard(product: Product, viewModel: BomaViewModel) {
                     .weight(1f)
                     .padding(start = 12.dp, end = 8.dp)
             ) {
+
+                // product name display
                 Text(
                     text = product.name,
                     style = MaterialTheme.typography.titleMedium.copy(
@@ -83,8 +98,9 @@ fun ProductCard(product: Product, viewModel: BomaViewModel) {
 
                 Spacer(modifier = Modifier.height(4.dp))
 
+                //product price display
                 Text(
-                    text = nairaFormat(product.intPrice),
+                    text = nairaFormat(product.doublePrice),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.primary,
                         fontSize = 14.sp
@@ -95,6 +111,7 @@ fun ProductCard(product: Product, viewModel: BomaViewModel) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.End
                 ) {
+                    //Product total display
                     if (total>0) {
                         Text(
                             text = nairaFormat( total),
@@ -105,40 +122,26 @@ fun ProductCard(product: Product, viewModel: BomaViewModel) {
                     }
                 }
             }
-//            OutlinedTextField(
-//                value = quantity,
-//                onValueChange = {
-//                    quantity = it
-//                    if (total > 0){
-//                        viewModel.addTotal(product.name, total.toInt())
-//                    }else{
-//                        viewModel.removeTotal(product.name)
-//                    }
-//                                },
-//                label = { Text("Qty") },
-//                singleLine = true,
-//                modifier = Modifier.width(90.dp)
-//            )
+
+            //quantity entry field
             OutlinedTextField(
                 value = quantity,
                 onValueChange = { newValue ->
-                    val qty = newValue.toIntOrNull() ?: 0
+                    val inputToDouble = newValue.toDoubleOrNull()
+                    quantity = newValue
 
-                    val newSoldProduct = SoldProduct(product,qty.toString(),qty)
-                    if (qty > 0) {
-                        viewModel.addProduct( soldProduct = newSoldProduct)
-                    } else {
-                        viewModel.removeProduct( newSoldProduct )
-                    }
-
-
+                    val newSoldProduct = SoldProduct(
+                        product = product,
+                        doubleQuantity = inputToDouble ?: 0.0,
+                        stringQuantity = newValue
+                    )
+                    viewModel.addProduct(newSoldProduct)
                 },
                 label = { Text("Qty") },
                 singleLine = true,
-                modifier = Modifier.width(90.dp)
+                modifier = Modifier.width(90.dp),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
-
-
         }
     }
 }
@@ -146,6 +149,6 @@ fun ProductCard(product: Product, viewModel: BomaViewModel) {
 @Preview(showBackground = true)
 @Composable
 fun ShowCard2() {
-    ProductCard(product = productList[2], viewModel())
+    ProductCard(product = hero[2], viewModel())
 }
 
