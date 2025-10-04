@@ -1,25 +1,11 @@
 package com.guvnoh.boma.uidesigns
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,27 +26,27 @@ import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.hero
 
 @Composable
-fun PriceChangeCard(product: Product, vm : BomaViewModel) {
+fun PriceChangeCard(product: Product, vm: BomaViewModel) {
     var newPrice by remember { mutableStateOf("") }
+    var priceError by remember { mutableStateOf<String?>(null) }
 
     val context = LocalContext.current
     val resId =
-        if (getImage(context,product.imageName) !=0) {
-            getImage(context,product.imageName)
-        }else R.drawable.bottle
-
+        if (getImage(context, product.imageName) != 0) {
+            getImage(context, product.imageName)
+        } else R.drawable.bottle
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        shape = MaterialTheme.shapes.medium,
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Product image
@@ -69,15 +55,15 @@ fun PriceChangeCard(product: Product, vm : BomaViewModel) {
                 contentDescription = product.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape),
+                    .size(72.dp)
+                    .clip(CircleShape)
             )
+
+            Spacer(modifier = Modifier.width(16.dp))
 
             // Product details
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp, end = 8.dp)
+                modifier = Modifier.weight(1f)
             ) {
                 Text(
                     text = product.name,
@@ -88,7 +74,7 @@ fun PriceChangeCard(product: Product, vm : BomaViewModel) {
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
                     text = nairaFormat(product.doublePrice),
@@ -97,26 +83,33 @@ fun PriceChangeCard(product: Product, vm : BomaViewModel) {
                         fontSize = 14.sp
                     )
                 )
-
-
             }
+
+            // New Price input
             OutlinedTextField(
                 value = newPrice,
                 onValueChange = {
-                    newPrice = it
-                    val checkNewPrice = it.toDoubleOrNull()
-                    if (checkNewPrice!=null) {
-                        if (checkNewPrice > 0.0) {
-                            product.stringPrice = it
-                            vm.addToPriceChangeList(product, it)
-                        }
+                    newPrice = it.filter { ch -> ch.isDigit() || ch == '.' }
+                    val parsed = newPrice.toDoubleOrNull()
+                    if (parsed != null && parsed > 0.0) {
+                        product.stringPrice = newPrice
+                        vm.addToPriceChangeList(product, newPrice)
+                        priceError = null
+                    } else if (newPrice.isNotBlank()) {
+                        priceError = "Invalid price"
                     }
-                                },
+                },
                 label = { Text("New Price") },
                 singleLine = true,
-                modifier = Modifier.width(90.dp)
+                isError = priceError != null,
+                supportingText = {
+                    if (priceError != null) {
+                        Text(priceError!!, color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                modifier = Modifier.width(120.dp),
+                shape = RoundedCornerShape(12.dp)
             )
-
         }
     }
 }
@@ -126,4 +119,3 @@ fun PriceChangeCard(product: Product, vm : BomaViewModel) {
 fun ShowCard() {
     PriceChangeCard(hero[1], viewModel())
 }
-

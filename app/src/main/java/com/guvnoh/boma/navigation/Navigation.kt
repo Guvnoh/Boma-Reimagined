@@ -9,6 +9,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.guvnoh.boma.models.BomaViewModel
+import com.guvnoh.boma.uidesigns.screens.AddProduct
+import com.guvnoh.boma.uidesigns.screens.DeleteProduct
 import com.guvnoh.boma.uidesigns.screens.PriceChangePage
 import com.guvnoh.boma.uidesigns.screens.ProductsPage
 import com.guvnoh.boma.uidesigns.screens.ReceiptPage
@@ -30,6 +32,8 @@ fun Navigation(
         composable(Screen.Products.route){ ProductsPage(navController, paddingValues, vm) }
         composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, vm) }
         composable(Screen.Receipt.route){ ReceiptPage(vm) }
+        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController) }
+        composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, vm) }
     }
 
 }

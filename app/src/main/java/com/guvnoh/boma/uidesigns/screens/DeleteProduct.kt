@@ -1,0 +1,72 @@
+package com.guvnoh.boma.uidesigns.screens
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.wear.compose.material.Icon
+import com.guvnoh.boma.models.BomaViewModel
+import com.guvnoh.boma.uidesigns.ProductCard
+import com.guvnoh.boma.uidesigns.SwipeableProductCard
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DeleteProduct(
+    navController: NavController,
+    paddingValues: PaddingValues,
+    vm: BomaViewModel
+) {
+    val productList by vm.products.collectAsState()
+    Scaffold(
+        modifier = Modifier
+            .padding(paddingValues)
+            .imePadding(),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Icon(Icons.Filled.Info, "")
+                    Text(
+                        text = "Remove Product from Database",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    )
+
+                }
+            )
+        }
+    ){
+        innerPadding ->
+        Column (Modifier.padding(innerPadding)){
+            // Product List
+            LazyColumn(
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(productList.sortedBy { it.sortCategory }) { product ->
+                    SwipeableProductCard(
+                        product = product,
+                        vm= vm,
+                        navController = navController)
+                }
+            }
+        }
+    }
+}

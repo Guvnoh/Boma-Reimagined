@@ -7,13 +7,13 @@ import kotlin.time.times
 data class Product(
 
 
-    val name: String = "",
+    var name: String = "",
     var stringPrice: String = "",
     var imageName: String = "",
     var image: Int = R.drawable.bottle,
     val id: String = "",
-    val doublePrice: Double = stringPrice.toDoubleOrNull()?:0.0,
-    val sortCategory: SortCategory = SortCategory.OTHER
+    var doublePrice: Double = stringPrice.toDoubleOrNull()?:0.0,
+    var sortCategory: SortCategory = SortCategory.OTHER
 
 )
 

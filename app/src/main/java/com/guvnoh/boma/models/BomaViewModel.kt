@@ -39,23 +39,25 @@ class BomaViewModel : ViewModel() {
         _customerName.value = name
     }
 
-    fun addProduct(soldProduct: SoldProduct) {
+    fun addProduct(soldProduct: SoldProduct?) {
         val current = _soldProducts.value.toMutableList()
+        val validSoldProduct = soldProduct ?: return
 
         // If product already exists, replace it instead of duplicating
-        val existingIndex = current.indexOfFirst { it.product.name == soldProduct.product.name }
-        if (existingIndex >= 0) {
-            current[existingIndex] = soldProduct
+        val existingIndex = current.indexOfFirst { it.product.name == validSoldProduct.product.name }
+        if (existingIndex >= 0 ) {
+            current[existingIndex] = validSoldProduct
         } else {
-            current.add(soldProduct)
+            current.add(validSoldProduct)
         }
 
         _soldProducts.value = current.toList() // ✅ new list triggers recomposition
     }
 
-    fun removeProduct(soldProduct: SoldProduct) {
+    fun removeProduct(soldProduct: SoldProduct?) {
         val current = _soldProducts.value.toMutableList()
-        current.removeAll { it.product.name == soldProduct.product.name }
+        val validSoldProduct = soldProduct ?: return
+        current.removeAll { it.product.name == validSoldProduct.product.name }
         _soldProducts.value = current.toList()
     }
 

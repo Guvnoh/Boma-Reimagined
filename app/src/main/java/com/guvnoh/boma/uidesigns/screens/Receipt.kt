@@ -1,6 +1,10 @@
 package com.guvnoh.boma.uidesigns.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -35,6 +40,7 @@ fun ReceiptPage(vm: BomaViewModel) {
     val receipt = Receipt(products = soldProducts, customerName = vm.customerName.value)
 
     val grandTotal = nairaFormat(receipt.products.sumOf { it.intTotal })
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -49,7 +55,9 @@ fun ReceiptPage(vm: BomaViewModel) {
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Button(onClick = {  }) {
+                Button(onClick = {
+                    copy(vm, context)
+                }) {
                     Icon(Icons.Filled.Menu, contentDescription = "Copy")
                     Spacer(Modifier.width(6.dp))
                     Text("Copy")
@@ -124,6 +132,31 @@ fun ReceiptPage(vm: BomaViewModel) {
     }
 }
 
+private fun copy(vm: BomaViewModel, context: Context){
+    val textToCopy = copyToClipboard(vm)
+    val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = ClipData.newPlainText("label", textToCopy)
+    clipBoard.setPrimaryClip(clip)
+    Toast.makeText(context, "Text copied!", Toast.LENGTH_SHORT).show()
+}
+
+private fun copyToClipboard(vm: BomaViewModel): String{
+    //The variable finalText holds the complete text to be sent to the clipboard
+    val finalText = StringBuilder()
+    val grandTotal = nairaFormat(vm.soldProducts.value.sumOf { it.intTotal })
+    vm.soldProducts.value.forEach{
+        val copiedQuantity: String = it.receiptQuantity
+        val textToCopy = "$copiedQuantity ${it.product.name} ${nairaFormat( it.intTotal )}\n"
+
+        finalText.append(textToCopy)
+    }
+    if (vm.soldProducts.value.size>1){
+        finalText.append("Total: $grandTotal")
+    }
+    return finalText.toString()
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun ReceiptPagePreview() {
