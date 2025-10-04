@@ -1,5 +1,7 @@
+
 package com.guvnoh.boma.uidesigns.screens
 
+import com.guvnoh.boma.uidesigns.SwipeableProductCard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,12 +9,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,6 +25,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.BomaViewModel
+import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.navigation.Screen
 import com.guvnoh.boma.uidesigns.ProductCard
 
@@ -29,23 +34,29 @@ import com.guvnoh.boma.uidesigns.ProductCard
 fun ProductsPage(
     navController: NavController,
     paddingValues: PaddingValues,
-    vm:BomaViewModel) {
-
+    vm: BomaViewModel
+) {
     val soldProducts by vm.soldProducts.collectAsState()
     val customerName by vm.customerName
-    val grandTotal = nairaFormat(soldProducts.sumOf { it.intTotal })
     val productList by vm.products.collectAsState()
-
+    val grandTotal = soldProducts.sumOf { it.intTotal }
 
     Scaffold(
         modifier = Modifier
             .padding(paddingValues)
-            .imePadding(), // keeps bottom bar above keyboard{needs help from manifest}
+            .imePadding(),
         topBar = {
             TopAppBar(
-                title = { Text("New Order") },
+                title = {
+                    Text(
+                        "New Order",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                },
                 actions = {
-                    IconButton(onClick = { /* maybe profile? */ }) {
+                    IconButton(onClick = { /* TODO: search */ }) {
                         Icon(Icons.Filled.Search, contentDescription = "Search")
                     }
                 }
@@ -60,44 +71,53 @@ fun ProductsPage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(MaterialTheme.colorScheme.surface)
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    //clear button
-                    Button(
+                    // Clear Button
+                    OutlinedButton(
                         onClick = {
                             vm.clearTotals()
                             vm.clearName()
-                                  },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        },
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
                     ) {
                         Icon(Icons.Filled.Clear, contentDescription = "Clear")
                         Spacer(Modifier.width(6.dp))
                         Text("Clear")
                     }
 
-                    //grand total
-                    val checkTotal = soldProducts.sumOf { it.intTotal }
-                    if (checkTotal > 0 ){
+                    // Grand Total
+                    if (grandTotal > 0) {
                         Text(
-                            grandTotal,
+                            nairaFormat(grandTotal),
                             style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.ExtraBold
                             ),
                             color = MaterialTheme.colorScheme.primary
                         )
+                    } else {
+                        Text(
+                            "₦0.00",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
 
-                    //done button
+                    // Done Button
                     Button(
                         onClick = {
                             navController.navigate(Screen.Receipt.route)
                             vm.soldProducts.value.forEach {
-                                if ( it.intTotal <= 0) vm.removeProduct(it)
+                                if (it.intTotal <= 0) vm.removeProduct(it)
                             }
-                                  },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
                         Icon(Icons.Filled.Done, contentDescription = "Done")
                         Spacer(Modifier.width(6.dp))
@@ -112,33 +132,32 @@ fun ProductsPage(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Customer name Input
+            // Customer Name
             OutlinedTextField(
                 value = customerName,
-                onValueChange = {
-                    vm.updateCustomerName(it)
-                                },
+                onValueChange = { vm.updateCustomerName(it) },
                 label = { Text("Customer Name") },
-                leadingIcon = {
-                    Icon(Icons.Filled.AccountCircle, contentDescription = null)
-                },
+                leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = null) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp)
+                    .padding(16.dp)
             )
 
-            // Product list
+            // Product List
             LazyColumn(
-                contentPadding = PaddingValues(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(productList.let { list -> list.sortedBy { it.sortCategory } }) { product ->
-                    ProductCard(product, vm)
+                items(productList.sortedBy { it.sortCategory }) { product ->
+                    ProductCard(
+                        product = product,
+                        viewModel = vm,)
                 }
             }
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

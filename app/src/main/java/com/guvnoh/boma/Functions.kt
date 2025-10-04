@@ -93,3 +93,7 @@ fun getImage(context: Context, name: String):Int{
     val resId = (context.resources.getIdentifier(name,"drawable",context.packageName))
     return if(resId !=0)resId else R.drawable.bottle
 }
+
+fun deleteProduct(product: Product){
+    databasePrices.child(product.name).removeValue()
+}

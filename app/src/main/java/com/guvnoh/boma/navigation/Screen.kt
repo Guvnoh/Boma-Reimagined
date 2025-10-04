@@ -1,14 +1,12 @@
 package com.guvnoh.boma.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.ui.graphics.vector.ImageVector
 
 open class Screen(
     val route: String
 ) {
     data object Products: Screen(route = "products")
-    data object PriceChange: Screen(route = "priceChange")
+    data object PriceChange: Screen(route = "price_change")
     data object Receipt: Screen(route = "receipt")
+    data object AddProduct: Screen(route = "add_product")
+    data object DeleteProduct: Screen(route = "delete_product")
 }
