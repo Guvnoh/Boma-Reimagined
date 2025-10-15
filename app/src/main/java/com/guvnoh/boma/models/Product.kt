@@ -2,7 +2,6 @@ package com.guvnoh.boma.models
 
 import com.guvnoh.boma.R
 import com.guvnoh.boma.formatters.halfAndQuarter
-import kotlin.time.times
 
 data class Product(
 
@@ -21,17 +20,18 @@ data class SoldProduct(
     val product: Product = Product(),
     var stringQuantity: String = "",
     var doubleQuantity: Double = 0.0,
-    val receiptQuantity: String = halfAndQuarter(doubleQuantity)
+    val receiptQuantity: String = halfAndQuarter(doubleQuantity),
+    var intTotal: Int = 0
 ) {
-    private val doubleTotal: Double = product.doublePrice * doubleQuantity
-    val intTotal: Int get() = doubleTotal.toInt()?:0
+    val doubleTotal: Double = product.doublePrice * doubleQuantity
 }
 
 data class Receipt(
     val id: String = "",
-    val products: List<SoldProduct>,
+    val soldProducts: List<SoldProduct> = emptyList(),
     val customerName: String = "",
-    val date: String = ""
+    var date: String = "",
+    val grandTotal: String = ""
 )
 
 enum class SortCategory {
