@@ -6,9 +6,9 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.SortCategory
+import com.guvnoh.boma.models.Stock
 import com.guvnoh.boma.models.cans
 import com.guvnoh.boma.models.cocacolaBottles
-import com.guvnoh.boma.models.getSortedBrandData
 import com.guvnoh.boma.models.guinness
 import com.guvnoh.boma.models.hero
 import com.guvnoh.boma.models.nbl
@@ -35,16 +35,35 @@ fun getDatabaseProductList(callback: (MutableList<Product>) -> Unit) {
         }
     })
 }
+fun getDatabaseStock(callback: (MutableList<Stock>) -> Unit) {
 
-fun pushData(list: List<Product>){
+    stockFulls.addValueEventListener(object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            val stockList = mutableListOf<Stock>()
+            for (product in snapshot.children) {
+                val stock = product.getValue(Stock::class.java)
+                if (stock!=null){
+                    stockList.add(stock)
+                }
+            }
+            callback(stockList)
+        }
+
+        override fun onCancelled(error: DatabaseError) {
+            // handle error if needed
+        }
+    })
+}
+
+fun pushData(list: List<Product>, root: String){
     list.forEach {
-        bomaBrands.child(it.name)
+        bomaBrands.child("").child(it.name)
             .setValue(it)
     }
 }
 
-fun getUpdatedDisplayList(databaseList: MutableList<Product>):MutableList<Product>{
-    var sortedProducts = mutableListOf<Product>()
+fun sortedUpdatedProductList(databaseList: MutableList<Product>):MutableList<Product>{
+    val sortedProducts = mutableListOf<Product>()
     val other: MutableList<Product> = mutableListOf()
 
     for (product in databaseList) {

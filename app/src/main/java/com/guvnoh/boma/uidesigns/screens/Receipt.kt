@@ -24,27 +24,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.guvnoh.boma.formatters.dateNow
+import com.guvnoh.boma.stockFulls
 import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.formatters.timeNow
+import com.guvnoh.boma.functions.sendRecord
 import com.guvnoh.boma.models.BomaViewModel
-import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.Receipt
+import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.models.Stock
+import com.guvnoh.boma.models.StockViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiptPage(vm: BomaViewModel) {
     val viewModel = vm.soldProducts.collectAsState()
+    val stockViewModel: StockViewModel = viewModel()
+    val stock = stockViewModel.stock.collectAsState()
     val soldProducts = viewModel.value
-    val receipt = Receipt(products = soldProducts, customerName = vm.customerName.value)
+    val receipt = vm.receipt.collectAsState()
 
-    val grandTotal = nairaFormat(receipt.products.sumOf { it.intTotal })
+    val grandTotal = receipt.value?.let {
+        nairaFormat(it.soldProducts.sumOf { product -> product.intTotal })
+    }
     val context = LocalContext.current
+
 
     Scaffold(
         topBar = {
-            SmallTopAppBar(
+            TopAppBar(
                 title = { Text("Receipt", style = MaterialTheme.typography.titleLarge) }
             )
         },
@@ -68,7 +74,11 @@ fun ReceiptPage(vm: BomaViewModel) {
                     Text("Screenshot")
                 }
                 Button(
-                    onClick = {  },
+                    onClick = {
+                        updateStock(stock.value.toMutableList(),soldProducts)
+                        receipt.value?.let { sendRecord(it) }
+                        Toast.makeText(context, "Sale record saved!", Toast.LENGTH_SHORT).show()
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                 ) {
                     Icon(Icons.Filled.CheckCircle, contentDescription = "Save")
@@ -85,9 +95,9 @@ fun ReceiptPage(vm: BomaViewModel) {
                 .padding(16.dp)
         ) {
             // Header Info
-            Text("Receipt #${receipt.id}", style = MaterialTheme.typography.titleMedium)
-            Text("Customer: ${receipt.customerName}", style = MaterialTheme.typography.bodyLarge)
-            Text("Date: $dateNow, $timeNow", style = MaterialTheme.typography.bodyMedium)
+            Text("Receipt #${receipt.value?.id}", style = MaterialTheme.typography.titleMedium)
+            Text("Customer: ${receipt.value?.customerName}", style = MaterialTheme.typography.bodyLarge)
+            Text("Date: ${receipt.value?.date}", style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(16.dp))
 
             // Products List
@@ -96,18 +106,26 @@ fun ReceiptPage(vm: BomaViewModel) {
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                items(receipt.products) { product ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(product.receiptQuantity, style = MaterialTheme.typography.bodyLarge)
-                        Text(product.product.name, style = MaterialTheme.typography.bodyLarge)
-                        Text(nairaFormat(product.intTotal), fontWeight = FontWeight.Bold)
+                receipt.value?.let {
+                    items(it.soldProducts) { soldProduct ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                soldProduct.receiptQuantity,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                soldProduct.product.name,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(nairaFormat(soldProduct.intTotal), fontWeight = FontWeight.Bold)
+                        }
+                        Divider()
                     }
-                    Divider()
                 }
             }
 
@@ -121,12 +139,14 @@ fun ReceiptPage(vm: BomaViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Grand Total", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    grandTotal,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                grandTotal?.let {
+                    Text(
+                        it,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }
@@ -138,6 +158,39 @@ private fun copy(vm: BomaViewModel, context: Context){
     val clip = ClipData.newPlainText("label", textToCopy)
     clipBoard.setPrimaryClip(clip)
     Toast.makeText(context, "Text copied!", Toast.LENGTH_SHORT).show()
+}
+
+
+
+private fun updateStock(stockList: MutableList<Stock>, products: List<SoldProduct>){
+
+    products.forEach {
+        soldProduct ->
+        val productName = soldProduct.product.name
+        //new depletion gets its value from the receipt qty entered for the brand
+        var newDepletion = soldProduct.doubleQuantity
+        //database stock is updated by finding matching product names in sold product list
+        //and database stock list
+        val stock = stockList.first {
+            productName == it.product?.name
+        }
+        //old depletion is the existing depletion in the database before update
+        val oldDepletion = stock.depletion?:0.0
+        newDepletion += oldDepletion
+        //closing stock (used in data class) means current stock
+        val currentStock = if
+                (stock.openingStock!! > 0.0){
+                    stock.openingStock - newDepletion
+        }else{0.0}
+        val productStockBranch = stockFulls.child(productName)
+
+        productStockBranch
+            .child("depletion")
+            .setValue(newDepletion)
+        productStockBranch
+            .child("closingStock")
+            .setValue(currentStock)
+    }
 }
 
 private fun copyToClipboard(vm: BomaViewModel): String{
@@ -160,11 +213,6 @@ private fun copyToClipboard(vm: BomaViewModel): String{
 @Preview(showBackground = true)
 @Composable
 fun ReceiptPagePreview() {
-    val demoProducts = listOf(
-        Product(name = "Rice", doublePrice = 2500.0),
-        Product(name = "Beans", doublePrice = 1800.0),
-        Product(name = "Yam", doublePrice = 1200.0)
-    )
     ReceiptPage(
         viewModel()
     )

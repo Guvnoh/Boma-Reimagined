@@ -295,7 +295,7 @@ fun ProductCard(
                         doubleQuantity = inputToDouble ?: 0.0,
                         stringQuantity = newValue
                     )
-                    viewModel.addProduct(newSoldProduct)
+                    viewModel.recordSoldProduct(newSoldProduct)
                 },
                 label = { Text("Qty") },
                 singleLine = true,

@@ -14,16 +14,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.wear.compose.material.Icon
 import com.guvnoh.boma.models.BomaViewModel
-import com.guvnoh.boma.uidesigns.ProductCard
 import com.guvnoh.boma.uidesigns.SwipeableProductCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,12 +35,15 @@ fun DeleteProduct(
     vm: BomaViewModel
 ) {
     val productList by vm.products.collectAsState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = Modifier
             .padding(paddingValues)
-            .imePadding(),
+            .imePadding()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
+                scrollBehavior = scrollBehavior,
                 title = {
                     Icon(Icons.Filled.Info, "")
                     Text(

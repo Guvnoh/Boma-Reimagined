@@ -1,10 +1,11 @@
 package com.guvnoh.boma.models
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.guvnoh.boma.getDatabaseProductList
-import com.guvnoh.boma.getUpdatedDisplayList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -18,6 +19,15 @@ class BomaViewModel : ViewModel() {
     var customerName: State<String> = _customerName
     private val _priceChangeProducts = MutableStateFlow<List<Product>>(emptyList())
     val priceChangeProducts: StateFlow<List<Product>> = _priceChangeProducts
+    private val _receipt = MutableStateFlow<Receipt?>(null)
+    @RequiresApi(Build.VERSION_CODES.O)
+    val receipt: StateFlow<Receipt?> = _receipt
+
+    fun setCurrentReceipt(receipt: Receipt){
+        _receipt.value = receipt
+    }
+
+
 
     fun addToPriceChangeList(product: Product, newPrice: String ){
         val current = _priceChangeProducts.value.toMutableList()
@@ -30,18 +40,21 @@ class BomaViewModel : ViewModel() {
     private fun getProductList(): StateFlow<List<Product>>{
         getDatabaseProductList {
             dbList ->
-            getUpdatedDisplayList(dbList)
             _products.value = dbList
         }
         return _products
     }
+
+
+
     fun updateCustomerName(name: String){
         _customerName.value = name
     }
 
-    fun addProduct(soldProduct: SoldProduct?) {
+    fun recordSoldProduct(soldProduct: SoldProduct?) {
         val current = _soldProducts.value.toMutableList()
         val validSoldProduct = soldProduct ?: return
+        validSoldProduct.intTotal = validSoldProduct.doubleTotal.toInt()
 
         // If product already exists, replace it instead of duplicating
         val existingIndex = current.indexOfFirst { it.product.name == validSoldProduct.product.name }
@@ -51,7 +64,7 @@ class BomaViewModel : ViewModel() {
             current.add(validSoldProduct)
         }
 
-        _soldProducts.value = current.toList() // ✅ new list triggers recomposition
+        _soldProducts.value = current.toList()
     }
 
     fun removeProduct(soldProduct: SoldProduct?) {
