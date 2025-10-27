@@ -1,4 +1,4 @@
-package com.guvnoh.boma.uidesigns
+package com.guvnoh.boma.uidesigns.cards
 
 import androidx.compose.foundation.Image
 import androidx.compose.material3.*
@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.guvnoh.boma.databasePrices
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.BomaViewModel
 import kotlinx.coroutines.launch
@@ -32,9 +31,12 @@ import androidx.wear.compose.material.ExperimentalWearMaterialApi
 import androidx.wear.compose.material.FractionalThreshold
 import androidx.wear.compose.material.rememberSwipeableState
 import androidx.wear.compose.material.swipeable
+import com.guvnoh.boma.database.DBBottleProducts
+import com.guvnoh.boma.database.DBPetsAndCans
 import com.guvnoh.boma.R
 import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.getImage
+import com.guvnoh.boma.functions.getImage
+import com.guvnoh.boma.models.ProductType
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalWearMaterialApi::class)
@@ -111,7 +113,18 @@ fun SwipeableProductCard(
 
     if (alert.value) {
         AlertDialogg(
-            onDelete = { databasePrices.child(product.name).removeValue() },
+            onDelete = {
+                val type = product.type
+                when(type ){
+                    ProductType.BOTTLE ->
+                        DBBottleProducts.child(product.name).removeValue()
+                    ProductType.PET ->
+                        DBPetsAndCans.child(product.name).removeValue()
+                    ProductType.CAN ->
+                        DBPetsAndCans.child(product.name).removeValue()
+                    else -> {}
+                }
+                       },
             product = product,
             alert = alert,
             navController = navController
@@ -174,7 +187,7 @@ fun DeleteProductCard(
 
     val context = LocalContext.current
     val resId =
-        if (getImage(context,product.imageName)!=0) {
+        if (getImage(context,product.imageName) !=0) {
             getImage(context,product.imageName)
         }else R.drawable.bottle
 

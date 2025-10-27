@@ -24,12 +24,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.guvnoh.boma.stockFulls
+import com.guvnoh.boma.database.stockFulls
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.sendRecord
 import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.models.Stock
+import com.guvnoh.boma.models.FullsStock
 import com.guvnoh.boma.models.StockViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -38,7 +38,7 @@ import com.guvnoh.boma.models.StockViewModel
 fun ReceiptPage(vm: BomaViewModel) {
     val viewModel = vm.soldProducts.collectAsState()
     val stockViewModel: StockViewModel = viewModel()
-    val stock = stockViewModel.stock.collectAsState()
+    val stock = stockViewModel.fullsStock.collectAsState()
     val soldProducts = viewModel.value
     val receipt = vm.receipt.collectAsState()
 
@@ -162,7 +162,7 @@ private fun copy(vm: BomaViewModel, context: Context){
 
 
 
-private fun updateStock(stockList: MutableList<Stock>, products: List<SoldProduct>){
+private fun updateStock(stockList: MutableList<FullsStock>, products: List<SoldProduct>){
 
     products.forEach {
         soldProduct ->

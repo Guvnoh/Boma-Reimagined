@@ -1,20 +1,30 @@
 package com.guvnoh.boma.models
 
 import androidx.lifecycle.ViewModel
-import com.guvnoh.boma.getDatabaseStock
+import com.guvnoh.boma.functions.getDatabaseEmptiesStock
+import com.guvnoh.boma.functions.getDatabaseFullsStock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
 class StockViewModel: ViewModel(){
-    private val _stock = MutableStateFlow<List<Stock>>(emptyList())
-    val stock: StateFlow<List<Stock>> = getDbStock()
+    private val _fullsStock = MutableStateFlow<List<FullsStock>>(emptyList())
+    val fullsStock: StateFlow<List<FullsStock>> = getDBFullsStock()
+    private val _emptiesStock = MutableStateFlow<List<EmptiesStock>>(emptyList())
+    val emptiesStock: StateFlow<List<EmptiesStock>> = getDBEmpties()
 
-    private fun getDbStock(): StateFlow<List<Stock>>{
-        getDatabaseStock {
+    private fun getDBFullsStock(): StateFlow<List<FullsStock>>{
+        getDatabaseFullsStock {
                 dbList ->
-            _stock.value = dbList
+            _fullsStock.value = dbList
         }
-        return _stock
+        return _fullsStock
+    }
+    private fun getDBEmpties(): StateFlow<List<EmptiesStock>>{
+        getDatabaseEmptiesStock {
+                dbList ->
+            _emptiesStock.value = dbList
+        }
+        return _emptiesStock
     }
 }

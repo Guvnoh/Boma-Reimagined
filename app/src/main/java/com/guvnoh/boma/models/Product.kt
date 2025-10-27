@@ -2,117 +2,146 @@ package com.guvnoh.boma.models
 
 import com.guvnoh.boma.R
 import com.guvnoh.boma.formatters.halfAndQuarter
+import com.guvnoh.boma.uidesigns.screens.BottomBarItem
 
-data class Product(
-
-
-    var name: String = "",
-    var stringPrice: String = "",
-    var imageName: String = "",
-    var image: Int = R.drawable.bottle,
-    val id: String = "",
-    var doublePrice: Double = stringPrice.toDoubleOrNull()?:0.0,
-    var sortCategory: SortCategory = SortCategory.OTHER
+open class Product (
+    open var name: String = "",
+    open var stringPrice: String = "",
+    open var imageName: String = "",
+    open var image: Int = R.drawable.bottle,
+    open val id: String = "",
+    open var doublePrice: Double = stringPrice.toDoubleOrNull()?:0.0,
+    open val type: ProductType = ProductType.BOTTLE
 
 )
+data class BottleProduct(
+    override var name: String = "",
+    override var stringPrice: String = "",
+    override var imageName: String = "",
+    override var image: Int = R.drawable.bottle,
+    override var id: String = "",
+    override var doublePrice: Double = stringPrice.toDoubleOrNull()?:0.0,
+    override var type: ProductType = ProductType.BOTTLE,
+
+    var empties: Empties = Empties()
+
+
+): Product()
+
+data class PetsAndCans(
+    override var name: String = "",
+    override var stringPrice: String = "",
+    override var imageName: String = "",
+    override var image: Int = R.drawable.bottle,
+    override var id: String = "",
+    override var doublePrice: Double = stringPrice.toDoubleOrNull()?:0.0,
+    override var type: ProductType = ProductType.PET
+):Product()
+
+enum class ProductType(){
+    BOTTLE,
+    PET,
+    CAN
+}
 
 data class SoldProduct(
-    val product: Product = Product(),
+    var product: Product = BottleProduct(
+        name = "",
+        stringPrice = "",
+        imageName = "",
+        image = 0,
+        id = "",
+        doublePrice = 0.0,
+        type = ProductType.BOTTLE
+    ),
     var stringQuantity: String = "",
     var doubleQuantity: Double = 0.0,
-    val receiptQuantity: String = halfAndQuarter(doubleQuantity),
+    var receiptQuantity: String = halfAndQuarter(doubleQuantity),
     var intTotal: Int = 0
 ) {
-    val doubleTotal: Double = product.doublePrice * doubleQuantity
+    var doubleTotal: Double = product.doublePrice * doubleQuantity
 }
 
 data class Receipt(
-    val id: String = "",
-    val soldProducts: List<SoldProduct> = emptyList(),
-    val customerName: String = "",
+    var id: String = "",
+    var soldProducts: List<SoldProduct> = emptyList(),
+    var customerName: String = "",
     var date: String = "",
-    val grandTotal: String = ""
+    var grandTotal: String = ""
 )
 
-enum class SortCategory {
-    COCACOLA,
-    HERO,
-    NBL,
-    GUINNESS,
-    PETS,
-    CANS,
-    OTHER
-}
-fun getSortedBrandData(list: MutableList<Product>): List<Product>{
-    val sortedBrandList = list.sortedBy { it.sortCategory }
-    return sortedBrandList
-}
-val cocacolaBottles = mutableListOf(
+//fun getBottleProducts(): List<BottleProduct>{
+//    val list: List<BottleProduct> = mutableListOf()
+//    list.toMutableList().addAll(cocacolaBottles)
+//    list.toMutableList().addAll(hero)
+//    list.toMutableList().addAll(nbl)
+//    list.toMutableList().addAll(guinness)
+//
+//    return list
+//}
+
+//fun getPetsAndCans(): List<PetsAndCans>{
+//    val list: List<PetsAndCans> = mutableListOf()
+//    list.toMutableList().addAll(cans)
+//    list.toMutableList().addAll(pets)
+//    return list
+//}
+
+val brandData = mutableListOf(
     //coca cola
-    Product(name = "50cl", stringPrice = "6300", imageName = "coke", sortCategory = SortCategory.COCACOLA),
-    Product(name = "35cl", stringPrice = "3800", imageName = "coke", sortCategory = SortCategory.COCACOLA),
-)
+    BottleProduct(name = "50cl", stringPrice = "6300", imageName = "coke", empties = Empties(company = EmptyCompany.COCA_COLA, noOfBottles = NoOfBottles.TWENTY_FOUR)),
+    BottleProduct(name = "35cl", stringPrice = "3800", imageName = "coke", empties = Empties(company = EmptyCompany.COCA_COLA, noOfBottles = NoOfBottles.TWENTY_FOUR)),
 
-val hero = mutableListOf(
-    //international breweries
+    //Hero
+    BottleProduct(name = "Hero", stringPrice = "8500", imageName = "hero", empties = Empties(company = EmptyCompany.HERO, noOfBottles = NoOfBottles.TWELVE)),
+    BottleProduct(name = "Budweiser", stringPrice = "10000", imageName = "budweiser", empties = Empties(company = EmptyCompany.HERO, noOfBottles = NoOfBottles.TWELVE)),
+    BottleProduct(name = "Castle Lite", stringPrice = "9500", imageName = "castle_lite", empties = Empties(company = EmptyCompany.HERO, noOfBottles = NoOfBottles.TWELVE)),
+    BottleProduct(name = "Flying fish", stringPrice = "13000", imageName = "fish", empties = Empties(company = EmptyCompany.HERO, noOfBottles = NoOfBottles.TWENTY)),
+    BottleProduct(name = "Trophy", stringPrice = "8500", imageName = "trophy", empties = Empties(company = EmptyCompany.HERO, noOfBottles = NoOfBottles.TWELVE)),
+    BottleProduct(name = "Trophy Stout", stringPrice = "9500", imageName = "trophy_stout", empties = Empties(company = EmptyCompany.HERO, noOfBottles = NoOfBottles.TWELVE)),
 
-    Product(name = "Hero", stringPrice = "8500", imageName = "hero", sortCategory = SortCategory.HERO),
-    Product(name = "Budweiser", stringPrice = "10400", imageName = "budweiser", sortCategory = SortCategory.HERO),
-    Product(name = "Castle Lite", stringPrice = "8500", imageName = "castle_lite", sortCategory = SortCategory.HERO),
-    Product(name = "Flying fish", stringPrice = "13000", imageName = "fish", sortCategory = SortCategory.HERO),
-    Product(name = "Trophy", stringPrice = "9000", imageName = "trophy", sortCategory = SortCategory.HERO),
-    Product(name = "Trophy Stout", stringPrice = "8500", imageName = "trophy_stout", sortCategory = SortCategory.HERO),
-)
-
-val nbl = mutableListOf(
     //NBL
-    Product(name = "Amstel", stringPrice =  "13500", imageName = "amstel", sortCategory = SortCategory.NBL),
-    Product(name = "Desperados", stringPrice = "16600", imageName = "despy", sortCategory = SortCategory.NBL),
-    Product(name = "Gulder", stringPrice = "10800", imageName = "gulder", sortCategory = SortCategory.NBL),
-    Product(name = "Heineken", stringPrice = "11900", imageName = "heineken", sortCategory = SortCategory.NBL),
-    Product(name = "Legend(big)", stringPrice = "11200", imageName = "legend", sortCategory = SortCategory.NBL),
-    Product(name = "Life", stringPrice = "9200", imageName = "life", sortCategory = SortCategory.NBL),
-    Product(name = "Maltina", stringPrice = "13000", imageName = "maltina", sortCategory = SortCategory.NBL),
-    Product(name = "Radler", stringPrice = "13000", imageName = "radler", sortCategory = SortCategory.NBL),
-    Product(name = "Star", stringPrice = "10500", imageName = "star", sortCategory = SortCategory.NBL),
-    Product(name = "Tiger", stringPrice = "15000", imageName = "tiger", sortCategory = SortCategory.NBL),
-    Product(name = "Medium Heineken", stringPrice = "17000", sortCategory = SortCategory.NBL)
-)
+    BottleProduct(name = "Amstel", stringPrice =  "13000", imageName = "amstel", empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWENTY_FOUR)),
+    BottleProduct(name = "Desperados", stringPrice = "16600", imageName = "despy", empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWENTY)),
+    BottleProduct(name = "Gulder", stringPrice = "10800", imageName = "gulder", empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWELVE)),
+    BottleProduct(name = "Heineken", stringPrice = "11900", imageName = "heineken", empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWELVE)),
+    BottleProduct(name = "Legend(big)", stringPrice = "11200", imageName = "legend", empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWELVE)),
+    BottleProduct(name = "Life", stringPrice = "9200", imageName = "life", empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWELVE)),
+    BottleProduct(name = "Maltina", stringPrice = "13000", imageName = "maltina", empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWENTY_FOUR)),
+    BottleProduct(name = "Radler", stringPrice = "13000", imageName = "radler", empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWENTY)),
+    BottleProduct(name = "Star", stringPrice = "10500", imageName = "star", empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWELVE)),
+    BottleProduct(name = "Tiger", stringPrice = "15000", imageName = "tiger", empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWENTY)),
+    BottleProduct(name = "Medium Heineken", stringPrice = "17000", empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWENTY)),
 
-val guinness = mutableListOf(
     //Guinness
-    Product(name = "Medium stout", stringPrice = "17500", imageName = "guinness", sortCategory = SortCategory.GUINNESS),
-    Product(name = "Small stout", stringPrice = "19000", imageName = "guinness", sortCategory = SortCategory.GUINNESS),
-    Product(name = "Orijin", stringPrice = "9500", imageName = "orijin", sortCategory = SortCategory.GUINNESS)
-)
-val cans = mutableListOf(
-    Product(name = "Beta Malt", stringPrice = "10700", imageName = "beta_malt", sortCategory = SortCategory.CANS),
-    Product(name = "Grand Malt", stringPrice = "10700", imageName = "grand_malt", sortCategory = SortCategory.CANS),
-    Product(name = "Amstel can", stringPrice = "13000", imageName = "amstel", sortCategory = SortCategory.CANS),
-    Product(name = "Life can", stringPrice = "15000", imageName = "life", sortCategory = SortCategory.CANS),
-    Product(name = "Star can", stringPrice = "12000", imageName = "star", sortCategory = SortCategory.CANS),
-    Product(name = "Hero can", stringPrice = "10500", imageName = "hero", sortCategory = SortCategory.CANS),
-    Product(name = "Trophy can", stringPrice = "10500", imageName = "trophy", sortCategory = SortCategory.CANS),
-    Product(name = "Heineken can", stringPrice = "15500", imageName = "heineken", sortCategory = SortCategory.CANS),
-    Product(name = "Guinness can", stringPrice = "25000", imageName = "guinness", sortCategory = SortCategory.CANS),
+    BottleProduct(name = "Medium stout", stringPrice = "17000", imageName = "guinness", empties = Empties(company = EmptyCompany.GUINNESS, noOfBottles = NoOfBottles.EIGHTEEN)),
+    BottleProduct(name = "Small stout", stringPrice = "19000", imageName = "guinness", empties = Empties(company = EmptyCompany.GUINNESS, noOfBottles = NoOfBottles.TWENTY_FOUR)),
+    BottleProduct(name = "Orijin", stringPrice = "9500", imageName = "orijin", empties = Empties(company = EmptyCompany.GUINNESS, noOfBottles = NoOfBottles.TWELVE)),
 
-    )
-val pets = mutableListOf(
+    //Cans
+    PetsAndCans(name = "Beta Malt", stringPrice = "10500", imageName = "beta_malt", type = ProductType.CAN),
+    PetsAndCans(name = "Grand Malt", stringPrice = "10700", imageName = "grand_malt", type = ProductType.CAN),
+    PetsAndCans(name = "Amstel can", stringPrice = "12500", imageName = "amstel", type = ProductType.CAN),
+    PetsAndCans(name = "Life can", stringPrice = "15000", imageName = "life", type = ProductType.CAN),
+    PetsAndCans(name = "Star can", stringPrice = "12000", imageName = "star", type = ProductType.CAN),
+    PetsAndCans(name = "Hero can", stringPrice = "10500", imageName = "hero", type = ProductType.CAN),
+    PetsAndCans(name = "Trophy can", stringPrice = "10500", imageName = "trophy", type = ProductType.CAN),
+    PetsAndCans(name = "Heineken can", stringPrice = "15500", imageName = "heineken", type = ProductType.CAN),
+    PetsAndCans(name = "Guinness can", stringPrice = "25000", imageName = "guinness", type = ProductType.CAN),
+
     //Pets
-    Product(name = "Bigger boy", stringPrice = "4600", imageName = "coke", sortCategory = SortCategory.PETS),
-    Product(name = "Predator", stringPrice = "5400", imageName = "predator", sortCategory = SortCategory.PETS),
-    Product(name = "Fearless", stringPrice = "5000", imageName = "fearless", sortCategory = SortCategory.PETS ),
-    Product(name = "Eva water (Big)", stringPrice =  "3900", imageName = "eva", sortCategory = SortCategory.PETS),
-    Product(name = "Eva water (75cl)", stringPrice = "2900", imageName = "eva", sortCategory = SortCategory.PETS),
-    Product(name = "Rex water (75cl)", stringPrice = "2900", sortCategory = SortCategory.PETS),
-    Product(name = "zenee water", stringPrice = "1700", sortCategory = SortCategory.PETS),
-    Product(name = "Aquafina", stringPrice = "2400", imageName = "aquafina", sortCategory = SortCategory.PETS),
-    Product(name = "Nutri Milk", stringPrice = "6400", imageName = "nutri_milk", sortCategory = SortCategory.PETS),
-    Product(name = "Nutri Choco", stringPrice = "7000", imageName = "nutri_choco", sortCategory = SortCategory.PETS),
-    Product(name = "Nutri Yo", stringPrice = "7000", imageName = "nutri_yo", sortCategory = SortCategory.PETS),
-    Product(name = "Pop cola (big)", stringPrice = "3600", imageName = "pop_cola", sortCategory = SortCategory.PETS),
-    Product(name = "Pop cola (small)", stringPrice = "2600", imageName = "pop_cola", sortCategory = SortCategory.PETS),
-    Product(name = "Pepsi", stringPrice = "4500", imageName = "pepsi", sortCategory = SortCategory.PETS),
+    PetsAndCans(name = "Bigger boy", stringPrice = "4600", imageName = "coke", type = ProductType.PET),
+    PetsAndCans(name = "Predator", stringPrice = "5400", imageName = "predator", type = ProductType.PET),
+    PetsAndCans(name = "Fearless", stringPrice = "5000", imageName = "fearless", type = ProductType.PET),
+    PetsAndCans(name = "Eva water (Big)", stringPrice =  "3900", imageName = "eva", type = ProductType.PET),
+    PetsAndCans(name = "Eva water (75cl)", stringPrice = "2900", imageName = "eva", type = ProductType.PET),
+    PetsAndCans(name = "Rex water (75cl)", stringPrice = "2900", type = ProductType.PET),
+    PetsAndCans(name = "zenee water", stringPrice = "1700", type = ProductType.PET),
+    PetsAndCans(name = "Aquafina", stringPrice = "2400", imageName = "aquafina", type = ProductType.PET),
+    PetsAndCans(name = "Nutri Milk", stringPrice = "6400", imageName = "nutri_milk", type = ProductType.PET),
+    PetsAndCans(name = "Nutri Choco", stringPrice = "7000", imageName = "nutri_choco", type = ProductType.PET),
+    PetsAndCans(name = "Nutri Yo", stringPrice = "7000", imageName = "nutri_yo", type = ProductType.PET),
+    PetsAndCans(name = "Pop cola (big)", stringPrice = "3600", imageName = "pop_cola", type = ProductType.PET),
+    PetsAndCans(name = "Pop cola (small)", stringPrice = "2600", imageName = "pop_cola", type = ProductType.PET),
+    PetsAndCans(name = "Pepsi", stringPrice = "4500", imageName = "pepsi", type = ProductType.PET),
 )
-
-

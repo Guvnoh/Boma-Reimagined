@@ -1,4 +1,4 @@
-package com.guvnoh.boma.uidesigns
+package com.guvnoh.boma.uidesigns.cards
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -20,10 +20,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.guvnoh.boma.R
 import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.getImage
+import com.guvnoh.boma.functions.getImage
+import com.guvnoh.boma.models.AutoScrollingText
 import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.hero
+import com.guvnoh.boma.models.brandData
 
 @Composable
 fun PriceChangeCard(product: Product, vm: BomaViewModel) {
@@ -65,14 +66,15 @@ fun PriceChangeCard(product: Product, vm: BomaViewModel) {
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = product.name,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+//                Text(
+//                    text = product.name,
+//                    style = MaterialTheme.typography.titleMedium.copy(
+//                        fontWeight = FontWeight.Bold
+//                    ),
+//                    maxLines = 1,
+//                    overflow = TextOverflow.Ellipsis
+//                )
+                AutoScrollingText(product.name, modifier = Modifier)
 
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -117,5 +119,5 @@ fun PriceChangeCard(product: Product, vm: BomaViewModel) {
 @Preview(showBackground = true)
 @Composable
 fun ShowCard() {
-    PriceChangeCard(hero[1], viewModel())
+    PriceChangeCard(brandData[1], viewModel())
 }

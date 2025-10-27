@@ -28,13 +28,16 @@ import androidx.navigation.compose.rememberNavController
 import com.guvnoh.boma.formatters.getDateTime
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.BomaViewModel
+import com.guvnoh.boma.models.BottleProduct
+import com.guvnoh.boma.models.EmptyCompany
+import com.guvnoh.boma.models.PetsAndCans
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.ProductSplashScreen
+import com.guvnoh.boma.models.ProductType
 import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.models.SortCategory
 import com.guvnoh.boma.navigation.Screen
-import com.guvnoh.boma.uidesigns.ProductCard
+import com.guvnoh.boma.uidesigns.cards.ProductCard
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,6 +47,7 @@ fun ProductsPage(
     paddingValues: PaddingValues,
     vm: BomaViewModel
 ) {
+
     var search: Boolean by rememberSaveable { mutableStateOf(false) }
     var searchEntry by rememberSaveable { mutableStateOf("") }
     val soldProducts by vm.soldProducts.collectAsState()
@@ -51,6 +55,8 @@ fun ProductsPage(
     val productList by vm.products.collectAsState()
     val grandTotal = soldProducts.sumOf { it.intTotal }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior( )
+
+
 
     Scaffold(
         modifier = Modifier
@@ -175,6 +181,12 @@ fun ProductsPage(
                         .fillMaxWidth()
                         .padding(16.dp)
                 )
+//
+//                LazyRow {
+//                    items(productList) {
+//                        ProductCard(it, vm)
+//                    }
+//                }
 
                 // Product List
                 if (!search) {
@@ -182,6 +194,33 @@ fun ProductsPage(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        val bottlesDisplay: MutableList<BottleProduct> = mutableListOf()
+                        val  unsortedBottles = productList.filter {
+                                it.type == ProductType.BOTTLE }
+                        unsortedBottles.forEach {
+                           val bottleVersion =  it as BottleProduct
+                            bottlesDisplay.add(bottleVersion)
+                        }
+
+                        val petsDisplay: MutableList<PetsAndCans> = mutableListOf()
+                        val  unsortedPets = productList.filter {
+                            it.type == ProductType.PET }
+                        unsortedPets.forEach {
+                            val petVersion =  it as PetsAndCans
+                            petsDisplay.add(petVersion)
+                        }
+                        val cansDisplay: MutableList<Product> = mutableListOf()
+                        val  unsortedCans = productList.filter {
+                            it.type == ProductType.CAN }
+                        unsortedCans.forEach {
+                            val canVersion =  it as PetsAndCans
+                            cansDisplay.add(canVersion)
+                        }
+
+
+
+                        val coca_colaGroup = getDisplayGroup(bottlesDisplay,EmptyCompany.COCA_COLA)
+
                         stickyHeader {
                             Column(
                                 modifier = Modifier
@@ -189,17 +228,19 @@ fun ProductsPage(
                                     .height(40.dp)
                                     .background(color = Color.White)
                             ) {
-                                Text("Cocacola")
+                                Text("Coca_cola")
                             }
                         }
-                        items(productList.filter { it.sortCategory == SortCategory.COCACOLA }
-                            .sortedBy { it.sortCategory }) { product ->
+
+                        items(coca_colaGroup.sortedBy {it.name}){ product ->
 
                             ProductCard(
                                 product = product,
                                 viewModel = vm,
                             )
                         }
+
+                        val heroGroup = getDisplayGroup(bottlesDisplay, EmptyCompany.HERO)
 
                         stickyHeader {
                             Column(
@@ -211,8 +252,7 @@ fun ProductsPage(
                                 Text("International Breweries")
                             }
                         }
-                        items(productList.filter { it.sortCategory == SortCategory.HERO }
-                            .sortedBy { it.sortCategory }) { product ->
+                        items(heroGroup.sortedBy { it.name }) { product ->
 
                             ProductCard(
                                 product = product,
@@ -220,6 +260,7 @@ fun ProductsPage(
                             )
                         }
 
+                        val nblGroup =  getDisplayGroup(bottlesDisplay, EmptyCompany.NBL)
                         stickyHeader {
                             Column(
                                 modifier = Modifier
@@ -230,8 +271,7 @@ fun ProductsPage(
                                 Text("Nigerian Breweries")
                             }
                         }
-                        items(productList.filter { it.sortCategory == SortCategory.NBL }
-                            .sortedBy { it.sortCategory }) { product ->
+                        items(nblGroup.sortedBy { it.name }) { product ->
 
                             ProductCard(
                                 product = product,
@@ -239,6 +279,7 @@ fun ProductsPage(
                             )
                         }
 
+                        val guinnessGroup = getDisplayGroup(bottlesDisplay, EmptyCompany.HERO)
                         stickyHeader {
                             Column(
                                 modifier = Modifier
@@ -251,13 +292,13 @@ fun ProductsPage(
 
                             }
                         }
-                        items(productList.filter { it.sortCategory == SortCategory.GUINNESS }
-                            .sortedBy { it.sortCategory }) { product ->
+                        items(guinnessGroup.sortedBy { it.name }) { product ->
                             ProductCard(
                                 product = product,
                                 viewModel = vm,
                             )
                         }
+
 
                         stickyHeader {
                             Column(
@@ -269,8 +310,7 @@ fun ProductsPage(
                                 Text("Pets")
                             }
                         }
-                        items(productList.filter { it.sortCategory == SortCategory.PETS }
-                            .sortedBy { it.sortCategory }) { product ->
+                        items(petsDisplay.sortedBy { it.name }) { product ->
 
                             ProductCard(
                                 product = product,
@@ -288,8 +328,7 @@ fun ProductsPage(
                                 Text("Cans")
                             }
                         }
-                        items(productList.filter { it.sortCategory == SortCategory.CANS }
-                            .sortedBy { it.sortCategory }) { product ->
+                        items(cansDisplay.sortedBy { it.name }) { product ->
 
                             ProductCard(
                                 product = product,
@@ -308,7 +347,7 @@ fun ProductsPage(
                                 newList.add(it)
                             }
                         }
-                        items(newList.sortedBy { it.sortCategory }) { product ->
+                        items(newList.sortedBy { it.name}) { product ->
                             ProductCard(
                                 product = product,
                                 viewModel = vm,
@@ -335,6 +374,11 @@ fun generateReceipt(vm: BomaViewModel, soldProducts: List<SoldProduct>): Receipt
         grandTotal = grandTotal.toString()
     )
     return receipt
+}
+
+fun getDisplayGroup(list: List<BottleProduct>, emptyCompany: EmptyCompany): List<BottleProduct>{
+    return list.filter { it.empties.company == emptyCompany }
+
 }
 
 

@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.wear.compose.material.Icon
 import com.guvnoh.boma.models.BomaViewModel
-import com.guvnoh.boma.uidesigns.SwipeableProductCard
+import com.guvnoh.boma.uidesigns.cards.SwipeableProductCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +64,7 @@ fun DeleteProduct(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(productList.sortedBy { it.sortCategory }) { product ->
+                items(productList.sortedBy { it.name }) { product ->
                     SwipeableProductCard(
                         product = product,
                         vm= vm,
