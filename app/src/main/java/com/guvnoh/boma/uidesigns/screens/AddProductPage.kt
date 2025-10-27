@@ -183,9 +183,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.guvnoh.boma.databasePrices
-import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.SortCategory
+import com.guvnoh.boma.database.DBBottleProducts
+import com.guvnoh.boma.database.DBPetsAndCans
+import com.guvnoh.boma.database.DBRoot
+import com.guvnoh.boma.models.BottleProduct
+import com.guvnoh.boma.models.Empties
+import com.guvnoh.boma.models.EmptyCompany
+import com.guvnoh.boma.models.NoOfBottles
+import com.guvnoh.boma.models.PetsAndCans
 import com.guvnoh.boma.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -193,9 +198,13 @@ import com.guvnoh.boma.navigation.Screen
 fun AddProduct(padding: PaddingValues, navController: NavController) {
     var productName by remember { mutableStateOf("") }
     var productPrice by remember { mutableStateOf("") }
+    var noOfBottles by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    var isBottleProduct by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
+
 
     var nameError by remember { mutableStateOf<String?>(null) }
     var priceError by remember { mutableStateOf<String?>(null) }
@@ -204,8 +213,12 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
     val sortCategories = listOf(
         "COCACOLA", "HERO", "NBL", "GUINNESS", "PETS", "CANS", "OTHER"
     )
+    val noOfBottlesTypes= listOf(
+        12, 18, 20, 24
+    )
 
-    val newProduct = Product()
+    var newBottleProduct = BottleProduct()
+    var newPetOrCan = PetsAndCans()
 
     Scaffold(
         modifier = Modifier.padding(padding),
@@ -250,7 +263,8 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                         value = productName,
                         onValueChange = { name ->
                             productName = name
-                            newProduct.name = name
+                            newBottleProduct.name = name
+                            newPetOrCan.name = name
                             nameError = if (name.isBlank()) "Name is required" else null
                         },
                         label = { Text("Product Name") },
@@ -270,8 +284,10 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                         value = productPrice,
                         onValueChange = { input ->
                             productPrice = input.filter { it.isDigit() || it == '.' }
-                            newProduct.stringPrice = productPrice
-                            newProduct.doublePrice = productPrice.toDoubleOrNull() ?: 0.0
+                            newBottleProduct.stringPrice = productPrice
+                            newPetOrCan.stringPrice = productPrice
+                            newBottleProduct.doublePrice = productPrice.toDoubleOrNull() ?: 0.0
+                            newPetOrCan.doublePrice = productPrice.toDoubleOrNull() ?: 0.0
                             priceError = if (productPrice.isBlank()) "Price is required" else null
                         },
                         label = { Text("Product Price (₦)") },
@@ -320,14 +336,24 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                                     onClick = {
                                         category = option
                                         expanded = false
-                                        newProduct.sortCategory = when (option) {
-                                            "COCACOLA" -> SortCategory.COCACOLA
-                                            "HERO" -> SortCategory.HERO
-                                            "NBL" -> SortCategory.NBL
-                                            "GUINNESS" -> SortCategory.GUINNESS
-                                            "PETS" -> SortCategory.PETS
-                                            "CANS" -> SortCategory.CANS
-                                            else -> SortCategory.OTHER
+                                        when (option) {
+                                            "COCACOLA" -> {
+                                                newBottleProduct.empties = Empties(EmptyCompany.COCA_COLA)
+                                                isBottleProduct = true
+                                            }
+                                            "HERO" -> {
+                                                newBottleProduct.empties = Empties(EmptyCompany.HERO)
+                                                isBottleProduct = true
+                                            }
+                                            "NBL" -> {
+                                                newBottleProduct.empties = Empties(EmptyCompany.NBL)
+                                                isBottleProduct = true
+                                            }
+                                            "GUINNESS" -> {
+                                                newBottleProduct.empties = Empties(EmptyCompany.GUINNESS)
+                                                isBottleProduct = true
+                                            }
+                                            else -> {isBottleProduct = false}
                                         }
                                         categoryError = null
                                     }
@@ -336,18 +362,81 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                         }
                     }
 
+
+                    if (isBottleProduct){
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = { expanded = !expanded }
+                        ) {
+                            OutlinedTextField(
+                                value = category,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Empty Type") },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                                },
+                                isError = categoryError != null,
+                                supportingText = {
+                                    if (categoryError != null) {
+                                        Text(categoryError!!, color = MaterialTheme.colorScheme.error)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                noOfBottles.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option.toString()) },
+                                        onClick = {
+                                            expanded = false
+
+                                            //no of bottles
+                                            newBottleProduct.empties.noOfBottles = when(option.toString()){
+                                                "12" -> NoOfBottles.TWELVE
+                                                "18" -> NoOfBottles.EIGHTEEN
+                                                "20" -> NoOfBottles.TWENTY
+                                                "24" -> NoOfBottles.TWENTY_FOUR
+                                                else -> NoOfBottles.TWELVE
+
+                                            }
+
+                                            categoryError = null
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                    }
+
                     // Done Button
                     Button(
                         onClick = {
-                            if (productName.isNotBlank() && productPrice.isNotBlank() && category.isNotBlank()) {
-                                databasePrices.child(newProduct.name).setValue(newProduct)
+                            if (productName.isNotBlank() && productPrice.isNotBlank() && category.isNotBlank() && isBottleProduct) {
+                                DBBottleProducts.child(newBottleProduct.name).setValue(newBottleProduct)
                                 navController.navigate(Screen.Products.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         inclusive = true
                                     }
                                     launchSingleTop = true
                                 }
-                            } else {
+                            } else if (productName.isNotBlank() && productPrice.isNotBlank() && category.isNotBlank()){
+                                DBPetsAndCans.child(newPetOrCan.name).setValue(newPetOrCan)
+                                navController.navigate(Screen.Products.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        inclusive = true
+                                    }
+                                    launchSingleTop = true
+                                }
+                            }
+                            else {
                                 if (productName.isBlank()) nameError = "Name is required"
                                 if (productPrice.isBlank()) priceError = "Price is required"
                                 if (category.isBlank()) categoryError = "Category is required"

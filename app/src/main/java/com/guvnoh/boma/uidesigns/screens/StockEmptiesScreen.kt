@@ -1,5 +1,7 @@
 package com.guvnoh.boma.uidesigns.screens
 
+import com.guvnoh.boma.uidesigns.cards.EmptiesStockCard
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -32,25 +34,21 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material.Icon
-import com.guvnoh.boma.R
-import com.guvnoh.boma.getDatabaseProductList
-import com.guvnoh.boma.models.BomaViewModel
-import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.Stock
 import com.guvnoh.boma.models.StockSplashScreen
 import com.guvnoh.boma.models.StockViewModel
-import com.guvnoh.boma.stockFulls
-import com.guvnoh.boma.uidesigns.StockCard
 
 @Composable
-fun StockScreen(
+fun StockEmptiesScreen(
     paddingValues: PaddingValues,
     vm: StockViewModel,
     navController: NavController,
 
-){
-    val stock by vm.stock.collectAsState()
+    ){
+
+
+    val emptiesStock by vm.emptiesStock.collectAsState()
     var showSplash by remember { mutableStateOf(true) }
+    //var topBarTitle by remember { mutableStateOf("Empties") }
 
     Scaffold(
         floatingActionButton = {FloatingActionButton(
@@ -77,7 +75,7 @@ fun StockScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()){
                 Text(
-                    text = "Stock Records",
+                    text = "Empties",
                     style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -92,7 +90,10 @@ fun StockScreen(
                     val selected = currentRoute == it.route
                     NavigationBarItem(
                         selected = selected,
-                        onClick = { navController.navigate(it.route){launchSingleTop = true} },
+                        onClick = {
+                            val route = it.route
+                            navController.navigate(route){launchSingleTop = true
+                            } },
                         icon = {it.icon},
                         label = { Text(it.title) }
                     )
@@ -104,51 +105,27 @@ fun StockScreen(
             StockSplashScreen(
                 modifier = Modifier.padding(it),
                 onTimeOut = {showSplash = false},
-                list = stock.toMutableList()
+                empties = emptiesStock.toMutableList()
             )
         }else{
             LazyColumn(
                 modifier = Modifier.padding(it)
             ) {
-                items(stock.toMutableList()){
+                items(emptiesStock.toMutableList()){
                         brandStock ->
-                    StockCard(brandStock)
+                    EmptiesStockCard(brandStock)
                 }
             }
         }
     }
 
 }
-open class BottomBarItem(
-    val route: String,
-    val title: String,
-    val icon: Int,
 
-    ){
-    data object Fulls: BottomBarItem(route = "fulls", title = "Fulls", R.drawable.orijin)
-    data object Empties: BottomBarItem(route = "empties", title = "Empties", R.drawable.bottle)
-}
-fun sendStockData(list: List<Product>){
 
-    list.forEach {
-        val random1 = (20..800).random()
-        val random2 = (20..800).random()
-        val stock = Stock(
-            product = it,
-            closingStock = random1.toDouble(),
-            openingStock = random2.toDouble(),
-            depletion = 0.0 )
-        stockFulls
-            .child(stock.product?.name?:"")
-            .setValue(stock)
-
-    }
-
-}
 
 @Preview
 @Composable
 private fun ShowStock(){
-    StockScreen(PaddingValues(), viewModel(), rememberNavController())
+    StockFullsScreen(PaddingValues(), viewModel(), rememberNavController())
 
 }

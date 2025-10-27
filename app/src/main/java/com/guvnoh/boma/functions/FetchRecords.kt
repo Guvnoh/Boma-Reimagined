@@ -3,7 +3,7 @@ package com.guvnoh.boma.functions
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import com.guvnoh.boma.bomaRecords
+import com.guvnoh.boma.database.bomaRecords
 import com.guvnoh.boma.models.Receipt
 
 fun getDatabaseRecords(callback: (MutableList<Receipt>) -> Unit) {

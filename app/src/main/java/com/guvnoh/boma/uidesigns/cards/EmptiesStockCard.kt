@@ -1,4 +1,6 @@
-package com.guvnoh.boma.uidesigns
+package com.guvnoh.boma.uidesigns.cards
+
+import com.guvnoh.boma.models.EmptiesStock
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,20 +12,18 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.guvnoh.boma.formatters.halfAndQuarter
-import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.Stock
-import com.guvnoh.boma.models.hero
+import com.guvnoh.boma.models.FullsStock
+import com.guvnoh.boma.models.brandData
 import kotlinx.coroutines.launch
 
 @Composable
-fun StockCard(stock: Stock){
+fun EmptiesStockCard(emptiesStock: EmptiesStock){
     val scope = rememberCoroutineScope()
     Card(
         modifier = Modifier
@@ -47,41 +47,22 @@ fun StockCard(stock: Stock){
         ) {
             // Product Name
             Text(
-                text = stock.product?.name?:"",
+                text = emptiesStock.company.name,
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold
             )
-//
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.SpaceBetween
-//            ) {
-//                Text(
-//                    text = "Opening stock: ",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                    fontWeight = FontWeight.Medium
-//                )
-//                Text(
-//                    text = halfAndQuarter(stock.openingStock ?: 0.0),
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                    fontWeight = FontWeight.Medium,
-//                    modifier = Modifier.padding(end = 30.dp)
-//                )
-//            }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Sold today: ",
+                    text = "Available: ",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
-                    text = halfAndQuarter(stock.depletion?:0.0),
+                    text = "${emptiesStock.quantity?.let {  halfAndQuarter(it)}}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium,
@@ -89,26 +70,6 @@ fun StockCard(stock: Stock){
 
                 )
             }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ){
-                Text(
-                    text = "Current stock:  ",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = halfAndQuarter(stock.closingStock?:0.0),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(end = 30.dp)
-                )
-            }
-
 
         }
 
@@ -118,5 +79,5 @@ fun StockCard(stock: Stock){
 @Preview
 @Composable
 private fun ShowStockCard(){
-    StockCard(Stock(product = hero[0]))
+    StockCard(FullsStock(product = brandData[0]))
 }

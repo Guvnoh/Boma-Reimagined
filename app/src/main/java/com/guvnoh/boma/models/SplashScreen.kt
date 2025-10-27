@@ -19,30 +19,54 @@ import androidx.wear.compose.material.Text
 fun StockSplashScreen(
     modifier: Modifier,
     onTimeOut: () -> Unit,
-    list: MutableList<Stock>,
+    fulls: MutableList<FullsStock>? = null,
+    empties: MutableList<EmptiesStock>? = null,
 ){
     Box (
         modifier = modifier
         .fillMaxSize(),
         contentAlignment = Alignment.Center
     ){
-        LaunchedEffect(list) {
-            if (list.isNotEmpty()){
-                onTimeOut()
-            }
+        if (fulls!=null){
+            LaunchedEffect(fulls) {
+                if (fulls.isNotEmpty()){
+                    onTimeOut()
+                }
 
-        }
-        Column (
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
-            Text(
-                text = "Loading...",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
-            CircularProgressIndicator()
+            }
+            Column (
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ){
+                Text(
+                    text = "Loading...",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                CircularProgressIndicator()
+            }
+        }else{
+            if (empties!=null){
+                LaunchedEffect(empties) {
+                    if (empties.isNotEmpty()){
+                        onTimeOut()
+                    }
+
+                }
+                Column (
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    Text(
+                        text = "Loading...",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
+                    CircularProgressIndicator()
+                }
+            }
         }
     }
 }

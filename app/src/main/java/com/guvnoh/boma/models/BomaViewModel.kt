@@ -5,7 +5,8 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.guvnoh.boma.getDatabaseProductList
+import com.guvnoh.boma.functions.getDBBottlesList
+import com.guvnoh.boma.functions.getDBPetsAndCansList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -27,8 +28,6 @@ class BomaViewModel : ViewModel() {
         _receipt.value = receipt
     }
 
-
-
     fun addToPriceChangeList(product: Product, newPrice: String ){
         val current = _priceChangeProducts.value.toMutableList()
         product.stringPrice = newPrice
@@ -36,15 +35,62 @@ class BomaViewModel : ViewModel() {
         _priceChangeProducts.value = current
     }
 
+//    private fun getProductList(): StateFlow<List<Product>>{
+//        val bottles = getDBBottlesList()
+//        val pets = getDBPetsAndCansList()
+//        val list = mutableListOf<Product>()
+//        list.addAll(bottles.value)
+//        list.addAll(pets.value)
+//        _products.value = list
+//        return _products
+//    }
+//
+//    private fun getDBBottlesList(): StateFlow<List<Product>>{
+//
+//        val list= MutableStateFlow<List<BottleProduct>>(emptyList())
+//        getDBBottlesList{
+//                dbList ->
+//            list.value = dbList
+//        }
+//        return list
+//    }
+//
+//    private fun getDBPetsAndCansList(): StateFlow<List<Product>>{
+//        val list = MutableStateFlow<List<PetsAndCans>>(emptyList())
+//        getDBPetsAndCansList {
+//                dbList ->
+//            list.value = dbList
+//        }
+//        return list
+//    }
+    private fun getProductList(): StateFlow<List<Product>> {
+        val bottlesFlow = MutableStateFlow<List<Product>>(emptyList())
+        val petsFlow = MutableStateFlow<List<Product>>(emptyList())
 
-    private fun getProductList(): StateFlow<List<Product>>{
-        getDatabaseProductList {
-            dbList ->
-            _products.value = dbList
+        // Fetch bottle products
+        getDBBottlesList { dbList ->
+            bottlesFlow.value = dbList
+            updateCombinedProducts(bottlesFlow.value, petsFlow.value)
         }
+
+        // Fetch pets and cans
+        getDBPetsAndCansList { dbList ->
+            petsFlow.value = dbList
+            updateCombinedProducts(bottlesFlow.value, petsFlow.value)
+        }
+
         return _products
     }
 
+    private fun updateCombinedProducts(
+        bottles: List<Product>,
+        pets: List<Product>
+    ) {
+        val combined = mutableListOf<Product>()
+        combined.addAll(bottles)
+        combined.addAll(pets)
+        _products.value = combined
+    }
 
 
     fun updateCustomerName(name: String){

@@ -6,24 +6,19 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.guvnoh.boma.models.BomaViewModel
-import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.RecordViewModel
 import com.guvnoh.boma.uidesigns.screens.AddProduct
-import com.guvnoh.boma.uidesigns.screens.BottomBarItem
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
 import com.guvnoh.boma.uidesigns.screens.PriceChangePage
 import com.guvnoh.boma.uidesigns.screens.ProductsPage
 import com.guvnoh.boma.uidesigns.screens.ReceiptPage
 import com.guvnoh.boma.uidesigns.screens.RecordDetails
 import com.guvnoh.boma.uidesigns.screens.RecordsScreen
-import com.guvnoh.boma.uidesigns.screens.StockScreen
 
 
 @RequiresApi(Build.VERSION_CODES.O)

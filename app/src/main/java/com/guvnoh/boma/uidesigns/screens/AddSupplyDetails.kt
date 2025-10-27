@@ -36,7 +36,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.ReceivedStock
-import com.guvnoh.boma.models.Stock
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -22,7 +22,7 @@ import com.guvnoh.boma.formatters.getDateTime
 import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.RecordViewModel
 import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.models.hero
+import com.guvnoh.boma.models.brandData
 import com.guvnoh.boma.navigation.Screen
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -84,7 +84,7 @@ private fun RecordsCardDemo(){
             date = getDateTime(),
             soldProducts = listOf(
                 SoldProduct(
-                    product = hero[0],
+                    product = brandData[0],
                     stringQuantity = "1",
                     doubleQuantity = 1.0,
 
