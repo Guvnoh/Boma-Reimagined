@@ -34,17 +34,20 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material.Icon
+import com.guvnoh.boma.database.bomaStock
+import com.guvnoh.boma.models.BomaViewModel
+import com.guvnoh.boma.models.EmptiesStock
+import com.guvnoh.boma.models.EmptyCompany
+import com.guvnoh.boma.models.NoOfBottles
 import com.guvnoh.boma.models.StockSplashScreen
-import com.guvnoh.boma.models.StockViewModel
 
 @Composable
 fun StockEmptiesScreen(
     paddingValues: PaddingValues,
-    vm: StockViewModel,
+    vm: BomaViewModel,
     navController: NavController,
 
     ){
-
 
     val emptiesStock by vm.emptiesStock.collectAsState()
     var showSplash by remember { mutableStateOf(true) }
@@ -118,6 +121,46 @@ fun StockEmptiesScreen(
             }
         }
     }
+}
+
+fun sendEmptiesData(){
+    val list: List<EmptyCompany> = EmptyCompany.entries
+
+    list.forEach {
+        val random1 = (20..800).random()
+        val random2 = (20..800).random()
+        val emptiesStock =
+            when(it){
+                EmptyCompany.HERO ->
+                    EmptiesStock(
+                        company = it,
+                        noOfBottles = NoOfBottles.TWELVE,
+                        quantity = random2.toDouble(),
+                    )
+                EmptyCompany.NBL ->
+                    EmptiesStock(
+                        company = it,
+                        noOfBottles = NoOfBottles.TWELVE,
+                        quantity = random2.toDouble(),
+                    )
+                EmptyCompany.COCA_COLA ->
+                    EmptiesStock(
+                        company = it,
+                        noOfBottles = NoOfBottles.TWENTY_FOUR,
+                        quantity = random2.toDouble(),
+                    )
+                EmptyCompany.GUINNESS ->
+                    EmptiesStock(
+                        company = it,
+                        noOfBottles = NoOfBottles.EIGHTEEN,
+                        quantity = random2.toDouble(),
+                    )
+
+            }
+        bomaStock.child("Empties")
+            .child(emptiesStock.company?.name?:"unknown")
+            .setValue(emptiesStock)
+    }
 
 }
 
@@ -126,6 +169,6 @@ fun StockEmptiesScreen(
 @Preview
 @Composable
 private fun ShowStock(){
-    StockFullsScreen(PaddingValues(), viewModel(), rememberNavController())
+    StockEmptiesScreen(PaddingValues(), viewModel(), navController = rememberNavController())
 
 }

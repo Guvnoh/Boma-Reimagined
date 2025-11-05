@@ -15,8 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.guvnoh.boma.database.DBBottleProducts
-import com.guvnoh.boma.database.DBPetsAndCans
+import com.guvnoh.boma.database.bomaStock
 import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.ProductType
@@ -66,7 +65,7 @@ fun PriceChangePage(
                     Button(
                         onClick = {
                             priceChangeList.forEach { product ->
-                                updatePrice(product, product.stringPrice)
+                                updatePrice(product, product.stringPrice?:"0.0")
                             }
 
                             navController.navigate(Screen.Products.route) {
@@ -105,16 +104,14 @@ fun PriceChangePage(
 }
 
 fun updatePrice(product: Product, newPrice: String) {
-    val isBottle = ProductType.BOTTLE
-    if (product.type == isBottle) {
-        DBBottleProducts.child(product.name).child("stringPrice").setValue(newPrice)
-        DBBottleProducts.child(product.name).child("doublePrice")
-            .setValue(newPrice.toDoubleOrNull() ?: 0.0)
-    }
-    else
-    {
-        DBPetsAndCans.child(product.name).child("stringPrice").setValue(newPrice)
-        DBPetsAndCans.child(product.name).child("doublePrice")
-            .setValue(newPrice.toDoubleOrNull() ?: 0.0)
-    }
+    bomaStock
+        .child("Fulls")
+        .child(product.name?:"unknown")
+        .child("stringPrice")
+        .setValue(newPrice)
+    bomaStock
+        .child("Fulls")
+        .child(product.name?:"unknown")
+        .child("doublePrice")
+        .setValue(newPrice.toDoubleOrNull() ?: 0.0)
 }

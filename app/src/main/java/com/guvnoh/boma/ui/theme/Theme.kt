@@ -108,7 +108,10 @@ private val DarkColors = darkColorScheme(
     onSurface = Color(0xFFEAEAEA),
     error = ErrorRed,
     onError = Color.White
+
+
 )
+val lightGray = Color.LightGray
 
 // ✅ Define your shapes here
 val AppShapes = Shapes(

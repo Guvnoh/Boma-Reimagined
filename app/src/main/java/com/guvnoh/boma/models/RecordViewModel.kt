@@ -18,7 +18,7 @@ class RecordViewModel: ViewModel(){
     private fun getDbRecords(): StateFlow<List<Receipt>>{
         getDatabaseRecords {
             dbRecords ->
-            _records.value = dbRecords
+            _records.value = dbRecords.asReversed()
         }
         return _records
     }

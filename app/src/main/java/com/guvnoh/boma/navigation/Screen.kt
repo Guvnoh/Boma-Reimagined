@@ -20,12 +20,38 @@ open class Screen(
     val title: String,
     val icon: MenuIcon? = null
 ) {
-    data object Products: Screen(route = "products",title = "Products", icon = MenuIcon.Vector(Icons.Default.ShoppingCart))
-    data object PriceChange: Screen(route = "price_change",title = "Change Price",icon = MenuIcon.Resource(R.drawable.naira))
-    data object Receipt: Screen(route = "receipt",title = "Receipt",)
-    data object AddProduct: Screen(route = "add_product", title = "Add Products", icon = MenuIcon.Vector(Icons.Default.AddCircle))
-    data object DeleteProduct: Screen(route = "delete_product",title = "Delete Products",icon = MenuIcon.Vector(Icons.Default.Delete))
-    data object Stock: Screen(route = "stock",title = "Stock",icon = MenuIcon.Resource(R.drawable.stock))
-    data object Records: Screen(route = "records", title = "Records",icon = MenuIcon.Resource(R.drawable.record))
-    data object RecordDetails: Screen(route = "record_details", title = "Record")
+    data object Products : Screen(
+        route = "products",
+        title = "Products",
+        icon = MenuIcon.Vector(Icons.Default.ShoppingCart)
+    )
+
+    data object PriceChange : Screen(
+        route = "price_change",
+        title = "Change Price",
+        icon = MenuIcon.Resource(R.drawable.naira)
+    )
+
+    data object Receipt : Screen(route = "receipt", title = "Receipt",)
+    data object AddProduct : Screen(
+        route = "add_product",
+        title = "Add Products",
+        icon = MenuIcon.Vector(Icons.Default.AddCircle)
+    )
+
+    data object DeleteProduct : Screen(
+        route = "delete_product",
+        title = "Delete Products",
+        icon = MenuIcon.Vector(Icons.Default.Delete)
+    )
+
+    data object Stock :
+        Screen(route = "stock", title = "Stock", icon = MenuIcon.Resource(R.drawable.stock))
+
+    data object Records :
+        Screen(route = "records", title = "Records", icon = MenuIcon.Resource(R.drawable.record))
+
+    data object RecordDetails : Screen(route = "record_details", title = "Record")
+
+
 }

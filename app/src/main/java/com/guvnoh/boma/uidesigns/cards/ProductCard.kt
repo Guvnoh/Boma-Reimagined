@@ -24,6 +24,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.guvnoh.boma.R
+import com.guvnoh.boma.formatters.halfAndQuarter
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.getImage
 import com.guvnoh.boma.models.AutoScrollingText
@@ -38,17 +39,14 @@ fun ProductCard(
 ) {
     val soldProducts = viewModel.soldProducts.collectAsState()
 
-    val soldProduct = soldProducts.value.find { it.product.name == product.name }
+    val soldProduct = soldProducts.value.find { it.product?.name == product.name }
 
     var quantity = soldProduct?.stringQuantity?:""
 
     val total = soldProduct?.intTotal?:0
 
     val context = LocalContext.current
-    val resId =
-        if (getImage(context,product.imageName) !=0) {
-            getImage(context,product.imageName)
-        }else R.drawable.bottle
+    val resId = getImage(context,product.imageName?:"bottle.jpg")
 
     Card(
         modifier = Modifier
@@ -105,10 +103,10 @@ fun ProductCard(
 //                    maxLines = 1,
 //                    overflow = TextOverflow.Ellipsis
 //                )
-                AutoScrollingText(product.name, modifier = Modifier)
+                AutoScrollingText(product.name?:"unknown", modifier = Modifier)
 
                 Text(
-                    text = nairaFormat(product.stringPrice.toInt()),
+                    text = nairaFormat(product.stringPrice?.toInt()?:0),
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp
@@ -142,7 +140,9 @@ fun ProductCard(
                     val newSoldProduct = SoldProduct(
                         product = product,
                         doubleQuantity = inputToDouble ?: 0.0,
-                        stringQuantity = newValue
+                        stringQuantity = newValue,
+                        intTotal = ((product.doublePrice?:0.0) * (quantity.toDoubleOrNull()?:0.0)).toInt(),
+                        receiptQuantity = halfAndQuarter(inputToDouble?:0.0)
                     )
                     viewModel.recordSoldProduct(newSoldProduct)
                 },

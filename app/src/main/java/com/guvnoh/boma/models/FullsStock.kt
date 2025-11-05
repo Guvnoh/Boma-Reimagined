@@ -1,32 +1,34 @@
 package com.guvnoh.boma.models
 
 data class FullsStock(
-    val product: Product? = null,
-    val openingStock: Double? = null,
-    val closingStock: Double? = null,
+    var openingStock: Double? = null,
+    var closingStock: Double? = null,
     val depletion: Double? = null,
+    val lastTimeSold: String? = null,
+    val soldLast: Double? = null,
+    var soldToday: Double? = null
 )
 
 data class ReceivedStock(
-    val product: Product?,
-    var quantity: Double? = 0.0,
-    var source: String? = ""
+    val product: Product? = null,
+    var quantity: Double? = null,
+    var source: String? = null
 )
 
 data class ReturnedToCompany(
-    val product: Product?,
-    var quantity: Double? = 0.0,
-    var company: String? = ""
+    val product: Product? = null,
+    var quantity: Double? = null,
+    var company: String? = null
 )
 
 data class ReturnedToBoma(
-    val product: Product?,
-    var quantity: Double? = 0.0,
+    val product: Product? = null,
+    var quantity: Double? = null,
     var customer: String? = ""
 )
 
 data class EmptiesStock(
-    var noOfBottles: NoOfBottles = NoOfBottles.TWELVE,
-    var company: EmptyCompany = EmptyCompany.NBL,
-    var quantity: Double? = 0.0,
+    var noOfBottles: NoOfBottles? = null,
+    var company: EmptyCompany? = null,
+    var quantity: Double? = null,
 )

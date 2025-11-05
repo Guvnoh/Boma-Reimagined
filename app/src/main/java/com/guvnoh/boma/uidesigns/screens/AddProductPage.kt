@@ -183,14 +183,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.guvnoh.boma.database.DBBottleProducts
-import com.guvnoh.boma.database.DBPetsAndCans
-import com.guvnoh.boma.database.DBRoot
-import com.guvnoh.boma.models.BottleProduct
+import com.guvnoh.boma.database.bomaStock
+import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.Empties
 import com.guvnoh.boma.models.EmptyCompany
 import com.guvnoh.boma.models.NoOfBottles
-import com.guvnoh.boma.models.PetsAndCans
 import com.guvnoh.boma.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -217,8 +214,7 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
         12, 18, 20, 24
     )
 
-    var newBottleProduct = BottleProduct()
-    var newPetOrCan = PetsAndCans()
+    val newProduct = Product()
 
     Scaffold(
         modifier = Modifier.padding(padding),
@@ -263,8 +259,7 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                         value = productName,
                         onValueChange = { name ->
                             productName = name
-                            newBottleProduct.name = name
-                            newPetOrCan.name = name
+                            newProduct.name = name
                             nameError = if (name.isBlank()) "Name is required" else null
                         },
                         label = { Text("Product Name") },
@@ -284,10 +279,8 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                         value = productPrice,
                         onValueChange = { input ->
                             productPrice = input.filter { it.isDigit() || it == '.' }
-                            newBottleProduct.stringPrice = productPrice
-                            newPetOrCan.stringPrice = productPrice
-                            newBottleProduct.doublePrice = productPrice.toDoubleOrNull() ?: 0.0
-                            newPetOrCan.doublePrice = productPrice.toDoubleOrNull() ?: 0.0
+                            newProduct.stringPrice = productPrice
+                            newProduct.doublePrice = productPrice.toDoubleOrNull() ?: 0.0
                             priceError = if (productPrice.isBlank()) "Price is required" else null
                         },
                         label = { Text("Product Price (₦)") },
@@ -338,19 +331,19 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                                         expanded = false
                                         when (option) {
                                             "COCACOLA" -> {
-                                                newBottleProduct.empties = Empties(EmptyCompany.COCA_COLA)
+                                                newProduct.empties = Empties(EmptyCompany.COCA_COLA)
                                                 isBottleProduct = true
                                             }
                                             "HERO" -> {
-                                                newBottleProduct.empties = Empties(EmptyCompany.HERO)
+                                                newProduct.empties = Empties(EmptyCompany.HERO)
                                                 isBottleProduct = true
                                             }
                                             "NBL" -> {
-                                                newBottleProduct.empties = Empties(EmptyCompany.NBL)
+                                                newProduct.empties = Empties(EmptyCompany.NBL)
                                                 isBottleProduct = true
                                             }
                                             "GUINNESS" -> {
-                                                newBottleProduct.empties = Empties(EmptyCompany.GUINNESS)
+                                                newProduct.empties = Empties(EmptyCompany.GUINNESS)
                                                 isBottleProduct = true
                                             }
                                             else -> {isBottleProduct = false}
@@ -398,7 +391,7 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                                             expanded = false
 
                                             //no of bottles
-                                            newBottleProduct.empties.noOfBottles = when(option.toString()){
+                                            newProduct.empties?.noOfBottles = when(option.toString()){
                                                 "12" -> NoOfBottles.TWELVE
                                                 "18" -> NoOfBottles.EIGHTEEN
                                                 "20" -> NoOfBottles.TWENTY
@@ -420,23 +413,14 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                     Button(
                         onClick = {
                             if (productName.isNotBlank() && productPrice.isNotBlank() && category.isNotBlank() && isBottleProduct) {
-                                DBBottleProducts.child(newBottleProduct.name).setValue(newBottleProduct)
+                                bomaStock.child("Fulls").child(newProduct.name?:"unknown").setValue(newProduct)
                                 navController.navigate(Screen.Products.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         inclusive = true
                                     }
                                     launchSingleTop = true
                                 }
-                            } else if (productName.isNotBlank() && productPrice.isNotBlank() && category.isNotBlank()){
-                                DBPetsAndCans.child(newPetOrCan.name).setValue(newPetOrCan)
-                                navController.navigate(Screen.Products.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        inclusive = true
-                                    }
-                                    launchSingleTop = true
-                                }
-                            }
-                            else {
+                            } else {
                                 if (productName.isBlank()) nameError = "Name is required"
                                 if (productPrice.isBlank()) priceError = "Price is required"
                                 if (category.isBlank()) categoryError = "Category is required"

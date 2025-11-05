@@ -1,40 +1,53 @@
 package com.guvnoh.boma.uidesigns.cards
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.guvnoh.boma.formatters.checkIfSoldToday
 import com.guvnoh.boma.formatters.halfAndQuarter
 import com.guvnoh.boma.models.FullsStock
+import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.brandData
 import kotlinx.coroutines.launch
 
+
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun StockCard(fullStock: FullsStock){
+fun StockCard(product: Product) {
     val scope = rememberCoroutineScope()
+    val soldToday = product.stock?.soldToday
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp),
-        shape = CardDefaults.shape,
-        elevation = CardDefaults.cardElevation(6.dp),
-        onClick = {
-            scope.launch {
-            }
-        },
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        onClick = { scope.launch { /* handle click */ } },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+            containerColor = MaterialTheme.colorScheme.surface
         )
     ) {
         Column(
@@ -43,78 +56,98 @@ fun StockCard(fullStock: FullsStock){
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Product Name
-            Text(
-                text = fullStock.product?.name?:"",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold
+            // --- Header Row ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = product.name ?: "Unnamed Product",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                // Optional visual indicator for low stock
+                val isLowStock = (product.stock?.closingStock ?: 0.0) < 5.0
+                val indicatorColor = if (isLowStock)
+                    MaterialTheme.colorScheme.error
+                else
+                    MaterialTheme.colorScheme.primary
+
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .background(indicatorColor, CircleShape)
+                )
+            }
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                thickness = 1.dp
             )
-//
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.SpaceBetween
-//            ) {
-//                Text(
-//                    text = "Opening stock: ",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                    fontWeight = FontWeight.Medium
-//                )
-//                Text(
-//                    text = halfAndQuarter(stock.openingStock ?: 0.0),
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                    fontWeight = FontWeight.Medium,
-//                    modifier = Modifier.padding(end = 30.dp)
-//                )
-//            }
+
+            // --- Sold Today ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Sold today: ",
+                    text = "Sold Today",
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = halfAndQuarter(fullStock.depletion?:0.0),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(end = 30.dp)
-
+                    text = halfAndQuarter(soldToday?:0.0),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
+            // --- Current Stock ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
-            ){
+            ) {
                 Text(
-                    text = "Current stock:  ",
+                    text = "Current Stock",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = halfAndQuarter(fullStock.closingStock?:0.0),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(end = 30.dp)
+                    text = halfAndQuarter(product.stock?.closingStock ?: 0.0),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = if ((product.stock?.closingStock ?: 0.0) < 5.0)
+                        MaterialTheme.colorScheme.error
+                    else
+                        MaterialTheme.colorScheme.onSurface
                 )
             }
 
-
+            // --- Optional Footer Highlight ---
+            if ((product.stock?.closingStock ?: 0.0) < 5.0) {
+                Text(
+                    text = "⚠️ Low stock — restock soon",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.error
+                    ),
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
         }
-
     }
 }
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview
 @Composable
 private fun ShowStockCard(){
-    StockCard(FullsStock(product = brandData[0]))
+    StockCard(Product())
 }

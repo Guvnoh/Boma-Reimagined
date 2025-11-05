@@ -42,7 +42,7 @@ fun Navigation(
         composable(Screen.Receipt.route){ ReceiptPage(vm) }
         composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController) }
         composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, vm) }
-        composable(Screen.Stock.route){ StockPageNav(paddingValues) }
+        composable(Screen.Stock.route){ StockPageNav(vm = vm, paddingValues = paddingValues) }
         composable(Screen.Records.route){ RecordsScreen(records, navController, paddingValues) }
         composable(Screen.RecordDetails.route){
             record?.let { selectedRecord -> RecordDetails(selectedRecord) }
