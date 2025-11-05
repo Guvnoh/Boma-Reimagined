@@ -19,7 +19,7 @@ import androidx.wear.compose.material.Text
 fun StockSplashScreen(
     modifier: Modifier,
     onTimeOut: () -> Unit,
-    fulls: MutableList<FullsStock>? = null,
+    stock: MutableList<Product>? = null,
     empties: MutableList<EmptiesStock>? = null,
 ){
     Box (
@@ -27,9 +27,9 @@ fun StockSplashScreen(
         .fillMaxSize(),
         contentAlignment = Alignment.Center
     ){
-        if (fulls!=null){
-            LaunchedEffect(fulls) {
-                if (fulls.isNotEmpty()){
+        if (stock!=null){
+            LaunchedEffect(stock) {
+                if (stock.isNotEmpty()){
                     onTimeOut()
                 }
 

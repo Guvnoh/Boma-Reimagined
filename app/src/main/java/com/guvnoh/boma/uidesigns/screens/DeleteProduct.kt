@@ -1,5 +1,7 @@
 package com.guvnoh.boma.uidesigns.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -27,6 +29,7 @@ import androidx.wear.compose.material.Icon
 import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.uidesigns.cards.SwipeableProductCard
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeleteProduct(
@@ -67,8 +70,8 @@ fun DeleteProduct(
                 items(productList.sortedBy { it.name }) { product ->
                     SwipeableProductCard(
                         product = product,
-                        vm= vm,
-                        navController = navController)
+                        navController = navController
+                    )
                 }
             }
         }

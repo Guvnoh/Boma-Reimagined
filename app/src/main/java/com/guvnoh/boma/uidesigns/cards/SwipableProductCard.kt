@@ -1,5 +1,7 @@
 package com.guvnoh.boma.uidesigns.cards
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.material3.*
 import androidx.compose.foundation.background
@@ -31,19 +33,19 @@ import androidx.wear.compose.material.ExperimentalWearMaterialApi
 import androidx.wear.compose.material.FractionalThreshold
 import androidx.wear.compose.material.rememberSwipeableState
 import androidx.wear.compose.material.swipeable
-import com.guvnoh.boma.database.DBBottleProducts
-import com.guvnoh.boma.database.DBPetsAndCans
 import com.guvnoh.boma.R
+import com.guvnoh.boma.database.bomaStock
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.getImage
+import com.guvnoh.boma.functions.vibratePhone
 import com.guvnoh.boma.models.ProductType
 import kotlin.math.roundToInt
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalWearMaterialApi::class)
 @Composable
 fun SwipeableProductCard(
     product: Product,
-    vm: BomaViewModel,
     navController: NavController
 ) {
     val scope = rememberCoroutineScope()
@@ -112,18 +114,12 @@ fun SwipeableProductCard(
     }
 
     if (alert.value) {
+        val context = LocalContext.current
+        vibratePhone(context)
         AlertDialogg(
             onDelete = {
                 val type = product.type
-                when(type ){
-                    ProductType.BOTTLE ->
-                        DBBottleProducts.child(product.name).removeValue()
-                    ProductType.PET ->
-                        DBPetsAndCans.child(product.name).removeValue()
-                    ProductType.CAN ->
-                        DBPetsAndCans.child(product.name).removeValue()
-                    else -> {}
-                }
+                bomaStock.child("Fulls").child(product.name?:"unkno").removeValue()
                        },
             product = product,
             alert = alert,
@@ -187,9 +183,7 @@ fun DeleteProductCard(
 
     val context = LocalContext.current
     val resId =
-        if (getImage(context,product.imageName) !=0) {
-            getImage(context,product.imageName)
-        }else R.drawable.bottle
+        getImage(context,product.imageName?:"bottle.jpg")
 
     Card(
         modifier = Modifier
@@ -237,7 +231,7 @@ fun DeleteProductCard(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
-                    text = product.name,
+                    text = product.name?:"unknown",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
@@ -246,7 +240,7 @@ fun DeleteProductCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = nairaFormat(product.stringPrice.toInt()),
+                    text = nairaFormat(product.stringPrice?.toInt()?:0),
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp

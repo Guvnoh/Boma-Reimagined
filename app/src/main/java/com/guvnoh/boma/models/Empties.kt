@@ -1,10 +1,10 @@
 package com.guvnoh.boma.models
 
 data class Empties (
-    val company: EmptyCompany = EmptyCompany.COCA_COLA,
-    var noOfBottles: NoOfBottles = NoOfBottles.TWELVE
-
+    val company: EmptyCompany? = null,
+    var noOfBottles: NoOfBottles? = null
 )
+
 enum class EmptyCompany{
     COCA_COLA,
     HERO,

@@ -20,32 +20,39 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.guvnoh.boma.database.stockFulls
+import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.database.bomaStock
+import com.guvnoh.boma.formatters.checkIfSoldToday
+import com.guvnoh.boma.formatters.getDate
+import com.guvnoh.boma.formatters.getTime
 import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.functions.captureScreen
+import com.guvnoh.boma.functions.saveBitmapToGallery
 import com.guvnoh.boma.functions.sendRecord
+import com.guvnoh.boma.functions.vibratePhone
 import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.models.FullsStock
-import com.guvnoh.boma.models.StockViewModel
+import kotlinx.coroutines.tasks.await
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiptPage(vm: BomaViewModel) {
+    val context = LocalContext.current
     val viewModel = vm.soldProducts.collectAsState()
-    val stockViewModel: StockViewModel = viewModel()
-    val stock = stockViewModel.fullsStock.collectAsState()
     val soldProducts = viewModel.value
     val receipt = vm.receipt.collectAsState()
 
+
     val grandTotal = receipt.value?.let {
-        nairaFormat(it.soldProducts.sumOf { product -> product.intTotal })
+        it.soldProducts?.sumOf { product -> product.intTotal?:0 }?.let { productIntTotal -> nairaFormat(productIntTotal) }
     }
-    val context = LocalContext.current
+    val view = LocalView.current
 
 
     Scaffold(
@@ -68,14 +75,17 @@ fun ReceiptPage(vm: BomaViewModel) {
                     Spacer(Modifier.width(6.dp))
                     Text("Copy")
                 }
-                Button(onClick = {  }) {
+                Button(onClick = {
+                    vibratePhone(context, 100L)
+                    saveBitmapToGallery(context, captureScreen(view))
+                }) {
                     Icon(Icons.Filled.Share, contentDescription = "Screenshot")
                     Spacer(Modifier.width(6.dp))
                     Text("Screenshot")
                 }
                 Button(
                     onClick = {
-                        updateStock(stock.value.toMutableList(),soldProducts)
+                        updateStock(soldProducts)
                         receipt.value?.let { sendRecord(it) }
                         Toast.makeText(context, "Sale record saved!", Toast.LENGTH_SHORT).show()
                     },
@@ -97,7 +107,12 @@ fun ReceiptPage(vm: BomaViewModel) {
             // Header Info
             Text("Receipt #${receipt.value?.id}", style = MaterialTheme.typography.titleMedium)
             Text("Customer: ${receipt.value?.customerName}", style = MaterialTheme.typography.bodyLarge)
-            Text("Date: ${receipt.value?.date}", style = MaterialTheme.typography.bodyMedium)
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()) {
+                Text("Date: ${receipt.value?.date}", style = MaterialTheme.typography.bodyMedium)
+                Text("Time: ${getTime()}", style = MaterialTheme.typography.bodyMedium)
+            }
             Spacer(Modifier.height(16.dp))
 
             // Products List
@@ -107,7 +122,7 @@ fun ReceiptPage(vm: BomaViewModel) {
                     .fillMaxWidth()
             ) {
                 receipt.value?.let {
-                    items(it.soldProducts) { soldProduct ->
+                    items(it.soldProducts?: emptyList()) { soldProduct ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -115,16 +130,16 @@ fun ReceiptPage(vm: BomaViewModel) {
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                soldProduct.receiptQuantity,
+                                soldProduct.receiptQuantity?:"0",
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             Text(
-                                soldProduct.product.name,
+                                soldProduct.product?.name?:"unknown",
                                 style = MaterialTheme.typography.bodyLarge
                             )
-                            Text(nairaFormat(soldProduct.intTotal), fontWeight = FontWeight.Bold)
+                            Text(nairaFormat(soldProduct.intTotal?:0), fontWeight = FontWeight.Bold)
                         }
-                        Divider()
+                        HorizontalDivider()
                     }
                 }
             }
@@ -141,13 +156,49 @@ fun ReceiptPage(vm: BomaViewModel) {
                 Text("Grand Total", style = MaterialTheme.typography.titleMedium)
                 grandTotal?.let {
                     Text(
-                        it,
+                        it.toString(),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
+        }
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+private fun updateStock(products: List<SoldProduct>) {
+    products.forEach { soldProduct ->
+        val stockRef = bomaStock
+            .child("Fulls")
+            .child(soldProduct.product?.name?:"unknown")
+            .child("stock")
+
+        val newDepletion = (soldProduct.doubleQuantity?:0.0) + (soldProduct.product?.stock?.depletion ?: 0.0)
+        val openingStock = soldProduct.product?.stock?.openingStock ?: 0.0
+        val closingStock = soldProduct.product?.stock?.closingStock ?: 0.0
+        val currentStock = if (openingStock > 0) closingStock - (soldProduct.doubleQuantity?:0.0) else 0.0
+
+        val dateParts = soldProduct.product?.stock?.lastTimeSold?.split(",", " ")
+        val isSoldToday = if (dateParts?.size == 4) checkIfSoldToday(dateParts) else false
+
+        // 🔥 Get the current soldToday value from Firebase
+        stockRef.child("soldToday").get().addOnSuccessListener { snapshot ->
+            val previousSoldToday = snapshot.getValue(Double::class.java) ?: 0.0
+
+            val newSoldToday = if (isSoldToday) {
+                previousSoldToday + (soldProduct.doubleQuantity?:0.0)
+            } else {
+                soldProduct.doubleQuantity
+            }
+
+            // ✅ Now update everything together
+            stockRef.child("depletion").setValue(newDepletion)
+            stockRef.child("closingStock").setValue(currentStock)
+            stockRef.child("lastTimeSold").setValue(getDate())
+            stockRef.child("soldLast").setValue(soldProduct.doubleQuantity)
+            stockRef.child("soldToday").setValue(newSoldToday)
         }
     }
 }
@@ -160,54 +211,22 @@ private fun copy(vm: BomaViewModel, context: Context){
     Toast.makeText(context, "Text copied!", Toast.LENGTH_SHORT).show()
 }
 
-
-
-private fun updateStock(stockList: MutableList<FullsStock>, products: List<SoldProduct>){
-
-    products.forEach {
-        soldProduct ->
-        val productName = soldProduct.product.name
-        //new depletion gets its value from the receipt qty entered for the brand
-        var newDepletion = soldProduct.doubleQuantity
-        //database stock is updated by finding matching product names in sold product list
-        //and database stock list
-        val stock = stockList.first {
-            productName == it.product?.name
-        }
-        //old depletion is the existing depletion in the database before update
-        val oldDepletion = stock.depletion?:0.0
-        newDepletion += oldDepletion
-        //closing stock (used in data class) means current stock
-        val currentStock = if
-                (stock.openingStock!! > 0.0){
-                    stock.openingStock - newDepletion
-        }else{0.0}
-        val productStockBranch = stockFulls.child(productName)
-
-        productStockBranch
-            .child("depletion")
-            .setValue(newDepletion)
-        productStockBranch
-            .child("closingStock")
-            .setValue(currentStock)
-    }
-}
-
-private fun copyToClipboard(vm: BomaViewModel): String{
+private fun copyToClipboard(vm: BomaViewModel): String {
     //The variable finalText holds the complete text to be sent to the clipboard
     val finalText = StringBuilder()
-    val grandTotal = nairaFormat(vm.soldProducts.value.sumOf { it.intTotal })
-    vm.soldProducts.value.forEach{
-        val copiedQuantity: String = it.receiptQuantity
-        val textToCopy = "$copiedQuantity ${it.product.name} ${nairaFormat( it.intTotal )}\n"
+    val grandTotal = nairaFormat(vm.soldProducts.value.sumOf { it.intTotal?:0 })
+    vm.soldProducts.value.forEach {
+        val copiedQuantity: String = it.receiptQuantity?:"0"
+        val textToCopy = "$copiedQuantity ${it.product?.name} ${nairaFormat(it.intTotal?:0)}\n"
 
         finalText.append(textToCopy)
     }
-    if (vm.soldProducts.value.size>1){
+    if (vm.soldProducts.value.size > 1) {
         finalText.append("Total: $grandTotal")
     }
     return finalText.toString()
 }
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)

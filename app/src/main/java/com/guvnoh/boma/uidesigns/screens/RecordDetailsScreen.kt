@@ -18,17 +18,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.functions.captureScreen
+import com.guvnoh.boma.functions.saveBitmapToGallery
+import com.guvnoh.boma.functions.vibratePhone
 import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.SoldProduct
+import java.time.LocalDateTime
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordDetails(receipt: Receipt) {
     val context = LocalContext.current
+    val view = LocalView.current
 
     Scaffold(
         topBar = {
@@ -43,18 +50,21 @@ fun RecordDetails(receipt: Receipt) {
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Button(onClick = { copy(receipt.soldProducts, context) }) {
+                Button(onClick = {receipt.soldProducts?.let{ copy(it, context) }}) {
                     Icon(Icons.Filled.Menu, contentDescription = "Copy")
                     Spacer(Modifier.width(6.dp))
                     Text("Copy")
                 }
-                Button(onClick = { /* TODO: Screenshot feature */ }) {
+                Button(onClick = {
+                    vibratePhone(context, 100L)
+                    saveBitmapToGallery(context, captureScreen(view))
+                } ){
                     Icon(Icons.Filled.Share, contentDescription = "Screenshot")
                     Spacer(Modifier.width(6.dp))
                     Text("Screenshot")
                 }
             }
-        }
+        },
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -65,7 +75,7 @@ fun RecordDetails(receipt: Receipt) {
             // Header Info
             Text("Receipt #${receipt.id}", style = MaterialTheme.typography.titleMedium)
             Text("Customer: ${receipt.customerName}", style = MaterialTheme.typography.bodyLarge)
-            Text("Date: ${receipt.date}", style = MaterialTheme.typography.bodyMedium)
+            Text("Date: ${receipt.date?.split(","," " )}", style = MaterialTheme.typography.bodyMedium)
 
             Spacer(Modifier.height(16.dp))
 
@@ -78,21 +88,26 @@ fun RecordDetails(receipt: Receipt) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(receipt.soldProducts) { product ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                product.receiptQuantity,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(product.product.name, style = MaterialTheme.typography.bodyLarge)
-                            Text(nairaFormat(product.intTotal), fontWeight = FontWeight.Bold)
+                    receipt.soldProducts?.let {
+                        items(it) { product ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    product.receiptQuantity?:"0",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    product.product?.name?:"unknown",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(nairaFormat(product.intTotal?:0), fontWeight = FontWeight.Bold)
+                            }
+                            HorizontalDivider()
                         }
-                        HorizontalDivider()
                     }
                 }
             }
@@ -107,8 +122,12 @@ fun RecordDetails(receipt: Receipt) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Grand Total", style = MaterialTheme.typography.titleMedium)
+                val grandTotal = receipt.soldProducts?.let {
+                    soldProducts ->
+                    nairaFormat(soldProducts.sumOf { it.intTotal?:0 })
+                }
                 Text(
-                    nairaFormat(receipt.soldProducts.sumOf { it.intTotal }),
+                    text = grandTotal?:"0.00",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -118,33 +137,34 @@ fun RecordDetails(receipt: Receipt) {
     }
 }
 
-//@RequiresApi(Build.VERSION_CODES.O)
-//@Preview(showBackground = true)
-//@Composable
-//fun RecordCardDetailsDemo() {
-//    // Simple fake data for preview
-//    val sampleProducts = listOf(
-//        SoldProduct().apply {
-//            receiptQuantity = "2x"
-//            intTotal = 1200
-//            product.name = "Toothpaste"
-//        },
-//        SoldProduct(
-//            receiptQuantity = "1x",
-//             = 800,
-//            product.name = "Soap"
-//        )
-//    )
-//
-//    RecordDetails(
-//        receipt = Receipt(
-//            id = "001",
-//            customerName = "John Doe",
-//            date = "2025-10-14",
-//            products = sampleProducts
-//        )
-//    )
-//}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true)
+@Composable
+fun RecordCardDetailsDemo() {
+    // Simple fake data for preview
+    val sampleProducts = listOf(
+        SoldProduct().apply {
+            receiptQuantity = "2x"
+            intTotal = 1200
+            product?.name = "Toothpaste"
+        },
+        SoldProduct().apply {
+            receiptQuantity = "1x"
+            intTotal = 800
+            product?.name = "Soap"
+        }
+    )
+
+    RecordDetails(
+        receipt = Receipt(
+            id = "001",
+            customerName = "John Doe",
+            date = "Thu, Oct 30 2025",
+            soldProducts = sampleProducts
+        )
+    )
+}
 
 // --- Clipboard copy helpers ---
 
@@ -156,12 +176,12 @@ private fun copy(list: List<SoldProduct>, context: Context) {
     Toast.makeText(context, "Receipt copied!", Toast.LENGTH_SHORT).show()
 }
 
-private fun copyToClipboard(list: List<SoldProduct>): String {
+fun copyToClipboard(list: List<SoldProduct>): String {
     val builder = StringBuilder()
-    val grandTotal = nairaFormat(list.sumOf { it.intTotal })
+    val grandTotal = nairaFormat(list.sumOf { it.intTotal?:0 })
 
     list.forEach {
-        builder.append("${it.receiptQuantity} ${it.product.name} ${nairaFormat(it.intTotal)}\n")
+        builder.append("${it.receiptQuantity} ${it.product?.name} ${nairaFormat(it.intTotal?:0)}\n")
     }
 
     if (list.isNotEmpty()) builder.append("Total: $grandTotal")

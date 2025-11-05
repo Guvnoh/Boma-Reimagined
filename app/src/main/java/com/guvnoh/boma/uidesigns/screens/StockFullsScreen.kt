@@ -1,17 +1,21 @@
 package com.guvnoh.boma.uidesigns.screens
 
-import androidx.compose.foundation.layout.Arrangement
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -25,109 +29,157 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material.Icon
 import com.guvnoh.boma.R
-import com.guvnoh.boma.database.stockEmpties
+import com.guvnoh.boma.database.bomaStock
+import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.FullsStock
 import com.guvnoh.boma.models.StockSplashScreen
-import com.guvnoh.boma.models.StockViewModel
-import com.guvnoh.boma.database.stockFulls
 import com.guvnoh.boma.models.EmptiesStock
 import com.guvnoh.boma.models.EmptyCompany
 import com.guvnoh.boma.models.NoOfBottles
 import com.guvnoh.boma.uidesigns.cards.StockCard
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun StockFullsScreen(
-    paddingValues: PaddingValues,
-    vm: StockViewModel,
-    navController: NavController,
+    vm: BomaViewModel,
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
 
-){
+) {
+    val products by vm.products.collectAsState()
+    //val stock by vm.fullsStock.collectAsState()
 
-
-    val stock by vm.fullsStock.collectAsState()
     var showSplash by remember { mutableStateOf(true) }
-    var topBarTitle by remember { mutableStateOf("Fulls") }
+    var topBarTitle by remember { mutableStateOf("Full Stock") }
+
+    vm.confirmSoldToday(products)
 
     Scaffold(
-        floatingActionButton = {FloatingActionButton(
-            onClick = {
-                //navController.navigate()
-            }
-        ) {
-            Row (
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(horizontal = 10.dp)
-            ){
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = "",
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                Spacer(modifier = Modifier.padding(horizontal = 3.dp))
-                Text(text = "Update")
-            }
-        }},
-        modifier = Modifier.padding(paddingValues),
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        containerColor = MaterialTheme.colorScheme.background,
+
+        // --- FAB ---
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = {
+                    // TODO: Navigate to update screen
+                },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Update stock",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Update",
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                shape = RoundedCornerShape(12.dp),
+                elevation = FloatingActionButtonDefaults.elevation(6.dp)
+            )
+        },
+
+        // --- Top Bar ---
         topBar = {
-            Column (
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()){
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Text(
                     text = topBarTitle,
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
                     color = MaterialTheme.colorScheme.onSurface
+                )
+                HorizontalDivider(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth(0.85f),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                    thickness = 1.dp
                 )
             }
         },
+
+        // --- Bottom Bar ---
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 4.dp
+            ) {
                 val bottomBarItems = listOf(BottomBarItem.Fulls, BottomBarItem.Empties)
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
-                bottomBarItems.forEach {
-                    val selected = currentRoute == it.route
+
+                bottomBarItems.forEach { item ->
+                    val selected = currentRoute == item.route
+
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
-                            val route = it.route
-                            navController.navigate(route){launchSingleTop = true
-                                if(route == BottomBarItem.Empties.route)topBarTitle = "Empties"
-                            } },
-                        icon = {it.icon},
-                        label = { Text(it.title) }
+                            navController.navigate(item.route) {
+                                launchSingleTop = true
+                            }
+                            topBarTitle = if (item == BottomBarItem.Empties) "Empties" else "Full Stock"
+                        },
+                        icon = { item.icon },
+                        label = { Text(item.title) },
+                        alwaysShowLabel = true
                     )
                 }
             }
         }
-    ){
-        if (showSplash){
-            StockSplashScreen(
-                modifier = Modifier.padding(it),
-                onTimeOut = {showSplash = false},
-                fulls = stock.toMutableList()
-            )
-        }else{
-            LazyColumn(
-                modifier = Modifier.padding(it)
-            ) {
-                items(stock.toMutableList()){
+    ) { innerPadding ->
+        // --- Screen Content ---
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            if (showSplash) {
+                StockSplashScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    onTimeOut = { showSplash = false },
+                    stock = products.toMutableList()
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 12.dp)
+                ) {
+                    items(products) {
                         brandStock ->
-                    StockCard(brandStock)
+                        StockCard(brandStock)
+                    }
                 }
             }
         }
     }
-
 }
+
 open class BottomBarItem(
     val route: String,
     val title: String,
@@ -144,64 +196,28 @@ fun sendStockData(list: List<Product>){
         val random1 = (20..800).random()
         val random2 = (20..800).random()
         val stock = FullsStock(
-            product = it,
             closingStock = random1.toDouble(),
             openingStock = random2.toDouble(),
-            depletion = 0.0 )
-        stockFulls
-            .child(stock.product?.name?:"")
-            .setValue(stock)
+            depletion = 0.0,
+            lastTimeSold = "Fri, Oct 31 2025"
+        )
+        it.stock = stock
+        bomaStock.child("Fulls")
+            .child(it.name?:"unknown")
+            .setValue(it)
 
     }
 
 }
 
-fun sendEmptiesData(){
-    val list: List<EmptyCompany> = EmptyCompany.entries
-
-    list.forEach {
-        val random1 = (20..800).random()
-        val random2 = (20..800).random()
-        val emptiesStock =
-            when(it){
-                EmptyCompany.HERO ->
-                    EmptiesStock(
-                        company = it,
-                        noOfBottles = NoOfBottles.TWELVE,
-                        quantity = random2.toDouble(),
-                )
-                EmptyCompany.NBL ->
-                    EmptiesStock(
-                        company = it,
-                        noOfBottles = NoOfBottles.TWELVE,
-                        quantity = random2.toDouble(),
-                    )
-                EmptyCompany.COCA_COLA ->
-                    EmptiesStock(
-                    company = it,
-                    noOfBottles = NoOfBottles.TWENTY_FOUR,
-                    quantity = random2.toDouble(),
-                    )
-                EmptyCompany.GUINNESS ->
-                    EmptiesStock(
-                        company = it,
-                        noOfBottles = NoOfBottles.EIGHTEEN,
-                        quantity = random2.toDouble(),
-                    )
-
-            }
-        stockEmpties
-            .child(emptiesStock.company.name)
-            .setValue(emptiesStock)
-    }
-
-}
 
 
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview
 @Composable
 private fun ShowStock(){
-    StockFullsScreen(PaddingValues(), viewModel(), rememberNavController())
+    StockFullsScreen(vm = viewModel(), navController = rememberNavController(), )
 
 }

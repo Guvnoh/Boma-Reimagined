@@ -59,7 +59,7 @@ fun AutoScrollingText(
     ){
         val textBreadth= textWidth.intValue
         val containerBreadth = containerWidth.intValue
-            if (textBreadth <= containerBreadth)return@LaunchedEffect
+        if (textBreadth <= containerBreadth) return@LaunchedEffect
         while (true){
             val maxScroll = (textBreadth - containerBreadth).coerceAtLeast(0)
             val next = when(direction){

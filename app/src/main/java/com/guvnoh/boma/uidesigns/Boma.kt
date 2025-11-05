@@ -9,15 +9,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -44,9 +36,16 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.guvnoh.boma.navigation.MenuIcon
-import com.guvnoh.boma.uidesigns.screens.ProductsPage
+import com.guvnoh.boma.navigation.Screen.AddProduct
+import com.guvnoh.boma.navigation.Screen.DeleteProduct
+import com.guvnoh.boma.navigation.Screen.PriceChange
+import com.guvnoh.boma.navigation.Screen.Products
+import com.guvnoh.boma.navigation.Screen.Receipt
+import com.guvnoh.boma.navigation.Screen.RecordDetails
+import com.guvnoh.boma.navigation.Screen.Records
+import com.guvnoh.boma.navigation.Screen.Stock
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -148,8 +147,17 @@ fun Boma() {
             topBar = {
                 TopAppBar(
                     title = {
+                        val navBackEntry by navController.currentBackStackEntryAsState()
+                        val currentRoute = navBackEntry?.destination?.route
+                        val screenList: List<Screen> = listOf(
+                            Products, PriceChange, Records, Receipt, RecordDetails, AddProduct, DeleteProduct, Stock
+                        )
+                        var currentTitle = ""
+                        screenList.forEach {
+                            if (it.route == currentRoute) currentTitle = it.title
+                        }
                         Text(
-                            text = selectedScreen.title,
+                            text = currentTitle,
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold
                             )

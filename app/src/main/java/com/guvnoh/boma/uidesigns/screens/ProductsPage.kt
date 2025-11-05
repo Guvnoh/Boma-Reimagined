@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
@@ -25,17 +26,21 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.formatters.getDateTime
+import com.guvnoh.boma.database.bomaStock
+import com.guvnoh.boma.formatters.getDate
+import com.guvnoh.boma.formatters.getTime
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.BomaViewModel
-import com.guvnoh.boma.models.BottleProduct
-import com.guvnoh.boma.models.EmptyCompany
-import com.guvnoh.boma.models.PetsAndCans
+import com.guvnoh.boma.models.EmptiesStock
 import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.models.EmptyCompany
+import com.guvnoh.boma.models.FullsStock
+import com.guvnoh.boma.models.NoOfBottles
 import com.guvnoh.boma.models.ProductSplashScreen
 import com.guvnoh.boma.models.ProductType
 import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.models.brandData
 import com.guvnoh.boma.navigation.Screen
 import com.guvnoh.boma.uidesigns.cards.ProductCard
 
@@ -53,10 +58,11 @@ fun ProductsPage(
     val soldProducts by vm.soldProducts.collectAsState()
     val customerName by vm.customerName
     val productList by vm.products.collectAsState()
-    val grandTotal = soldProducts.sumOf { it.intTotal }
+    val grandTotal = soldProducts.sumOf { it.intTotal?:0 }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior( )
 
-
+    vm.confirmSoldToday(productList)
+    //sendFullsDataToDB()
 
     Scaffold(
         modifier = Modifier
@@ -75,16 +81,16 @@ fun ProductsPage(
                     )
                 },
                 actions = {
-                    if (!search) {
-                        IconButton(
-                            onClick = { search = !search }) {
-                            Icon(Icons.Filled.Search, contentDescription = "Search")
-                        }
-                    }else{
+                    IconButton(
+                        onClick = { search = !search },
+                        ) {
+                        if (!search) Icon(Icons.Filled.Search, contentDescription = "Search")
+                    }
+                    if (search){
                         OutlinedTextField(
                             value = searchEntry,
                             onValueChange = {
-                                entry ->
+                                    entry ->
                                 searchEntry = entry
                             },
                             label = { Text("Search products...") },
@@ -93,6 +99,7 @@ fun ProductsPage(
                                 .width(200.dp)
                         )
                     }
+
                 }
             )
         },
@@ -112,9 +119,11 @@ fun ProductsPage(
                     // Clear Button
                     OutlinedButton(
                         onClick = {
-                            searchEntry = ""
+                            if (searchEntry!="") {
+                                search = !search
+                                searchEntry = ""
+                            }
                             //search text field is replaced by search icon
-                            search = !search
                             vm.clearTotals()
                             vm.clearName()
                         },
@@ -141,10 +150,12 @@ fun ProductsPage(
                     // Done Button
                     Button(
                         onClick = {
+
                             searchEntry = ""
                             navController.navigate(Screen.Receipt.route)
                             generateReceipt(vm,soldProducts)
                             vm.setCurrentReceipt(generateReceipt(vm,soldProducts))
+
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
@@ -174,19 +185,15 @@ fun ProductsPage(
                 // Customer Name
                 OutlinedTextField(
                     value = customerName,
-                    onValueChange = { vm.updateCustomerName(it) },
+                    onValueChange = {
+                        vm.updateCustomerName(it)
+                                    },
                     label = { Text("Customer Name") },
                     leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = null) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
                 )
-//
-//                LazyRow {
-//                    items(productList) {
-//                        ProductCard(it, vm)
-//                    }
-//                }
 
                 // Product List
                 if (!search) {
@@ -194,27 +201,24 @@ fun ProductsPage(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        val bottlesDisplay: MutableList<BottleProduct> = mutableListOf()
+                        val bottlesDisplay: MutableList<Product> = mutableListOf()
                         val  unsortedBottles = productList.filter {
                                 it.type == ProductType.BOTTLE }
                         unsortedBottles.forEach {
-                           val bottleVersion =  it as BottleProduct
-                            bottlesDisplay.add(bottleVersion)
+                                bottlesDisplay.add(it)
                         }
 
-                        val petsDisplay: MutableList<PetsAndCans> = mutableListOf()
+                        val petsDisplay: MutableList<Product> = mutableListOf()
                         val  unsortedPets = productList.filter {
                             it.type == ProductType.PET }
                         unsortedPets.forEach {
-                            val petVersion =  it as PetsAndCans
-                            petsDisplay.add(petVersion)
+                            petsDisplay.add(it)
                         }
                         val cansDisplay: MutableList<Product> = mutableListOf()
                         val  unsortedCans = productList.filter {
                             it.type == ProductType.CAN }
                         unsortedCans.forEach {
-                            val canVersion =  it as PetsAndCans
-                            cansDisplay.add(canVersion)
+                            cansDisplay.add(it)
                         }
 
 
@@ -268,6 +272,7 @@ fun ProductsPage(
                                     .height(40.dp)
                                     .background(color = Color.White)
                             ) {
+
                                 Text("Nigerian Breweries")
                             }
                         }
@@ -279,7 +284,7 @@ fun ProductsPage(
                             )
                         }
 
-                        val guinnessGroup = getDisplayGroup(bottlesDisplay, EmptyCompany.HERO)
+                        val guinnessGroup = getDisplayGroup(bottlesDisplay, EmptyCompany.GUINNESS)
                         stickyHeader {
                             Column(
                                 modifier = Modifier
@@ -299,7 +304,7 @@ fun ProductsPage(
                             )
                         }
 
-
+                        //pets
                         stickyHeader {
                             Column(
                                 modifier = Modifier
@@ -318,6 +323,8 @@ fun ProductsPage(
                             )
                         }
 
+
+                        //cans
                         stickyHeader {
                             Column(
                                 modifier = Modifier
@@ -343,7 +350,7 @@ fun ProductsPage(
                     ) {
                         val newList = mutableListOf<Product>()
                         productList.forEach {
-                            if (it.name.lowercase().contains(searchEntry)) {
+                            if (it.name?.lowercase()?.contains(searchEntry) == true) {
                                 newList.add(it)
                             }
                         }
@@ -360,13 +367,27 @@ fun ProductsPage(
     }
 }
 
+fun sendFullsDataToDB(){
+    val list = brandData
+
+    list.forEach {
+        val random1 = (20..800).random()
+        val random2 = (20..800).random()
+        bomaStock.child("Fulls")
+            .child(it.name?:"unknown")
+            .setValue(it)
+    }
+
+}
+
 @RequiresApi(Build.VERSION_CODES.O)
 fun generateReceipt(vm: BomaViewModel, soldProducts: List<SoldProduct>): Receipt{
     val customerName by vm.customerName
-    val validSoldProducts = soldProducts.filter { it.intTotal>0 }
+    val validSoldProducts = soldProducts.filter { (it.intTotal?:0)>0 }
     //val productList by vm.products.collectAsState()
-    val grandTotal = validSoldProducts.sumOf { it.intTotal }
-    val date = getDateTime()
+    val grandTotal = validSoldProducts.sumOf { it.intTotal?:0 }
+    val date = getDate()
+    val time = getTime()
     val receipt = Receipt(
         soldProducts = validSoldProducts,
         customerName = customerName,
@@ -376,8 +397,14 @@ fun generateReceipt(vm: BomaViewModel, soldProducts: List<SoldProduct>): Receipt
     return receipt
 }
 
-fun getDisplayGroup(list: List<BottleProduct>, emptyCompany: EmptyCompany): List<BottleProduct>{
-    return list.filter { it.empties.company == emptyCompany }
+fun getDisplayGroup(list: List<Product>, emptyCompany: EmptyCompany): List<Product>{
+    val group = mutableListOf<Product>()
+    list.forEach {
+        if (it.type == ProductType.BOTTLE && it.empties?.company == emptyCompany)
+            group.add(it)
+    }
+
+    return group
 
 }
 
