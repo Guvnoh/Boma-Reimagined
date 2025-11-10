@@ -10,7 +10,7 @@ import com.guvnoh.boma.database.bomaStock
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.EmptiesStock
 
-fun getDBProductList(callback: (MutableList<Product>) -> Unit) {
+fun getDBProductList(onListReady: (MutableList<Product>) -> Unit) {
 
     bomaStock.child("Fulls").addValueEventListener(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
@@ -28,7 +28,7 @@ fun getDBProductList(callback: (MutableList<Product>) -> Unit) {
                     brandList.add(product)
                 }
             }
-            callback(brandList)
+            onListReady(brandList)
         }
 
         override fun onCancelled(error: DatabaseError) {
@@ -39,27 +39,6 @@ fun getDBProductList(callback: (MutableList<Product>) -> Unit) {
 }
 
 
-
-//fun getDatabaseFullsStock(callback: (MutableList<Product>) -> Unit) {
-//
-//    bomaStock.child("Empties").addValueEventListener(object : ValueEventListener {
-//        override fun onDataChange(snapshot: DataSnapshot) {
-//            val stockList = mutableListOf<EmptiesStock>()
-//            for (empty in snapshot.children) {
-//                val stock = empty.getValue(EmptiesStock::class.java)
-//                if (stock!=null){
-//                    stockList.add(stock)
-//                }
-//            }
-//            callback(stockList)
-//        }
-//
-//        override fun onCancelled(error: DatabaseError) {
-//            // handle error if needed
-//            Log.d("DB_getDBStock_ERR", "onCancelled: $error")
-//        }
-//    })
-//}
 
 fun getDBaseEmptiesStock(callback: (MutableList<EmptiesStock>) -> Unit) {
 
