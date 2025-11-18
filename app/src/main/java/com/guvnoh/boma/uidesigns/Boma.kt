@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
@@ -56,7 +57,7 @@ fun Boma() {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val vm: BomaViewModel = viewModel()
-    var selectedScreen by remember { mutableStateOf<Screen>(Screen.Products) }
+    var selectedScreen by remember { mutableStateOf<Screen>(Products) }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -93,8 +94,9 @@ fun Boma() {
 
                 // Drawer Items with ripple + hover
                 DrawerItem(
-                    screen = Screen.Products,
+                    screen = Products,
                     scope = scope,
+                    isSelected = selectedScreen == Products,
                     drawerState = drawerState,
                     navController = navController,
                     onItemSelected = {selectedScreen = it}
@@ -102,43 +104,51 @@ fun Boma() {
 
 
                 DrawerItem(
-                    screen = Screen.PriceChange,
+                    screen = PriceChange,
                     scope = scope,
+                    isSelected = selectedScreen == PriceChange,
                     drawerState = drawerState,
                     navController = navController,
                     onItemSelected = {selectedScreen = it}
                 )
 
                 DrawerItem(
-                    screen = Screen.Stock,
+                    screen = Stock,
                     scope = scope,
+                    isSelected = selectedScreen == Stock,
                     drawerState = drawerState,
                     navController = navController,
                     onItemSelected = {selectedScreen = it}
                 )
 
                 DrawerItem(
-                    screen = Screen.Records,
+                    screen = Records,
                     scope = scope,
+                    isSelected = selectedScreen == Records,
                     drawerState = drawerState,
                     navController = navController,
                     onItemSelected = {selectedScreen = it}
                 )
 
                 DrawerItem(
-                    screen = Screen.AddProduct,
+                    screen = AddProduct,
                     scope = scope,
+                    isSelected = selectedScreen == AddProduct,
                     drawerState = drawerState,
                     navController = navController,
                     onItemSelected = {selectedScreen = it}
                 )
 
                 DrawerItem(
-                    screen = Screen.DeleteProduct,
+                    screen = DeleteProduct,
                     scope = scope,
+                    isSelected = selectedScreen == DeleteProduct,
                     drawerState = drawerState,
                     navController = navController,
-                    onItemSelected = {selectedScreen = it}
+                    onItemSelected = {
+                        selectedScreen = it
+
+                    }
                 )
             }
         }
@@ -181,14 +191,26 @@ fun Boma() {
 fun DrawerItem(
     screen: Screen,
     scope: CoroutineScope,
+    isSelected: Boolean = false,
     drawerState: DrawerState,
     navController: NavController,
     onItemSelected: (Screen) -> Unit = {}
 ){
     val interactionSource = remember { MutableInteractionSource() }
+    val bg = if (isSelected)
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+    else
+        MaterialTheme.colorScheme.surface
+
+    val tint = if (isSelected)
+        MaterialTheme.colorScheme.primary
+    else
+        MaterialTheme.colorScheme.onSurface
     Row(
         modifier = Modifier
+
             .fillMaxWidth()
+            .background(bg)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
@@ -207,14 +229,15 @@ fun DrawerItem(
         verticalAlignment = Alignment.CenterVertically
     ) {
         when(val icon = screen.icon){
-            is MenuIcon.Resource -> Icon(painterResource( icon.resId), "")
-            is MenuIcon.Vector -> Icon(imageVector = icon.imageVector, "")
-            null -> Icon(Icons.Default.Info, "")
+            is MenuIcon.Resource -> Icon(painterResource( icon.resId), "", tint = tint)
+            is MenuIcon.Vector -> Icon(imageVector = icon.imageVector, "", tint = tint)
+            null -> Icon(Icons.Default.Info, "", tint = tint)
         }
 //        Icon(screen.icon, contentDescription = screen.title, tint = MaterialTheme.colorScheme.primary)
         Spacer(Modifier.width(16.dp))
         Text(
             text = screen.title,
+            color = tint,
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontWeight = FontWeight.Medium
             )
