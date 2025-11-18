@@ -9,9 +9,10 @@ val database: FirebaseDatabase = FirebaseDatabase.getInstance()
 val DBRoot: DatabaseReference = database.reference.child("Boma")
 
 //records
-val bomaRecords: DatabaseReference = DBRoot.child("BomaDBRecords")
+val bomaRecords: DatabaseReference = DBRoot.child("BomaDBRecords2")
 
 //stock
 //val stockFulls = DBRoot.child("Stock").child("fulls ")
+
 //val stockEmpties = DBRoot.child("Stock").child("empties")
 val bomaStock = DBRoot.child("BomaStock")

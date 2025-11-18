@@ -28,7 +28,6 @@ import com.guvnoh.boma.functions.saveBitmapToGallery
 import com.guvnoh.boma.functions.vibratePhone
 import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.SoldProduct
-import java.time.LocalDateTime
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)

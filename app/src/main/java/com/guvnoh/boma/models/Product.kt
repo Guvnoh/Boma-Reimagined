@@ -1,7 +1,7 @@
 package com.guvnoh.boma.models
 
+import com.google.firebase.database.ServerValue
 import com.guvnoh.boma.R
-import com.guvnoh.boma.formatters.halfAndQuarter
 
 data class Product (
      var name: String? = null,
@@ -31,6 +31,7 @@ data class SoldProduct(
 )
 
 data class Receipt(
+    val timeStamp: Long? = null,
     var id: String? = null,
     var soldProducts: List<SoldProduct>? = null,
     var customerName: String? = null,
@@ -40,34 +41,34 @@ data class Receipt(
 
 val brandData = mutableListOf(
     //coca cola
-    Product(name = "50cl", stringPrice = "6300", imageName = "coke", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.COCA_COLA, noOfBottles = NoOfBottles.TWENTY_FOUR)),
-    Product(name = "35cl", stringPrice = "3800", imageName = "coke", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.COCA_COLA, noOfBottles = NoOfBottles.TWENTY_FOUR)),
+    Product(name = "50cl", stringPrice = "6300", imageName = "coke", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.COCA_COLA, emptyType = EmptyType.TWENTY_FOUR)),
+    Product(name = "35cl", stringPrice = "3800", imageName = "coke", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.COCA_COLA, emptyType = EmptyType.TWENTY_FOUR)),
 
     //Hero
-    Product(name = "Hero", stringPrice = "8500", imageName = "hero", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.HERO, noOfBottles = NoOfBottles.TWELVE)),
-    Product(name = "Budweiser", stringPrice = "10000", imageName = "budweiser", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.HERO, noOfBottles = NoOfBottles.TWELVE)),
-    Product(name = "Castle Lite", stringPrice = "9500", imageName = "castle_lite", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.HERO, noOfBottles = NoOfBottles.TWELVE)),
-    Product(name = "Flying fish", stringPrice = "13000", imageName = "fish", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.HERO, noOfBottles = NoOfBottles.TWENTY)),
-    Product(name = "Trophy", stringPrice = "8500", imageName = "trophy", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.HERO, noOfBottles = NoOfBottles.TWELVE)),
-    Product(name = "Trophy Stout", stringPrice = "9500", imageName = "trophy_stout", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.HERO, noOfBottles = NoOfBottles.TWELVE)),
+    Product(name = "Hero", stringPrice = "8500", imageName = "hero", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.HERO, emptyType = EmptyType.TWELVE)),
+    Product(name = "Budweiser", stringPrice = "10000", imageName = "budweiser", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.HERO, emptyType = EmptyType.TWELVE)),
+    Product(name = "Castle Lite", stringPrice = "9500", imageName = "castle_lite", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.HERO, emptyType = EmptyType.TWELVE)),
+    Product(name = "Flying fish", stringPrice = "13000", imageName = "fish", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.HERO, emptyType = EmptyType.TWENTY)),
+    Product(name = "Trophy", stringPrice = "8500", imageName = "trophy", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.HERO, emptyType = EmptyType.TWELVE)),
+    Product(name = "Trophy Stout", stringPrice = "9500", imageName = "trophy_stout", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.HERO, emptyType = EmptyType.TWELVE)),
 
     //NBL
-    Product(name = "Amstel", stringPrice =  "13000", imageName = "amstel", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWENTY_FOUR)),
-    Product(name = "Desperados", stringPrice = "16600", imageName = "despy", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWENTY)),
-    Product(name = "Gulder", stringPrice = "10800", imageName = "gulder", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWELVE)),
-    Product(name = "Heineken", stringPrice = "11900", imageName = "heineken", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWELVE)),
-    Product(name = "Legend(big)", stringPrice = "11200", imageName = "legend", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWELVE)),
-    Product(name = "Life", stringPrice = "9200", imageName = "life", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWELVE)),
-    Product(name = "Maltina", stringPrice = "13000", imageName = "maltina", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWENTY_FOUR)),
-    Product(name = "Radler", stringPrice = "13000", imageName = "radler", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWENTY)),
-    Product(name = "Star", stringPrice = "10500", imageName = "star", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWELVE)),
-    Product(name = "Tiger", stringPrice = "15000", imageName = "tiger", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWENTY)),
-    Product(name = "Medium Heineken", stringPrice = "17000", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, noOfBottles = NoOfBottles.TWENTY)),
+    Product(name = "Amstel", stringPrice =  "13000", imageName = "amstel", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, emptyType = EmptyType.TWENTY_FOUR)),
+    Product(name = "Desperados", stringPrice = "16600", imageName = "despy", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, emptyType = EmptyType.TWENTY)),
+    Product(name = "Gulder", stringPrice = "10800", imageName = "gulder", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, emptyType = EmptyType.TWELVE)),
+    Product(name = "Heineken", stringPrice = "11900", imageName = "heineken", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, emptyType = EmptyType.TWELVE)),
+    Product(name = "Legend(big)", stringPrice = "11200", imageName = "legend", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, emptyType = EmptyType.TWELVE)),
+    Product(name = "Life", stringPrice = "9200", imageName = "life", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, emptyType = EmptyType.TWELVE)),
+    Product(name = "Maltina", stringPrice = "13000", imageName = "maltina", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, emptyType = EmptyType.TWENTY_FOUR)),
+    Product(name = "Radler", stringPrice = "13000", imageName = "radler", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, emptyType = EmptyType.TWENTY)),
+    Product(name = "Star", stringPrice = "10500", imageName = "star", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, emptyType = EmptyType.TWELVE)),
+    Product(name = "Tiger", stringPrice = "15000", imageName = "tiger", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, emptyType = EmptyType.TWENTY)),
+    Product(name = "Medium Heineken", stringPrice = "17000", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.NBL, emptyType = EmptyType.TWENTY)),
 
     //Guinness
-    Product(name = "Medium stout", stringPrice = "17000", imageName = "guinness", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.GUINNESS, noOfBottles = NoOfBottles.EIGHTEEN)),
-    Product(name = "Small stout", stringPrice = "19000", imageName = "guinness", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.GUINNESS, noOfBottles = NoOfBottles.TWENTY_FOUR)),
-    Product(name = "Orijin", stringPrice = "9500", imageName = "orijin", type = ProductType.BOTTLE,empties = Empties(company = EmptyCompany.GUINNESS, noOfBottles = NoOfBottles.TWELVE)),
+    Product(name = "Medium stout", stringPrice = "17000", imageName = "guinness", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.GUINNESS, emptyType = EmptyType.EIGHTEEN)),
+    Product(name = "Small stout", stringPrice = "19000", imageName = "guinness", type = ProductType.BOTTLE, empties = Empties(company = EmptyCompany.GUINNESS, emptyType = EmptyType.TWENTY_FOUR)),
+    Product(name = "Orijin", stringPrice = "9500", imageName = "orijin", type = ProductType.BOTTLE,empties = Empties(company = EmptyCompany.GUINNESS, emptyType = EmptyType.TWELVE)),
 
     //Cans
     Product(name = "Beta Malt", stringPrice = "10500", imageName = "beta_malt", type = ProductType.CAN),

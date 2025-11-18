@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import com.guvnoh.boma.models.RecordViewModel
+import com.guvnoh.boma.uidesigns.cards.RecordCard
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

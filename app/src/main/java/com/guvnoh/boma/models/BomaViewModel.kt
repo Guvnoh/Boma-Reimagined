@@ -18,19 +18,32 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class BomaViewModel : ViewModel() {
+    //products
     private val _products = MutableStateFlow<List<Product>>(emptyList())
     val products: StateFlow<List<Product>> = getProductList()
+
+    //sold products
     private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
     val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
+
+    //customer
     private val _customerName = mutableStateOf("")
     var customerName: State<String> = _customerName
+
+    //price change products
     private val _priceChangeProducts = MutableStateFlow<List<Product>>(emptyList())
     val priceChangeProducts: StateFlow<List<Product>> = _priceChangeProducts
+
+    //receipt
     private val _receipt = MutableStateFlow<Receipt?>(null)
     @RequiresApi(Build.VERSION_CODES.O)
     val receipt: StateFlow<Receipt?> = _receipt
+
+    //fulls stock
     private val _fullsStock = MutableStateFlow<List<FullsStock>>(emptyList())
     val fullsStock: StateFlow<List<FullsStock>> = getDBFullsStock()
+
+    //empties stock
     private val _emptiesStock = MutableStateFlow<List<EmptiesStock>>(emptyList())
     val emptiesStock: StateFlow<List<EmptiesStock>> = getDBEmpties()
 
@@ -57,6 +70,7 @@ class BomaViewModel : ViewModel() {
     }
 
 
+    //get stock data from database
     private fun getDBFullsStock(): StateFlow<List<FullsStock>> {
         val list = mutableListOf<FullsStock>()
          _products.value.forEach {
