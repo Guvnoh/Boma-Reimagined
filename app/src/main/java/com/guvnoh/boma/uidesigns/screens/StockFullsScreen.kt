@@ -43,9 +43,6 @@ import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.FullsStock
 import com.guvnoh.boma.models.StockSplashScreen
-import com.guvnoh.boma.models.EmptiesStock
-import com.guvnoh.boma.models.EmptyCompany
-import com.guvnoh.boma.models.NoOfBottles
 import com.guvnoh.boma.uidesigns.cards.StockCard
 
 

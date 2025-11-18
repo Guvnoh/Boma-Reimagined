@@ -38,7 +38,7 @@ import com.guvnoh.boma.database.bomaStock
 import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.models.EmptiesStock
 import com.guvnoh.boma.models.EmptyCompany
-import com.guvnoh.boma.models.NoOfBottles
+import com.guvnoh.boma.models.EmptyType
 import com.guvnoh.boma.models.StockSplashScreen
 
 @Composable
@@ -134,25 +134,25 @@ fun sendEmptiesData(){
                 EmptyCompany.HERO ->
                     EmptiesStock(
                         company = it,
-                        noOfBottles = NoOfBottles.TWELVE,
+                        emptyType = EmptyType.TWELVE,
                         quantity = random2.toDouble(),
                     )
                 EmptyCompany.NBL ->
                     EmptiesStock(
                         company = it,
-                        noOfBottles = NoOfBottles.TWELVE,
+                        emptyType = EmptyType.TWELVE,
                         quantity = random2.toDouble(),
                     )
                 EmptyCompany.COCA_COLA ->
                     EmptiesStock(
                         company = it,
-                        noOfBottles = NoOfBottles.TWENTY_FOUR,
+                        emptyType = EmptyType.TWENTY_FOUR,
                         quantity = random2.toDouble(),
                     )
                 EmptyCompany.GUINNESS ->
                     EmptiesStock(
                         company = it,
-                        noOfBottles = NoOfBottles.EIGHTEEN,
+                        emptyType = EmptyType.EIGHTEEN,
                         quantity = random2.toDouble(),
                     )
 

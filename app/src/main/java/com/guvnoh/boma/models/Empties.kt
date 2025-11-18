@@ -2,7 +2,7 @@ package com.guvnoh.boma.models
 
 data class Empties (
     val company: EmptyCompany? = null,
-    var noOfBottles: NoOfBottles? = null
+    var emptyType: EmptyType? = null
 )
 
 enum class EmptyCompany{
@@ -12,7 +12,7 @@ enum class EmptyCompany{
     GUINNESS,
 }
 
-enum class NoOfBottles{
+enum class EmptyType{
     TWENTY,
     TWELVE,
     TWENTY_FOUR,

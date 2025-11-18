@@ -15,20 +15,19 @@ data class ReceivedStock(
     var source: String? = null
 )
 
-data class ReturnedToCompany(
+data class Return(
     val product: Product? = null,
     var quantity: Double? = null,
-    var company: String? = null
+    var type: ReturnType? = null
 )
+enum class ReturnType{
+    COMPANY,
+    CUSTOMER
+}
 
-data class ReturnedToBoma(
-    val product: Product? = null,
-    var quantity: Double? = null,
-    var customer: String? = ""
-)
 
 data class EmptiesStock(
-    var noOfBottles: NoOfBottles? = null,
+    var emptyType: EmptyType? = null,
     var company: EmptyCompany? = null,
     var quantity: Double? = null,
 )

@@ -187,7 +187,7 @@ import com.guvnoh.boma.database.bomaStock
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.Empties
 import com.guvnoh.boma.models.EmptyCompany
-import com.guvnoh.boma.models.NoOfBottles
+import com.guvnoh.boma.models.EmptyType
 import com.guvnoh.boma.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -391,12 +391,12 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                                             expanded = false
 
                                             //no of bottles
-                                            newProduct.empties?.noOfBottles = when(option.toString()){
-                                                "12" -> NoOfBottles.TWELVE
-                                                "18" -> NoOfBottles.EIGHTEEN
-                                                "20" -> NoOfBottles.TWENTY
-                                                "24" -> NoOfBottles.TWENTY_FOUR
-                                                else -> NoOfBottles.TWELVE
+                                            newProduct.empties?.emptyType = when(option.toString()){
+                                                "12" -> EmptyType.TWELVE
+                                                "18" -> EmptyType.EIGHTEEN
+                                                "20" -> EmptyType.TWENTY
+                                                "24" -> EmptyType.TWENTY_FOUR
+                                                else -> EmptyType.TWELVE
 
                                             }
 
