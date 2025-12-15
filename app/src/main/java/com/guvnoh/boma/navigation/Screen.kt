@@ -2,15 +2,13 @@ package com.guvnoh.boma.navigation
 
 import androidx.annotation.DrawableRes
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.guvnoh.boma.R
 
-sealed class MenuIcon (){
+sealed class MenuIcon {
     data class Resource(@DrawableRes val resId: Int): MenuIcon()
     data class Vector( val imageVector: ImageVector): MenuIcon()
 }

@@ -31,54 +31,6 @@ import com.guvnoh.boma.models.SoldProduct
 import com.guvnoh.boma.models.brandData
 import com.guvnoh.boma.navigation.Screen
 
-//@RequiresApi(Build.VERSION_CODES.O)
-//@Composable
-//fun RecordCard(
-//    record: Receipt,
-//    navController: NavHostController,
-//    vm: RecordViewModel
-//){
-//    //val getDetails = remember { mutableStateOf(false) }
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(horizontal = 12.dp, vertical = 8.dp),
-//        shape = CardDefaults.shape,
-//        elevation = CardDefaults.cardElevation(6.dp),
-//        onClick = {
-//            vm.setCurrentRecord(record)
-//            navController.navigate(Screen.RecordDetails.route){
-//                launchSingleTop = true
-//            }
-//
-//            //RecordsNavigation(record,vm, navController)
-//
-//        },
-//        colors = CardDefaults.cardColors(
-//            containerColor = MaterialTheme.colorScheme.surfaceVariant
-//        )
-//    )  {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(16.dp),
-//            verticalArrangement = Arrangement.spacedBy(12.dp)
-//        )  {
-//            Text(
-//                text = record.customerName,
-//                style = MaterialTheme.typography.titleLarge,
-//                color = MaterialTheme.colorScheme.primary,
-//                fontWeight = FontWeight.Bold
-//            )
-//            Text(
-//                text = record.date,
-//                style = MaterialTheme.typography.titleLarge,
-//                color = MaterialTheme.colorScheme.primary,
-//                fontWeight = FontWeight.Bold
-//            )
-//        }
-//    }
-//}
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RecordCard(

@@ -172,6 +172,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.*
@@ -180,9 +181,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.rememberNavController
 import com.guvnoh.boma.database.bomaStock
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.Empties
@@ -287,6 +291,7 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                         modifier = Modifier.fillMaxWidth(),
                         isError = priceError != null,
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         supportingText = {
                             if (priceError != null) {
                                 Text(priceError!!, color = MaterialTheme.colorScheme.error)
@@ -441,4 +446,10 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun ShowAddScreen(){
+    AddProduct(PaddingValues(5.dp), rememberNavController())
 }
