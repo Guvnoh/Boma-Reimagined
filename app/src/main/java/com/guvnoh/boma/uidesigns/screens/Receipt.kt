@@ -183,7 +183,7 @@ private fun updateStock(products: List<SoldProduct>) {
         val dateParts = soldProduct.product?.stock?.lastTimeSold?.split(",", " ")
         val isSoldToday = if (dateParts?.size == 4) checkIfSoldToday(dateParts) else false
 
-        // 🔥 Get the current soldToday value from Firebase
+        // Get the current soldToday value from Firebase
         stockRef.child("soldToday").get().addOnSuccessListener { snapshot ->
             val previousSoldToday = snapshot.getValue(Double::class.java) ?: 0.0
 
