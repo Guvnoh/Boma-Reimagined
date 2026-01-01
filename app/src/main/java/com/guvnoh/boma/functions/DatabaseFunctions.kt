@@ -6,13 +6,13 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.guvnoh.boma.R
-import com.guvnoh.boma.database.bomaStock
+import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.EmptiesStock
 
 fun getDBProductList(onListReady: (MutableList<Product>) -> Unit) {
 
-    bomaStock.child("Fulls").addValueEventListener(object : ValueEventListener {
+    FirebaseRefs.fullStock.addValueEventListener(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             val brandList = mutableListOf<Product>()
             for (eachBrand in snapshot.children) {
@@ -42,7 +42,7 @@ fun getDBProductList(onListReady: (MutableList<Product>) -> Unit) {
 
 fun getDBaseEmptiesStock(callback: (MutableList<EmptiesStock>) -> Unit) {
 
-    bomaStock.child("Empties").addValueEventListener(object : ValueEventListener {
+    FirebaseRefs.empties.addValueEventListener(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             val stockList = mutableListOf<EmptiesStock>()
             for (product in snapshot.children) {

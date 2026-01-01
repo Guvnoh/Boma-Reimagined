@@ -41,10 +41,10 @@ import com.guvnoh.boma.models.ReceivedStock
 @Composable
 fun UpdateStockCard(padding: PaddingValues,product: Product){
     var quantity by remember { mutableStateOf("") }
-    var source by remember { mutableStateOf("") }
-    var stock = ReceivedStock(product,0.0,source)
+    val source by remember { mutableStateOf("") }
+    val stock = ReceivedStock(product = product, quantity = 0.0, source = source)
     var nameError by remember { mutableStateOf<String?>(null) }
-    var sourceError by remember { mutableStateOf<String?>(null) }
+    val sourceError by remember { mutableStateOf<String?>(null) }
     Scaffold(
         modifier = Modifier.padding(padding),
         topBar = {

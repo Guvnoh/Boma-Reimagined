@@ -25,14 +25,15 @@ import com.guvnoh.boma.R
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.getImage
 import com.guvnoh.boma.models.AutoScrollingText
-import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.brandData
+import com.guvnoh.boma.viewmodels.BomaViewModel
+import com.guvnoh.boma.viewmodels.ProductsViewModel
 
 @Composable
 fun PriceChangeCard(
     product: Product,
-    vm: BomaViewModel
+    vm: ProductsViewModel
 ) {
     var newPrice by remember { mutableStateOf("") }
     var priceError by remember { mutableStateOf<String?>(null) }
@@ -81,7 +82,7 @@ fun PriceChangeCard(
                 )
 
                 Text(
-                    text = nairaFormat(product.doublePrice?:0.0),
+                    text = nairaFormat(product.stringPrice?.toDouble()?:0.0),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium,

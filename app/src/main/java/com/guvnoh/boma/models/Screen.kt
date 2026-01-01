@@ -1,4 +1,4 @@
-package com.guvnoh.boma.navigation
+package com.guvnoh.boma.models
 
 import androidx.annotation.DrawableRes
 import androidx.compose.material.icons.Icons
@@ -45,6 +45,12 @@ open class Screen(
 
     data object Stock :
         Screen(route = "stock", title = "Stock", icon = MenuIcon.Resource(R.drawable.stock))
+
+    data object WarehouseStock :
+        Screen(route = "warehouseStock", title = "Warehouse Stock", icon = MenuIcon.Resource(R.drawable.stock))
+
+    data object HeadOfficeStock :
+        Screen(route = "headOfficeStock", title = "HeadOffice Stock", icon = MenuIcon.Resource(R.drawable.stock))
 
     data object Records :
         Screen(route = "records", title = "Records", icon = MenuIcon.Resource(R.drawable.record))

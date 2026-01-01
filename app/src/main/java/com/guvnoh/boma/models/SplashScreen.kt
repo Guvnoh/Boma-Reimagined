@@ -19,7 +19,7 @@ import androidx.wear.compose.material.Text
 fun StockSplashScreen(
     modifier: Modifier,
     onTimeOut: () -> Unit,
-    stock: MutableList<Product>? = null,
+    stock: MutableList<FullsStock>? = null,
     empties: MutableList<EmptiesStock>? = null,
 ){
     Box (

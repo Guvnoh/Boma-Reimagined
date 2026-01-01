@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun AutoScrollingText(
@@ -49,7 +50,8 @@ fun AutoScrollingText(
             Text(
                 text = text,
                 softWrap = false,
-                maxLines = 1
+                maxLines = 1,
+                fontWeight = FontWeight.ExtraBold
             )
         }
     }

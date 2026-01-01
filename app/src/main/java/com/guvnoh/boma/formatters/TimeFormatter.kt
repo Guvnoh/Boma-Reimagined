@@ -3,9 +3,6 @@ package com.guvnoh.boma.formatters
 import android.os.Build
 import androidx.annotation.RequiresApi
 import java.time.LocalDateTime
-import java.time.Month
-import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -23,23 +20,21 @@ fun getTime(): String{
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun getDay():Int{
-    return  LocalDateTime.now().dayOfMonth
+fun getDay(): String{
+    return  LocalDateTime.now().toString()
 }
 
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun checkIfSoldToday(timeInput: List<String> = listOf("Thu", "Oct", "30", "2025")): Boolean {
-    val recordYear = timeInput[3].toInt()
-    val recordMonth = Month.valueOf(timeInput[1].uppercase().take(3))
-    val recordDay = timeInput[2].toInt()
-
+fun checkIfSoldToday(timeSold: String): Boolean {
     val now = LocalDateTime.now()
+    val date = DateTimeFormatter.ofPattern("EEE, MMM dd yyyy")
+    val timeNow = now.format(date)
 
-    return (
-            now.year == recordYear &&
-                    now.month == recordMonth &&
-                    now.dayOfMonth == recordDay
-            )
+//    val todayString = "$dayOfWeek, $monthNow $dayOfMonth $yearNow"
+//    val formattedReceiptTime = timeSold.replace("[, ]", "")
+//    val formattedTimeToday = todayString.replace("[, ]", "")
+
+    return (timeSold.lowercase() == timeNow.lowercase())
 
 }

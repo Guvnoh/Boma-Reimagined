@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
@@ -29,8 +28,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
 import com.guvnoh.boma.R
-import com.guvnoh.boma.models.BomaViewModel
-import com.guvnoh.boma.navigation.Screen
+import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.navigation.Navigation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -38,15 +36,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.guvnoh.boma.navigation.MenuIcon
-import com.guvnoh.boma.navigation.Screen.AddProduct
-import com.guvnoh.boma.navigation.Screen.DeleteProduct
-import com.guvnoh.boma.navigation.Screen.PriceChange
-import com.guvnoh.boma.navigation.Screen.Products
-import com.guvnoh.boma.navigation.Screen.Receipt
-import com.guvnoh.boma.navigation.Screen.RecordDetails
-import com.guvnoh.boma.navigation.Screen.Records
-import com.guvnoh.boma.navigation.Screen.Stock
+import com.guvnoh.boma.models.MenuIcon
+import com.guvnoh.boma.models.Screen.AddProduct
+import com.guvnoh.boma.models.Screen.DeleteProduct
+import com.guvnoh.boma.models.Screen.PriceChange
+import com.guvnoh.boma.models.Screen.Products
+import com.guvnoh.boma.models.Screen.Receipt
+import com.guvnoh.boma.models.Screen.RecordDetails
+import com.guvnoh.boma.models.Screen.Records
+import com.guvnoh.boma.models.Screen.Stock
+import com.guvnoh.boma.viewmodels.BomaViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -182,7 +181,7 @@ fun Boma() {
                 )
             }
         ) { innerPadding ->
-            Navigation(innerPadding, navController, vm)
+            Navigation(innerPadding, navController)
         }
     }
 }

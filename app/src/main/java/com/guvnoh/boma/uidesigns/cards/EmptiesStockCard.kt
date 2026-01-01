@@ -183,5 +183,5 @@ fun EmptiesStockCard(emptiesStock: EmptiesStock) {
 @Preview
 @Composable
 private fun ShowStockCard(){
-    StockCard(Product())
+    //StockCard(Product())
 }

@@ -15,19 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.guvnoh.boma.database.bomaStock
-import com.guvnoh.boma.models.BomaViewModel
-import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.ProductType
-import com.guvnoh.boma.navigation.Screen
+import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.cards.PriceChangeCard
+import com.guvnoh.boma.viewmodels.ProductsViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun PriceChangePage(
     navController: NavController,
     paddingValues: PaddingValues,
-    vm: BomaViewModel
+    vm: ProductsViewModel
 ) {
 //    brandData.forEach {
 //        if (it.type == ProductType.BOTTLE )DBBottleProducts.child(it.name).setValue(it)
@@ -65,7 +62,10 @@ fun PriceChangePage(
                     Button(
                         onClick = {
                             priceChangeList.forEach { product ->
-                                updatePrice(product, product.stringPrice?:"0.0")
+                                if (product.id!=null && product.doublePrice!=null){
+                                    vm.updatePrice(product.id!!, product.doublePrice!!)
+                                }
+
                             }
 
                             navController.navigate(Screen.Products.route) {
@@ -103,15 +103,3 @@ fun PriceChangePage(
     }
 }
 
-fun updatePrice(product: Product, newPrice: String) {
-    bomaStock
-        .child("Fulls")
-        .child(product.name?:"unknown")
-        .child("stringPrice")
-        .setValue(newPrice)
-    bomaStock
-        .child("Fulls")
-        .child(product.name?:"unknown")
-        .child("doublePrice")
-        .setValue(newPrice.toDoubleOrNull() ?: 0.0)
-}

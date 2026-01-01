@@ -26,8 +26,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.wear.compose.material.Icon
-import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.uidesigns.cards.SwipeableProductCard
+import com.guvnoh.boma.viewmodels.ProductsViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,9 +35,9 @@ import com.guvnoh.boma.uidesigns.cards.SwipeableProductCard
 fun DeleteProduct(
     navController: NavController,
     paddingValues: PaddingValues,
-    vm: BomaViewModel
+    productsViewModel: ProductsViewModel
 ) {
-    val productList by vm.products.collectAsState()
+    val productList by productsViewModel.products.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = Modifier
@@ -70,7 +70,8 @@ fun DeleteProduct(
                 items(productList.sortedBy { it.name }) { product ->
                     SwipeableProductCard(
                         product = product,
-                        navController = navController
+                        navController = navController,
+                        productsViewModel
                     )
                 }
             }

@@ -4,14 +4,15 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.guvnoh.boma.models.BomaViewModel
-import com.guvnoh.boma.models.RecordViewModel
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.repositories.StockRepository
 import com.guvnoh.boma.uidesigns.screens.AddProduct
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
 import com.guvnoh.boma.uidesigns.screens.PriceChangePage
@@ -19,6 +20,11 @@ import com.guvnoh.boma.uidesigns.screens.ProductsPage
 import com.guvnoh.boma.uidesigns.screens.ReceiptPage
 import com.guvnoh.boma.uidesigns.screens.RecordDetails
 import com.guvnoh.boma.uidesigns.screens.RecordsScreen
+import com.guvnoh.boma.viewmodels.BomaViewModel
+import com.guvnoh.boma.viewmodels.ProductsViewModel
+import com.guvnoh.boma.viewmodels.ReceiptViewmodel
+import com.guvnoh.boma.viewmodels.RecordViewModel
+import com.guvnoh.boma.viewmodels.StockViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -26,23 +32,50 @@ import com.guvnoh.boma.uidesigns.screens.RecordsScreen
 fun Navigation(
     paddingValues: PaddingValues,
     navController: NavHostController,
-    vm: BomaViewModel,
     ){
+
     val records: RecordViewModel  = viewModel()
     val record by records.record.collectAsState()
-    //val recordsNavController = rememberNavController()
+
+    val productsViewModel: ProductsViewModel = viewModel()
+    val products by productsViewModel.products.collectAsState()
+
+    val bomaViewModel: BomaViewModel = viewModel()
+    val stockViewModel: StockViewModel = viewModel()
+
+    val receiptViewmodel: ReceiptViewmodel = viewModel()
+
+
+
+
+
+    LaunchedEffect(Unit) {
+        bomaViewModel.checkDailyReset{ StockRepository().resetSoldToday() }
+    }
+//    LaunchedEffect (products){
+//        if (products.isNotEmpty()){
+//            products.forEach {
+//                FirebaseRefs.bomaRoot
+//                    .child("Stock_Fulls")
+//                    .child(it.id?:"unknown")
+//                    .setValue(it)
+//            }
+//        }
+//    }
+
 
     NavHost(
         startDestination = Screen.Products.route,
         navController = navController
 
     ){
-        composable(Screen.Products.route){ ProductsPage(navController, paddingValues, vm) }
-        composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, vm) }
-        composable(Screen.Receipt.route){ ReceiptPage(vm) }
-        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController) }
-        composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, vm) }
-        composable(Screen.Stock.route){ StockPageNav(vm = vm, paddingValues = paddingValues) }
+        composable(Screen.Products.route){ ProductsPage(navController, paddingValues, productsViewModel, receiptViewmodel) }
+        composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, productsViewModel) }
+        composable(Screen.Receipt.route){ ReceiptPage(stockViewModel, receiptViewmodel) }
+        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController, productsViewModel) }
+        composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, productsViewModel) }
+        composable(Screen.Stock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
+        composable(Screen.WarehouseStock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
         composable(Screen.Records.route){ RecordsScreen(records, navController, paddingValues) }
         composable(Screen.RecordDetails.route){
             record?.let { selectedRecord -> RecordDetails(selectedRecord) }

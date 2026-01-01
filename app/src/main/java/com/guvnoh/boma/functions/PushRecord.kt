@@ -1,11 +1,10 @@
 package com.guvnoh.boma.functions
 
-import com.google.firebase.database.ServerValue
-import com.guvnoh.boma.database.bomaRecords
+import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.Receipt
 
 fun sendRecord(record: Receipt){
-    val newRef = bomaRecords.push()
+    val newRef = FirebaseRefs.records.push()
     val recordMap = mapOf(
         "timeStamp" to record.timeStamp,
         "id" to record.id,

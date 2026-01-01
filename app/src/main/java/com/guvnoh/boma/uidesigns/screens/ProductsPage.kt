@@ -22,23 +22,16 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.database.bomaStock
-import com.guvnoh.boma.formatters.getDate
-import com.guvnoh.boma.formatters.getTime
 import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.EmptyCompany
 import com.guvnoh.boma.models.ProductSplashScreen
 import com.guvnoh.boma.models.ProductType
-import com.guvnoh.boma.models.Receipt
-import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.models.brandData
-import com.guvnoh.boma.navigation.Screen
+import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.cards.ProductCard
+import com.guvnoh.boma.viewmodels.ProductsViewModel
+import com.guvnoh.boma.viewmodels.ReceiptViewmodel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,7 +39,8 @@ import com.guvnoh.boma.uidesigns.cards.ProductCard
 fun ProductsPage(
     navController: NavController,
     paddingValues: PaddingValues,
-    vm: BomaViewModel
+    vm: ProductsViewModel,
+    receiptViewmodel: ReceiptViewmodel
 ) {
 
     var search: Boolean by rememberSaveable { mutableStateOf(false) }
@@ -55,9 +49,9 @@ fun ProductsPage(
     val customerName by vm.customerName
     val productList by vm.products.collectAsState()
     val grandTotal = soldProducts.sumOf { it.intTotal?:0 }
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior( )
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    vm.confirmSoldToday(productList)
+    //vm.confirmSoldToday(productList)
     //sendFullsDataToDB()
 
     Scaffold(
@@ -149,8 +143,8 @@ fun ProductsPage(
 
                             searchEntry = ""
                             navController.navigate(Screen.Receipt.route)
-                            generateReceipt(vm,soldProducts)
-                            vm.setCurrentReceipt(generateReceipt(vm,soldProducts))
+                            val receipt = vm.generateReceipt()
+                            receiptViewmodel.setCurrentReceipt(receipt)
 
                         },
                         colors = ButtonDefaults.buttonColors(
@@ -182,7 +176,7 @@ fun ProductsPage(
                 OutlinedTextField(
                     value = customerName,
                     onValueChange = {
-                        vm.updateCustomerName(it)
+                        vm.setCustomerName(it)
                                     },
                     label = { Text("Customer Name") },
                     leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = null) },
@@ -226,9 +220,14 @@ fun ProductsPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(40.dp)
-                                    .background(color = Color.White)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Coca_cola")
+                                Text(
+                                    text = "Coca_cola",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                )
                             }
                         }
 
@@ -247,9 +246,14 @@ fun ProductsPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(40.dp)
-                                    .background(color = Color.White)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("International Breweries")
+                                Text(
+                                    text = "International Breweries",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
                             }
                         }
                         items(heroGroup.sortedBy { it.name }) { product ->
@@ -266,10 +270,15 @@ fun ProductsPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(40.dp)
-                                    .background(color = Color.White)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
 
-                                Text("Nigerian Breweries")
+                                Text(
+                                    text = "Nigerian Breweries",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
                             }
                         }
                         items(nblGroup.sortedBy { it.name }) { product ->
@@ -286,10 +295,15 @@ fun ProductsPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(40.dp)
-                                    .background(color = Color.White)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
 
-                                Text("Guinness")
+                                Text(
+                                    text = "Guinness",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
 
                             }
                         }
@@ -306,9 +320,14 @@ fun ProductsPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(40.dp)
-                                    .background(color = Color.White)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Pets")
+                                Text(
+                                    text = "Pets",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
                             }
                         }
                         items(petsDisplay.sortedBy { it.name }) { product ->
@@ -326,9 +345,14 @@ fun ProductsPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(40.dp)
-                                    .background(color = Color.White)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Cans")
+                                Text(
+                                    text = "Cans",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    )
                             }
                         }
                         items(cansDisplay.sortedBy { it.name }) { product ->
@@ -363,35 +387,6 @@ fun ProductsPage(
     }
 }
 
-fun sendFullsDataToDB(){
-    val list = brandData
-
-    list.forEach {
-        val random1 = (20..800).random()
-        val random2 = (20..800).random()
-        bomaStock.child("Fulls")
-            .child(it.name?:"unknown")
-            .setValue(it)
-    }
-
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun generateReceipt(vm: BomaViewModel, soldProducts: List<SoldProduct>): Receipt{
-    val customerName by vm.customerName
-    val validSoldProducts = soldProducts.filter { (it.intTotal?:0)>0 }
-    //val productList by vm.products.collectAsState()
-    val grandTotal = validSoldProducts.sumOf { it.intTotal?:0 }
-    val date = getDate()
-    val time = getTime()
-    val receipt = Receipt(
-        soldProducts = validSoldProducts,
-        customerName = customerName,
-        date = date,
-        grandTotal = grandTotal.toString()
-    )
-    return receipt
-}
 
 fun getDisplayGroup(list: List<Product>, emptyCompany: EmptyCompany): List<Product>{
     val group = mutableListOf<Product>()
@@ -409,5 +404,5 @@ fun getDisplayGroup(list: List<Product>, emptyCompany: EmptyCompany): List<Produ
 @Preview(showBackground = true)
 @Composable
 fun ShowProducts() {
-    ProductsPage(rememberNavController(), PaddingValues(), viewModel())
+   // ProductsPage(rememberNavController(), PaddingValues(), viewModel())
 }

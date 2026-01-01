@@ -27,26 +27,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.BomaViewModel
 import kotlinx.coroutines.launch
 import androidx.wear.compose.material.ExperimentalWearMaterialApi
 import androidx.wear.compose.material.FractionalThreshold
 import androidx.wear.compose.material.rememberSwipeableState
 import androidx.wear.compose.material.swipeable
-import com.guvnoh.boma.R
-import com.guvnoh.boma.database.bomaStock
+import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.getImage
 import com.guvnoh.boma.functions.vibratePhone
-import com.guvnoh.boma.models.ProductType
+import com.guvnoh.boma.viewmodels.ProductsViewModel
 import kotlin.math.roundToInt
 
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalWearMaterialApi::class)
+@OptIn(ExperimentalWearMaterialApi::class)
 @Composable
 fun SwipeableProductCard(
     product: Product,
-    navController: NavController
+    navController: NavController,
+    productsViewModel: ProductsViewModel,
 ) {
     val scope = rememberCoroutineScope()
     val alert = remember { mutableStateOf(false) }
@@ -119,7 +118,7 @@ fun SwipeableProductCard(
         AlertDialogg(
             onDelete = {
                 val type = product.type
-                bomaStock.child("Fulls").child(product.name?:"unkno").removeValue()
+                productsViewModel.deleteProduct(product.name?:"")
                        },
             product = product,
             alert = alert,

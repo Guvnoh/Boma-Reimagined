@@ -35,9 +35,9 @@ import kotlinx.coroutines.launch
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun StockCard(product: Product) {
+fun StockCard(name: String, stock: FullsStock) {
     val scope = rememberCoroutineScope()
-    val soldToday = product.stock?.soldToday
+    val soldToday = stock.soldToday
 
     Card(
         modifier = Modifier
@@ -63,7 +63,7 @@ fun StockCard(product: Product) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = product.name ?: "Unnamed Product",
+                    text = name,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold
                     ),
@@ -71,7 +71,7 @@ fun StockCard(product: Product) {
                 )
 
                 // Optional visual indicator for low stock
-                val isLowStock = (product.stock?.closingStock ?: 0.0) < 5.0
+                val isLowStock = (stock.closingStock ?: 0.0) < 5.0
                 val indicatorColor = if (isLowStock)
                     MaterialTheme.colorScheme.error
                 else
@@ -119,11 +119,11 @@ fun StockCard(product: Product) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = halfAndQuarter(product.stock?.closingStock ?: 0.0),
+                    text = halfAndQuarter(stock.closingStock ?: 0.0),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.SemiBold
                     ),
-                    color = if ((product.stock?.closingStock ?: 0.0) < 5.0)
+                    color = if ((stock.closingStock ?: 0.0) < 5.0)
                         MaterialTheme.colorScheme.error
                     else
                         MaterialTheme.colorScheme.onSurface
@@ -131,7 +131,7 @@ fun StockCard(product: Product) {
             }
 
             // --- Optional Footer Highlight ---
-            if ((product.stock?.closingStock ?: 0.0) < 5.0) {
+            if ((stock.closingStock ?: 0.0) < 5.0) {
                 Text(
                     text = "⚠️ Low stock — restock soon",
                     style = MaterialTheme.typography.bodySmall.copy(
@@ -149,5 +149,5 @@ fun StockCard(product: Product) {
 @Preview
 @Composable
 private fun ShowStockCard(){
-    StockCard(Product())
+    StockCard("P",FullsStock())
 }
