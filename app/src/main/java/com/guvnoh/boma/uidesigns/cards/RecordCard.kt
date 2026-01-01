@@ -26,10 +26,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.guvnoh.boma.formatters.getDate
 import com.guvnoh.boma.models.Receipt
-import com.guvnoh.boma.models.RecordViewModel
 import com.guvnoh.boma.models.SoldProduct
 import com.guvnoh.boma.models.brandData
-import com.guvnoh.boma.navigation.Screen
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.viewmodels.RecordViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

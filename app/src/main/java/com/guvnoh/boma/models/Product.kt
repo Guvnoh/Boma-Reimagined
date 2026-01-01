@@ -1,18 +1,17 @@
 package com.guvnoh.boma.models
 
-import com.google.firebase.database.ServerValue
 import com.guvnoh.boma.R
 
 data class Product (
-     var name: String? = null,
-     var stringPrice: String? = null,
-     var imageName: String? = null,
-     var image: Int = R.drawable.bottle,
-     val id: String? = null,
-     var doublePrice: Double? = null ,
-     var stock: FullsStock? = null,
-     val type: ProductType? = null,
-     var empties: Empties? = null
+    var name: String? = null,
+    var stringPrice: String? = null,
+    var imageName: String? = null,
+    var image: Int = R.drawable.bottle,
+    var id: String? = null,
+    var doublePrice: Double? = null,
+    var stock: FullsStock? = null,
+    var type: ProductType? = null,
+    var empties: Empties? = null
 
 )
 
@@ -27,7 +26,7 @@ data class SoldProduct(
     var stringQuantity: String? = null,
     var doubleQuantity: Double? = null,
     var receiptQuantity: String? = null,
-    var intTotal: Int? = null
+    var intTotal: Int? = null,
 )
 
 data class Receipt(

@@ -1,15 +1,19 @@
 package com.guvnoh.boma.models
 
+import com.guvnoh.boma.formatters.getDate
+
 data class FullsStock(
     var openingStock: Double? = null,
     var closingStock: Double? = null,
     val depletion: Double? = null,
-    val lastTimeSold: String? = null,
-    val soldLast: Double? = null,
-    var soldToday: Double? = null
+    var lastTimeSold: String? = null,
+    var soldLast: Double? = null,
+    var soldToday: Double? = null,
+    var receivedStock: ReceivedStock? = null
 )
 
 data class ReceivedStock(
+    val date: String? = null,
     val product: Product? = null,
     var quantity: Double? = null,
     var source: String? = null

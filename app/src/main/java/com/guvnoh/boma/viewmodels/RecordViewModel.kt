@@ -1,10 +1,8 @@
-package com.guvnoh.boma.models
+package com.guvnoh.boma.viewmodels
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.guvnoh.boma.functions.getDatabaseRecords
+import com.guvnoh.boma.models.Receipt
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -13,7 +11,6 @@ class RecordViewModel: ViewModel(){
     val records: StateFlow<List<Receipt>> = getDbRecords()
     private var _record = MutableStateFlow<Receipt?>(null)
     val record: StateFlow<Receipt?> = _record
-
 
     private fun getDbRecords(): StateFlow<List<Receipt>>{
         getDatabaseRecords {

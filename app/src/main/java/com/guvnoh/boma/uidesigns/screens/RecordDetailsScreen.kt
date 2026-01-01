@@ -26,6 +26,7 @@ import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.captureScreen
 import com.guvnoh.boma.functions.saveBitmapToGallery
 import com.guvnoh.boma.functions.vibratePhone
+import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.SoldProduct
 
@@ -74,7 +75,7 @@ fun RecordDetails(receipt: Receipt) {
             // Header Info
             Text("Receipt #${receipt.id}", style = MaterialTheme.typography.titleMedium)
             Text("Customer: ${receipt.customerName}", style = MaterialTheme.typography.bodyLarge)
-            Text("Date: ${receipt.date?.split(","," " )}", style = MaterialTheme.typography.bodyMedium)
+            Text("Date: ${(receipt.date?:"error")}", style = MaterialTheme.typography.bodyMedium)
 
             Spacer(Modifier.height(16.dp))
 
@@ -141,16 +142,18 @@ fun RecordDetails(receipt: Receipt) {
 @Preview(showBackground = true)
 @Composable
 fun RecordCardDetailsDemo() {
-    // Simple fake data for preview
+
     val sampleProducts = listOf(
         SoldProduct().apply {
-            receiptQuantity = "2x"
+            receiptQuantity = "2"
             intTotal = 1200
+            product = Product()
             product?.name = "Toothpaste"
         },
         SoldProduct().apply {
-            receiptQuantity = "1x"
+            receiptQuantity = "1"
             intTotal = 800
+            product = Product()
             product?.name = "Soap"
         }
     )

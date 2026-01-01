@@ -1,0 +1,61 @@
+package com.guvnoh.boma.viewmodels
+
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.os.Build
+import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModel
+import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.models.Receipt
+import com.guvnoh.boma.models.SoldProduct
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+class ReceiptViewmodel : ViewModel(){
+
+    private val _receipt = MutableStateFlow<Receipt?>(null)
+    val receipt: StateFlow<Receipt?> = _receipt
+
+    fun setCurrentReceipt(receipt: Receipt){
+        _receipt.value = receipt
+    }
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun saveSale(list: List<SoldProduct>, stockViewModel: StockViewModel){
+        list.forEach { soldProduct ->
+            soldProduct.doubleQuantity?.let {
+                qty -> soldProduct.product?.name?.let {
+                    name -> stockViewModel.sellProduct(name, qty)
+                }
+            }
+
+        }
+    }
+
+    fun copy(receipt: Receipt, context: Context){
+        val textToCopy = copyToClipboard(receipt)
+        val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("label", textToCopy)
+        clipBoard.setPrimaryClip(clip)
+        Toast.makeText(context, "Text copied!", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun copyToClipboard(receipt: Receipt): String {
+        //The variable finalText holds the complete text to be sent to the clipboard
+        val finalText = StringBuilder()
+        val soldProductsRaw = receipt.soldProducts?: emptyList()
+        val soldProducts = soldProductsRaw.filter { it.intTotal!! >0 }.toList()
+        val grandTotal = soldProducts.sumOf { it.intTotal?:0 }
+        soldProducts.forEach {
+            val copiedQuantity: String = it.receiptQuantity?:"0"
+            val textToCopy = "$copiedQuantity ${it.product?.name} ${nairaFormat(it.intTotal?:0)}\n"
+
+            finalText.append(textToCopy)
+        }
+        if (soldProducts.size > 1) {
+            finalText.append("Total: $grandTotal")
+        }
+        return finalText.toString()
+    }
+}

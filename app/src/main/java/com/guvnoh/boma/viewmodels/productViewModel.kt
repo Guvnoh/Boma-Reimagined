@@ -1,0 +1,164 @@
+package com.guvnoh.boma.viewmodels
+
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.MutableData
+import com.google.firebase.database.Transaction
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.formatters.getDate
+import com.guvnoh.boma.formatters.getTime
+import com.guvnoh.boma.formatters.halfAndQuarter
+import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.models.Receipt
+import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.repositories.ProductsRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.update
+
+
+class ProductsViewModel(
+    private val repository: ProductsRepository = ProductsRepository()
+) : ViewModel() {
+
+    private val _products = MutableStateFlow<List<Product>>(emptyList())
+    val products: StateFlow<List<Product>> = _products
+
+        //customer
+    private val _customerName = mutableStateOf("")
+    var customerName: State<String> = _customerName
+
+        //sold products
+    private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
+    val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
+
+        //price change products
+    private val _priceChangeProducts = MutableStateFlow<List<Product>>(emptyList())
+    val priceChangeProducts: StateFlow<List<Product>> = _priceChangeProducts
+
+
+    init {
+        observeProducts()
+    }
+
+    //get products from database
+
+    private fun observeProducts() {
+        repository.observeProducts { list ->
+            _products.value = list
+        }
+    }
+
+    // customer name
+
+    fun setCustomerName(name: String){
+        _customerName.value = name
+    }
+
+    //sold products management
+
+    fun updateSoldProduct(
+        product: Product,
+        stringQuantity: String,
+        doubleQuantity: Double
+    ) {
+        _soldProducts.update { list ->
+            val updated = list.toMutableList()
+            val index = updated.indexOfFirst { it.product?.name == product.name }
+
+            val total = ((product.stringPrice?.toDoubleOrNull() ?: 0.0) * doubleQuantity).toInt()
+
+            val soldProduct = SoldProduct(
+                product = product,
+                stringQuantity = stringQuantity,
+                doubleQuantity = doubleQuantity,
+                intTotal = total,
+                receiptQuantity = halfAndQuarter(doubleQuantity)
+            )
+
+            if (index >= 0) {
+                updated[index] = soldProduct
+            } else {
+                updated.add(soldProduct)
+            }
+
+            updated
+        }
+    }
+
+    //generate receipt
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun generateReceipt(): Receipt {
+        val validSoldProducts = soldProducts.value.filter { (it.intTotal?:0)>0 }.toList()
+        //val productList by vm.products.collectAsState()
+        val grandTotal = validSoldProducts.sumOf { it.intTotal?:0 }
+        val date = getDate()
+        val receipt = Receipt(
+            id = FirebaseRefs.bomaRoot.push().key.toString().replace("-",""),
+            soldProducts = validSoldProducts,
+            customerName = customerName.value,
+            date = date,
+            grandTotal = grandTotal.toString()
+        )
+        return receipt
+    }
+
+
+
+    // price change
+    fun updatePrice(productId: String, newPrice: Double) {
+        repository.updatePrice(productId, newPrice)
+    }
+    fun addToPriceChangeList(product: Product, newPrice: String ){
+        val current = _priceChangeProducts.value.toMutableList()
+        product.stringPrice = newPrice
+        current.add(product)
+        _priceChangeProducts.value = current
+    }
+
+    fun addProduct(product: Product){
+        repository.addProduct(product)
+    }
+
+    fun deleteProduct(productId: String) {
+        repository.deleteProduct(productId)
+    }
+
+    fun clearTotals() {
+        _soldProducts.value = emptyList()
+    }
+
+    fun clearName(){
+        _customerName.value = ""
+    }
+
+//    fun idCheck(productId: String){
+//        FirebaseRefs.fullStock.child(productId).child("id")
+//            .runTransaction(object : Transaction.Handler{
+//                override fun doTransaction(data: MutableData): Transaction.Result {
+//                    if (data.value == null || data.value == "") {
+//                        val id = FirebaseRefs.fullStock.child(productId).push().key
+//                        data.value = id
+//                        return Transaction.success(data)
+//                    }else return Transaction.abort()
+//
+//                }
+//
+//                override fun onComplete(
+//                    error: DatabaseError?,
+//                    committed: Boolean,
+//                    currentData: DataSnapshot?
+//                ) {}
+//            }
+//            )
+//    }
+
+}

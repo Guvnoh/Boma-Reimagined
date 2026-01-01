@@ -1,5 +1,7 @@
 package com.guvnoh.boma.uidesigns.screens
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.guvnoh.boma.uidesigns.cards.EmptiesStockCard
 
 import androidx.compose.foundation.layout.Arrangement
@@ -34,17 +36,18 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material.Icon
-import com.guvnoh.boma.database.bomaStock
-import com.guvnoh.boma.models.BomaViewModel
+import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.EmptiesStock
 import com.guvnoh.boma.models.EmptyCompany
 import com.guvnoh.boma.models.EmptyType
 import com.guvnoh.boma.models.StockSplashScreen
+import com.guvnoh.boma.viewmodels.StockViewModel
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun StockEmptiesScreen(
     paddingValues: PaddingValues,
-    vm: BomaViewModel,
+    vm: StockViewModel,
     navController: NavController,
 
     ){
@@ -108,13 +111,13 @@ fun StockEmptiesScreen(
             StockSplashScreen(
                 modifier = Modifier.padding(it),
                 onTimeOut = {showSplash = false},
-                empties = emptiesStock.toMutableList()
+                empties = emptiesStock.values.toMutableList()
             )
         }else{
             LazyColumn(
                 modifier = Modifier.padding(it)
             ) {
-                items(emptiesStock.toMutableList()){
+                items(emptiesStock.values.toMutableList()){
                         brandStock ->
                     EmptiesStockCard(brandStock)
                 }
@@ -157,7 +160,7 @@ fun sendEmptiesData(){
                     )
 
             }
-        bomaStock.child("Empties")
+        FirebaseRefs.empties
             .child(emptiesStock.company?.name?:"unknown")
             .setValue(emptiesStock)
     }
@@ -166,6 +169,7 @@ fun sendEmptiesData(){
 
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview
 @Composable
 private fun ShowStock(){

@@ -22,30 +22,28 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.guvnoh.boma.R
-import com.guvnoh.boma.formatters.halfAndQuarter
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.getImage
 import com.guvnoh.boma.models.AutoScrollingText
-import com.guvnoh.boma.models.BomaViewModel
 import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.viewmodels.ProductsViewModel
 
 @Composable
 fun ProductCard(
     product: Product,
-    viewModel: BomaViewModel
+    viewModel: ProductsViewModel,
 ) {
     val soldProducts = viewModel.soldProducts.collectAsState()
 
     val soldProduct = soldProducts.value.find { it.product?.name == product.name }
 
-    var quantity = soldProduct?.stringQuantity?:""
+    val quantity = soldProduct?.stringQuantity?:""
 
     val total = soldProduct?.intTotal?:0
+
+    val enabled: Boolean by remember { mutableStateOf((product.stock?.closingStock?:0.0)>0) }
 
     val context = LocalContext.current
     val resId = getImage(context,product.imageName?:"bottle.jpg")
@@ -56,7 +54,11 @@ fun ProductCard(
             .padding(vertical = 8.dp, horizontal = 12.dp),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = if (enabled){
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        }else{
+            CardDefaults.cardColors(containerColor = Color.LightGray)
+        }
     ) {
         Row(
             modifier = Modifier
@@ -96,24 +98,20 @@ fun ProductCard(
                     .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-//                Text(
-//                    text = product.name,
-//                    style = MaterialTheme.typography.titleMedium.copy(
-//                        fontWeight = FontWeight.Bold,
-//                        fontSize = 18.sp
-//                    ),
-//                    maxLines = 1,
-//                    overflow = TextOverflow.Ellipsis
-//                )
                 AutoScrollingText(product.name?:"unknown", modifier = Modifier)
 
                 Text(
-                    text = nairaFormat(product.stringPrice?.toInt()?:0),
+                    text = if (enabled) {
+                        nairaFormat(product.stringPrice?.toInt()?:0)
+                    } else{
+                        "⚠️out of stock!"
+                    },
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp
                     )
                 )
+                //TOTAL
                 Column (Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End){
                     // 🧮 Show Total if available
                     AnimatedVisibility(
@@ -133,28 +131,26 @@ fun ProductCard(
             }
 
             // 🔢 Quantity Input
-            OutlinedTextField(
-                value = quantity,
-                onValueChange = { newValue ->
-                    val inputToDouble = newValue.toDoubleOrNull()
-                    quantity = newValue
+            if (enabled){
+                OutlinedTextField(
+                    value = quantity,
+                    onValueChange = { newValue ->
+                        val input = newValue.toDoubleOrNull()?:0.0
 
-                    val newSoldProduct = SoldProduct(
-                        product = product,
-                        doubleQuantity = inputToDouble ?: 0.0,
-                        stringQuantity = newValue,
-                        intTotal = ((product.doublePrice?:0.0) * (quantity.toDoubleOrNull()?:0.0)).toInt(),
-                        receiptQuantity = halfAndQuarter(inputToDouble?:0.0)
-                    )
-                    viewModel.recordSoldProduct(newSoldProduct)
-                },
-                label = { Text("Qty") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier
-                    .width(90.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
+                        viewModel.updateSoldProduct(
+                            product = product,
+                            stringQuantity = newValue,
+                            doubleQuantity = input
+                        )
+                    },
+                    label = { Text("Qty") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier
+                        .width(90.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
         }
     }
 }

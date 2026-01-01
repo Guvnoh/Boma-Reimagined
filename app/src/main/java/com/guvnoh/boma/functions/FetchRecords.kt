@@ -4,12 +4,12 @@ import android.util.Log
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import com.guvnoh.boma.database.bomaRecords
+import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.Receipt
 
 fun getDatabaseRecords(callback: (MutableList<Receipt>) -> Unit) {
 
-    bomaRecords.orderByChild("timeStamp")
+    FirebaseRefs.records.orderByChild("timeStamp")
         .addValueEventListener(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             val records = snapshot.children.mapNotNull {
