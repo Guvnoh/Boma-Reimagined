@@ -25,9 +25,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.functions.getImage
 import com.guvnoh.boma.models.AutoScrollingText
 import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.repositories.ProductsRepository
 import com.guvnoh.boma.viewmodels.ProductsViewModel
 
 @Composable
@@ -46,7 +46,7 @@ fun ProductCard(
     val enabled: Boolean by remember { mutableStateOf((product.stock?.closingStock?:0.0)>0) }
 
     val context = LocalContext.current
-    val resId = getImage(context,product.imageName?:"bottle.jpg")
+    val resId = ProductsRepository().getImage(context,product.imageName?:"bottle.jpg")
 
     Card(
         modifier = Modifier
@@ -101,16 +101,22 @@ fun ProductCard(
                 AutoScrollingText(product.name?:"unknown", modifier = Modifier)
 
                 Text(
-                    text = if (enabled) {
-                        nairaFormat(product.stringPrice?.toInt()?:0)
-                    } else{
-                        "⚠️out of stock!"
-                    },
+                    text = nairaFormat(product.stringPrice?.toInt()?:0),
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp
                     )
                 )
+
+                if (!enabled) {
+                    Text( text = "⚠️out of stock!",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 14.sp
+                        )
+                    )
+                }
+
                 //TOTAL
                 Column (Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End){
                     // 🧮 Show Total if available

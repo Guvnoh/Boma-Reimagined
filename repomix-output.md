@@ -42,9 +42,8 @@ app/proguard-rules.pro
 app/src/androidTest/java/com/guvnoh/boma/ExampleInstrumentedTest.kt
 app/src/main/AndroidManifest.xml
 app/src/main/ic_launcher-playstore.png
-app/src/main/java/com/guvnoh/boma/database/Database.kt
 app/src/main/java/com/guvnoh/boma/database/firebaseRefs.kt
-app/src/main/java/com/guvnoh/boma/domain/DateProvider.kt
+app/src/main/java/com/guvnoh/boma/dateProvider/DateProvider.kt
 app/src/main/java/com/guvnoh/boma/formatters/CurrencyFormatter.kt
 app/src/main/java/com/guvnoh/boma/formatters/NumberFormatter.kt
 app/src/main/java/com/guvnoh/boma/formatters/TimeFormatter.kt
@@ -60,9 +59,9 @@ app/src/main/java/com/guvnoh/boma/models/AutoScrollingText.kt
 app/src/main/java/com/guvnoh/boma/models/Empties.kt
 app/src/main/java/com/guvnoh/boma/models/FullsStock.kt
 app/src/main/java/com/guvnoh/boma/models/Product.kt
+app/src/main/java/com/guvnoh/boma/models/Screen.kt
 app/src/main/java/com/guvnoh/boma/models/SplashScreen.kt
 app/src/main/java/com/guvnoh/boma/navigation/MainNavigation.kt
-app/src/main/java/com/guvnoh/boma/navigation/Screen.kt
 app/src/main/java/com/guvnoh/boma/navigation/StockPageNavigation.kt
 app/src/main/java/com/guvnoh/boma/repositories/AppMetaRepository.kt
 app/src/main/java/com/guvnoh/boma/repositories/ProductRepository.kt
@@ -71,7 +70,6 @@ app/src/main/java/com/guvnoh/boma/ui/theme/Color.kt
 app/src/main/java/com/guvnoh/boma/ui/theme/Theme.kt
 app/src/main/java/com/guvnoh/boma/ui/theme/Type.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/cards/EmptiesStockCard.kt
-app/src/main/java/com/guvnoh/boma/uidesigns/cards/PriceChangeCard.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/cards/ProductCard.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/cards/RecordCard.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/cards/StockCard.kt
@@ -81,14 +79,17 @@ app/src/main/java/com/guvnoh/boma/uidesigns/DrawerMenu.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/AddProductPage.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/AddSupplyDetails.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/DeleteProduct.kt
-app/src/main/java/com/guvnoh/boma/uidesigns/screens/PriceChangePage.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/HeadOfficeStock.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeCard.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangePage.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/ProductsPage.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/Receipt.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/RecordDetailsScreen.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/RecordsScreen.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/StockEmptiesScreen.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/StockFullsScreen.kt
-app/src/main/java/com/guvnoh/boma/viewmodels/BomaViewModel.kt
+app/src/main/java/com/guvnoh/boma/viewmodels/AppMetaViewModel.kt
 app/src/main/java/com/guvnoh/boma/viewmodels/productViewModel.kt
 app/src/main/java/com/guvnoh/boma/viewmodels/ReceiptViewmodel.kt
 app/src/main/java/com/guvnoh/boma/viewmodels/RecordViewModel.kt
@@ -168,6 +169,629 @@ settings.gradle.kts
 
 # Files
 
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeCard.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.priceChange
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.guvnoh.boma.R
+import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.models.AutoScrollingText
+import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.models.brandData
+import com.guvnoh.boma.repositories.ProductsRepository
+import com.guvnoh.boma.viewmodels.ProductsViewModel
+
+@Composable
+fun PriceChangeCard(
+    product: Product,
+    priceChangeViewmodel: PriceChangeViewmodel
+) {
+
+    var newPrice by remember { mutableStateOf("") }
+    var priceError by remember { mutableStateOf<String?>(null) }
+
+    val context = LocalContext.current
+    val imageRes = ProductsRepository()
+        .getImage(context, product.imageName?:"bottle.jpg")
+        .takeIf { it != 0 } ?: R.drawable.bottle
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // 🖼️ Product Image
+            Image(
+                painter = painterResource(imageRes),
+                contentDescription = product.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(CircleShape)
+                    .border(2.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+            )
+
+            // 🧾 Product Info
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                //auto scrolling text enables long product names animated horizontal movement
+                AutoScrollingText(
+                    text = product.name ?: "unknown",
+                    modifier = Modifier,
+                )
+
+                //Price Display
+                val price = newPrice.ifEmpty {
+                    (product.stringPrice?.toDoubleOrNull() ?: 0.0).toString()
+                }
+                Text(
+                    text = if (priceError == null) nairaFormat(price.toDouble()) else "₦0.00",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 15.sp
+                    )
+                )
+            }
+
+             //New Price input
+            OutlinedTextField(
+                value = newPrice,
+                onValueChange = {
+                    newPrice = ""
+                    priceChangeViewmodel.changePrices(
+                        newPrice = newPrice,
+                        product = product,
+                    )
+                    newPrice = it
+                    priceChangeViewmodel.changePrices(
+                        newPrice = newPrice,
+                        product = product,
+                    )
+                    priceError = priceChangeViewmodel.errorCheck(newPrice)
+                },
+                label = { Text("New Price") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = priceError != null,
+                supportingText = {
+                    if (priceError != null) {
+                        Text(priceError!!, color = MaterialTheme.colorScheme.error)
+                    }
+                },
+                modifier = Modifier.width(120.dp),
+                shape = RoundedCornerShape(12.dp)
+            )
+        }
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun ShowCard() {
+    PriceChangeCard(brandData[1], viewModel())
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangePage.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.priceChange
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.viewmodels.ProductsViewModel
+
+
+@Composable
+fun PriceChangePage(
+    navController: NavController,
+    paddingValues: PaddingValues,
+    priceChangeViewmodel: PriceChangeViewmodel
+) {
+    val productList by priceChangeViewmodel.products.collectAsState()
+    val priceChangeList by priceChangeViewmodel.priceChangeProducts.collectAsState()
+
+    Scaffold(
+        modifier = Modifier.padding(paddingValues),
+        bottomBar = {
+            Surface(
+                tonalElevation = 4.dp,
+                shadowElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Button(
+                        onClick = {
+                            priceChangeList.forEach { product ->
+                                if (product.id!=null && product.doublePrice!=null){
+                                    priceChangeViewmodel.updatePrice(product)
+                                }
+
+                            }
+
+                            navController.navigate(Screen.Products.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        enabled = priceChangeList.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(Icons.Filled.Done, contentDescription = "Save Changes")
+                        Spacer(Modifier.width(8.dp))
+                        Text("Save Changes")
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            contentPadding = PaddingValues(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            items(productList.sortedBy { it.name }) { product ->
+                PriceChangeCard(product, priceChangeViewmodel)
+            }
+        }
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.priceChange
+
+import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.repositories.ProductsRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+class PriceChangeViewmodel: ViewModel() {
+
+    //product list
+    private val _products = MutableStateFlow<List<Product>>(emptyList())
+    val products: StateFlow<List<Product>> = _products
+
+    //price change products
+    private val _priceChangeProducts = MutableStateFlow<List<Product>>(emptyList())
+    val priceChangeProducts: StateFlow<List<Product>> = _priceChangeProducts
+
+    init {
+        observeProducts(FirebaseRefs.warehouseFulls)
+    }
+
+    private fun observeProducts(repo: DatabaseReference) {
+        val repository = ProductsRepository()
+        repository.observeProducts(repo) { list ->
+            _products.value = list
+        }
+    }
+
+
+    private fun addToPriceChangeList(product: Product, newPrice: String ){
+        val current = _priceChangeProducts.value.toMutableList()
+        product.stringPrice = newPrice
+        current.add(product)
+        _priceChangeProducts.value = current
+    }
+
+    // price change
+    fun updatePrice(product: Product) {
+        val repository = ProductsRepository()
+        repository.updatePrice(product)
+    }
+
+    fun changePrices(newPrice: String, product: Product){
+        val parsedNewPrice = newPrice.filter { ch -> ch.isDigit() || ch == '.' }
+        val parsed = parsedNewPrice.toDoubleOrNull()
+        if (parsed != null && parsed > 0.0) {
+            product.stringPrice = newPrice
+            product.doublePrice = parsed
+            addToPriceChangeList(product, newPrice)
+        }
+    }
+
+    fun errorCheck(newPrice: String): String?{
+        val double = newPrice.toDoubleOrNull()
+        val result = when{
+            newPrice.isEmpty() -> "Empty Field"
+            double == null -> "Invalid Price"
+            double >= 0 -> null
+            else -> "Invalid Price"
+        }
+
+        return  result
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/viewmodels/AppMetaViewModel.kt
+```kotlin
+//package com.guvnoh.boma.models
+//
+//import android.os.Build
+//import android.util.Log
+//import androidx.annotation.RequiresApi
+//import androidx.compose.runtime.State
+//import androidx.compose.runtime.mutableStateOf
+//import androidx.lifecycle.ViewModel
+//import androidx.lifecycle.viewModelScope
+//import com.guvnoh.boma.database.bomaStock
+//import com.guvnoh.boma.formatters.checkIfSoldToday
+//import com.guvnoh.boma.formatters.getDate
+//import com.guvnoh.boma.functions.getDBProductList
+//import com.guvnoh.boma.functions.getDBaseEmptiesStock
+//import kotlinx.coroutines.flow.MutableStateFlow
+//import kotlinx.coroutines.flow.StateFlow
+//import kotlinx.coroutines.launch
+//import kotlinx.coroutines.tasks.await
+//
+//class BomaViewModel : ViewModel() {
+//    //products
+//    private val _products = MutableStateFlow<List<Product>>(emptyList())
+//    val products: StateFlow<List<Product>> = getProductList()
+//
+//    //sold products
+//    private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
+//    val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
+//
+
+//
+
+//
+
+//
+//    //fulls stock
+//    private val _fullsStock = MutableStateFlow<List<FullsStock>>(emptyList())
+//    val fullsStock: StateFlow<List<FullsStock>> = getDBFullsStock()
+//
+
+//
+//    @RequiresApi(Build.VERSION_CODES.O)
+//    fun confirmSoldToday(productList: List<Product>){
+//        val stockDataBase = bomaStock.child("Fulls")
+//
+//        productList.forEach {
+//            val isSoldToday = checkIfSoldToday(it.stock?.lastTimeSold?:"")
+//            //Log.d("SendData", "Processing ${it.name} - soldToday=${it.stock.soldToday} - isSoldToday=$isSoldToday")
+//            if (!isSoldToday && (it.stock?.soldToday?:0.0) > 0){
+//                it.name?.let { brandName ->
+//                    stockDataBase
+//                        .child(brandName)
+//                        .child("stock")
+//                        .child("soldToday")
+//                        .setValue(0.0)
+//                }
+//            }
+//
+//        }
+//    }
+//
+//
+//    //get stock data from database
+//    private fun getDBFullsStock(): StateFlow<List<FullsStock>> {
+//        val list = mutableListOf<FullsStock>()
+//         _products.value.forEach {
+//             it.stock?.let { it1 -> list.add(it1) }
+//        }
+//        _fullsStock.value = list
+//        return _fullsStock
+//    }
+//
+//    private fun getDBEmpties(): StateFlow<List<EmptiesStock>> {
+//        getDBaseEmptiesStock {
+//            emptiesStock ->
+//            _emptiesStock.value = emptiesStock
+//        }
+//        return _emptiesStock
+//    }
+//
+//
+
+//
+
+//
+//    private fun getProductList(): StateFlow<List<Product>> {
+//        // Fetch products
+//        getDBProductList { dbList ->
+//            _products.value = dbList
+//        }
+//
+//        return _products
+//    }
+//
+//    fun updateCustomerName(name: String){
+//        _customerName.value = name
+//    }
+//
+
+//
+//    fun removeProduct(soldProduct: SoldProduct?) {
+//        val current = _soldProducts.value.toMutableList()
+//        val validSoldProduct = soldProduct ?: return
+//        current.removeAll { it.product?.name == validSoldProduct.product?.name }
+//        _soldProducts.value = current.toList()
+//    }
+//
+
+//
+//}
+//
+
+package com.guvnoh.boma.viewmodels
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.MutableData
+import com.google.firebase.database.Transaction
+import com.guvnoh.boma.models.FullsStock
+import com.guvnoh.boma.repositories.AppMetaRepository
+
+class AppMetaViewModel : ViewModel() {
+
+    private val metaRepo = AppMetaRepository()
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun checkDailyReset(onReset: () -> Unit) {
+        metaRepo.checkNewDay {
+            onReset()
+        }
+    }
+
+    fun resetSoldToday(repo: DatabaseReference) {
+        repo.get().addOnSuccessListener { snapshot ->
+            snapshot.children.forEach { productSnap ->
+                val productId = productSnap.key ?: return@forEach
+
+                val stockRef = repo
+                    .child(productId)
+                    .child("stock")
+
+                stockRef.runTransaction(object : Transaction.Handler {
+                    override fun doTransaction(data: MutableData): Transaction.Result {
+                        val stock = data.getValue(FullsStock::class.java)
+                            ?: return Transaction.success(data)
+
+                        val closing = stock.closingStock ?: 0.0
+
+                        stock.openingStock = closing
+                        stock.soldToday = 0.0
+
+                        data.value = stock
+                        return Transaction.success(data)
+                    }
+
+                    override fun onComplete(
+                        error: DatabaseError?,
+                        committed: Boolean,
+                        snapshot: DataSnapshot?
+                    ) = Unit
+                })
+            }
+        }
+    }
+}
+```
+
+## File: .gitignore
+```
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+```
+
+## File: app/.gitignore
+```
+/build
+```
+
+## File: app/google-services.json
+```json
+{
+  "project_info": {
+    "project_number": "1036788853215",
+    "firebase_url": "https://freemann-firms-default-rtdb.firebaseio.com",
+    "project_id": "freemann-firms",
+    "storage_bucket": "freemann-firms.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1036788853215:android:cb4340cf04dc0b277cfc6a",
+        "android_client_info": {
+          "package_name": "com.guvnoh.binl"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvT3qj25i69EE63fUFWwDE4XHx-07x7k8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1036788853215:android:2d49ef49181dd99f7cfc6a",
+        "android_client_info": {
+          "package_name": "com.guvnoh.boma"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvT3qj25i69EE63fUFWwDE4XHx-07x7k8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1036788853215:android:a91464966917adc97cfc6a",
+        "android_client_info": {
+          "package_name": "com.guvnoh.freemannfirms"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvT3qj25i69EE63fUFWwDE4XHx-07x7k8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
+```
+
+## File: app/proguard-rules.pro
+```
+# Add project specific ProGuard rules here.
+# You can control the set of applied configuration files using the
+# proguardFiles setting in build.gradle.
+#
+# For more details, see
+#   http://developer.android.com/guide/developing/tools/proguard.html
+
+# If your project uses WebView with JS, uncomment the following
+# and specify the fully qualified class name to the JavaScript interface
+# class:
+#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
+#   public *;
+#}
+
+# Uncomment this to preserve the line number information for
+# debugging stack traces.
+#-keepattributes SourceFile,LineNumberTable
+
+# If you keep the line number information, uncomment this to
+# hide the original source file name.
+#-renamesourcefileattribute SourceFile
+```
+
+## File: app/src/androidTest/java/com/guvnoh/boma/ExampleInstrumentedTest.kt
+```kotlin
+package com.guvnoh.boma
+
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.ext.junit.runners.AndroidJUnit4
+
+import org.junit.Test
+import org.junit.runner.RunWith
+
+import org.junit.Assert.*
+
+/**
+ * Instrumented test, which will execute on an Android device.
+ *
+ * See [testing documentation](http://d.android.com/tools/testing).
+ */
+@RunWith(AndroidJUnit4::class)
+class ExampleInstrumentedTest {
+    @Test
+    fun useAppContext() {
+        // Context of the app under test.
+        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+        assertEquals("com.guvnoh.boma", appContext.packageName)
+    }
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/database/firebaseRefs.kt
 ```kotlin
 package com.guvnoh.boma.database
@@ -182,17 +806,24 @@ object FirebaseRefs {
 
     //database root folder
     private val root: DatabaseReference = db.reference.child("Boma")
+    val bomaRoot = root.child("BomaStock")
 
-    val fullStock = root.child("BomaStock").child("Fulls")
+    val warehouseFulls = bomaRoot.child("Warehouse").child("Fulls")
+    val warehouseEmpties = bomaRoot.child("Warehouse").child("Empties")
+
+    val HeadOfficeFulls = bomaRoot.child("HeadOffice").child("Fulls")
+    val HeadOfficeEmpties = bomaRoot.child("HeadOffice").child("Empties")
+
+    val displayProductsRepo = root.child("BomaStock").child("Stock_Fulls")
     val empties = root.child("BomaStock").child("Empties")
     val records = root.child("BomaDBRecords2")
     val appMeta = root.child("appMeta")
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/domain/DateProvider.kt
+## File: app/src/main/java/com/guvnoh/boma/dateProvider/DateProvider.kt
 ```kotlin
-package com.guvnoh.boma.domain
+package com.guvnoh.boma.dateProvider
 
 import android.os.Build
 import java.text.SimpleDateFormat
@@ -211,23 +842,120 @@ object DateProvider {
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/formatters/CurrencyFormatter.kt
+```kotlin
+package com.guvnoh.boma.formatters
+
+import java.text.DecimalFormat
+
+fun nairaFormat(num: Double): String{
+    var format = DecimalFormat("#,###")
+    val decimal =  num % 1 != 0.0
+
+    return if (num>=0.0 && decimal){
+        format = DecimalFormat("#,##0.00")
+        "₦${format.format(num)}"
+    }else if (num>=0.0){
+        "₦${format.format(num)}"
+    }else{"₦0.00"}
+}
+
+fun nairaFormat(num: Int): String{
+    val format = DecimalFormat("#,###")
+    return if (num>0){"₦${format.format(num)}"}else{"₦0.00"}
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/formatters/NumberFormatter.kt
+```kotlin
+package com.guvnoh.boma.formatters
+
+fun halfAndQuarter(num: Double): String{
+    //converts 0.5 to display as '½', same for 0.25 (quarter)
+    //also converts them when they have integer companions e.g '1½' etc...
+    val integerPart = (num).toInt()
+    return if (num % 1 == 0.5){
+        if(integerPart==0){
+            "½"
+        } else "$integerPart½"
+    }else if (num % 1 == 0.25){
+        if(integerPart==0){
+            "¼"
+        } else "$integerPart¼"
+    }
+    else if (num>num.toInt()){
+        num.toString()
+    }else num.toInt().toString()
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/functions/Screenshot.kt
+```kotlin
+package com.guvnoh.boma.functions
+
+import android.content.ContentValues
+import android.content.Context
+import android.graphics.Bitmap
+import android.os.Environment
+import android.provider.MediaStore
+import android.view.View
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalView
+import java.io.OutputStream
+
+fun captureScreen(view: View): Bitmap {
+    val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+    val canvas = android.graphics.Canvas(bitmap)
+    view.draw(canvas)
+    return bitmap
+}
+
+fun saveBitmapToGallery(context: Context, bitmap: Bitmap) {
+    val filename = "Screenshot_${System.currentTimeMillis()}.png"
+    val resolver = context.contentResolver
+    val contentValues = ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+        put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
+        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
+    }
+
+    val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+    uri?.let {
+        val outputStream: OutputStream? = resolver.openOutputStream(it)
+        outputStream.use { stream ->
+            if (stream != null) {
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            }
+        }
+    }
+    Toast.makeText(context, "Screenshot saved.", Toast.LENGTH_SHORT).show()
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/functions/SendDummyData.kt
 ```kotlin
 package com.guvnoh.boma.functions
 
+import com.google.firebase.database.DatabaseReference
 import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.brandData
 
 object SendDummyData {
-    fun sendFullsDataToDB(){
-        val list = brandData
 
-        list.forEach {
-            val random1 = (20..800).random()
-            val random2 = (20..800).random()
-            FirebaseRefs.fullStock
-                .child(it.name?:"unknown")
-                .setValue(it)
+    fun createNewFullsStock(products: List<Product>){
+        products.forEach { product ->
+            product.id?.let { productId ->
+
+                //populate 'root.bomastock.warehouse.fulls' with fulls stock data
+                FirebaseRefs.warehouseFulls
+                    .child(productId).setValue(product)
+
+                //populate 'root.bomastock.headoffice.fulls' with fulls stock data
+                FirebaseRefs.HeadOfficeFulls
+                    .child(productId).setValue(product)
+            }
         }
 
     }
@@ -250,6 +978,99 @@ object StockCalculator {
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/functions/VibratePhone.kt
+```kotlin
+package com.guvnoh.boma.functions
+
+import android.content.Context
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+import android.os.Build
+import androidx.annotation.RequiresApi
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun vibratePhone(context: Context, duration: Long = 100L) {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        val vibrator = vibratorManager.defaultVibrator
+        vibrator.vibrate(
+            VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
+        )
+    } else {
+        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        vibrator.vibrate(
+            VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
+        )
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/models/Screen.kt
+```kotlin
+package com.guvnoh.boma.models
+
+import androidx.annotation.DrawableRes
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.guvnoh.boma.R
+
+sealed class MenuIcon {
+    data class Resource(@DrawableRes val resId: Int): MenuIcon()
+    data class Vector( val imageVector: ImageVector): MenuIcon()
+}
+
+open class Screen(
+    val route: String,
+    val title: String,
+    val icon: MenuIcon? = null
+) {
+    data object Products : Screen(
+        route = "products",
+        title = "Products",
+        icon = MenuIcon.Vector(Icons.Default.ShoppingCart)
+    )
+
+    data object PriceChange : Screen(
+        route = "price_change",
+        title = "Change Price",
+        icon = MenuIcon.Resource(R.drawable.naira)
+    )
+
+    data object Receipt : Screen(route = "receipt", title = "Receipt",)
+    data object AddProduct : Screen(
+        route = "add_product",
+        title = "Add Products",
+        icon = MenuIcon.Vector(Icons.Default.AddCircle)
+    )
+
+    data object DeleteProduct : Screen(
+        route = "delete_product",
+        title = "Delete Products",
+        icon = MenuIcon.Vector(Icons.Default.Delete)
+    )
+
+    data object Stock :
+        Screen(route = "stock", title = "Stock", icon = MenuIcon.Resource(R.drawable.stock))
+
+    data object WarehouseStock :
+        Screen(route = "warehouseStock", title = "Warehouse Stock", icon = MenuIcon.Resource(R.drawable.stock))
+
+    data object HeadOfficeStock :
+        Screen(route = "headOfficeStock", title = "HeadOffice Stock", icon = MenuIcon.Resource(R.drawable.stock))
+
+    data object Records :
+        Screen(route = "records", title = "Records", icon = MenuIcon.Resource(R.drawable.record))
+
+    data object RecordDetails : Screen(route = "record_details", title = "Record")
+
+
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/repositories/AppMetaRepository.kt
 ```kotlin
 package com.guvnoh.boma.repositories
@@ -260,7 +1081,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.MutableData
 import com.google.firebase.database.Transaction
-import com.guvnoh.boma.domain.DateProvider
+import com.guvnoh.boma.dateProvider.DateProvider
 import com.guvnoh.boma.database.FirebaseRefs
 
 class AppMetaRepository {
@@ -283,7 +1104,7 @@ class AppMetaRepository {
                     committed: Boolean,
                     currentData: DataSnapshot?
                 ) {
-                    onNewDay()
+                    if (committed && error == null) onNewDay()
                 }
 
             })
@@ -296,32 +1117,41 @@ class AppMetaRepository {
 ```kotlin
 package com.guvnoh.boma.repositories
 
+import android.content.Context
+import android.util.Log
 import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.Product
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
+import com.guvnoh.boma.R
+import com.guvnoh.boma.models.EmptiesStock
 
 class ProductsRepository {
 
-    private val productsRef = FirebaseRefs.fullStock
+    private val warehouseProductsRepo = FirebaseRefs.warehouseFulls
+
+    private val headOfficeProductsRepo = FirebaseRefs.HeadOfficeFulls
+
+    private val productsRepo = FirebaseRefs.displayProductsRepo
 
     private var listener: ValueEventListener? = null
 
-    /**
-     * Observe products in realtime
-     */
+
+     // Observe products in realtime
     fun observeProducts(
+         repo: DatabaseReference,
         onChange: (List<Product>) -> Unit
     ) {
-        listener?.let { productsRef.removeEventListener(it) }
+        listener?.let { repo.removeEventListener(it) }
 
         listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val products = snapshot.children.mapNotNull { child ->
                     child.getValue(Product::class.java)
                 }
-                onChange(products)
+                onChange(products.filter { it.id!=null })
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -329,41 +1159,109 @@ class ProductsRepository {
             }
         }
 
-        productsRef.addValueEventListener(listener!!)
+        repo.addValueEventListener(listener!!)
     }
 
-    /**
-     * Add new product
-     */
+    fun getDBProductList(onListReady: (MutableList<Product>) -> Unit) {
+
+        FirebaseRefs.HeadOfficeFulls.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val brandList = mutableListOf<Product>()
+                for (eachBrand in snapshot.children) {
+
+                    val product = eachBrand.getValue(Product::class.java)
+                    val soldTodayDB = eachBrand
+                        .child("stock")
+                        .child("soldToday")
+                        .getValue(Double::class.java)
+                    if (product!=null){
+                        if (soldTodayDB!=null) product.stock?.soldToday = soldTodayDB
+                        if (product.doublePrice==null)product.doublePrice = product.stringPrice?.toDouble()
+                        brandList.add(product)
+                    }
+                }
+                onListReady(brandList)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // handle error if needed
+                Log.d("DB_getBottlesList_ERR", "onCancelled: $error")
+            }
+        })
+    }
+
+
+
+    fun getDBaseEmptiesStock(callback: (MutableList<EmptiesStock>) -> Unit) {
+
+        FirebaseRefs.empties.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val stockList = mutableListOf<EmptiesStock>()
+                for (product in snapshot.children) {
+                    val stock = product.getValue(EmptiesStock::class.java)
+                    if (stock!=null){
+                        stockList.add(stock)
+                    }
+                }
+                callback(stockList)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // handle error if needed
+                Log.d("DB_getDBStock_ERR", "onCancelled: $error")
+            }
+        })
+    }
+
+
+
+    fun getImage(context: Context, name: String):Int{
+        val resId = (context.resources.getIdentifier(name,"drawable",context.packageName))
+        return if(resId !=0)resId else R.drawable.bottle
+    }
+
+
+
+    // Add new product
     fun addProduct(product: Product) {
-        val name = product.name ?: return
-        productsRef.child(name).setValue(product)
+        val key = productsRepo.push().key.toString()
+         product.id = key
+        productsRepo.child(key).setValue(product)
+        warehouseProductsRepo.child(key).setValue(product)
+        headOfficeProductsRepo.child(key).setValue(product)
     }
 
-    /**
-     * Update price only
-     */
-    fun updatePrice(productId: String, newPrice: Double) {
-        productsRef
-            .child(productId)
-            .child("price")
-            .setValue(newPrice)
+
+     // Update price
+    fun updatePrice(product: Product) {
+        val reposToUpdate = listOf(productsRepo, warehouseProductsRepo, headOfficeProductsRepo)
+
+         reposToUpdate.forEach {
+             it.child(product.id?:"error")
+             .child("stringPrice")
+             .setValue(product.stringPrice)
+
+             it.child(product.id?:"error")
+             .child("doublePrice")
+             .setValue(product.doublePrice)
+         }
     }
 
-    /**
-     * Delete product completely
-     */
+
+     // Delete product completely
     fun deleteProduct(productId: String) {
-        productsRef
-            .child(productId)
-            .removeValue()
+         val reposToUpdate = listOf(productsRepo, warehouseProductsRepo, headOfficeProductsRepo)
+         reposToUpdate.forEach {
+             it.child(productId)
+             .removeValue()
+         }
+
     }
 
-    /**
-     * Call this when ViewModel is cleared
-     */
+
+     // Call this when ViewModel is cleared
     fun clear() {
-        listener?.let { productsRef.removeEventListener(it) }
+        listener?.let { productsRepo.removeEventListener(it) }
         listener = null
     }
 }
@@ -496,46 +1394,66 @@ import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.FullsStock
 import com.google.firebase.database.*
 import com.guvnoh.boma.models.EmptiesStock
+import com.guvnoh.boma.models.Product
 
-class StockRepository {
+class StockRepository() {
 
-    private val fullsRef = FirebaseRefs.fullStock
+    //private val fullsRef = FirebaseRefs.fullStock
+    private val wareHouseFullsRepo = FirebaseRefs.warehouseFulls
+    private val headOfficeFulls = FirebaseRefs.HeadOfficeFulls
     private val emptiesRef = FirebaseRefs.empties
 
-    private var fullsListener: ValueEventListener? = null
+    private var warehouseFullsListener: ValueEventListener? = null
+    private var headOfficeFullsListener: ValueEventListener? = null
     private var emptiesListener: ValueEventListener? = null
 
     // ------------------------------------------------
     // FULLS STOCK (OBSERVE)
     // ------------------------------------------------
 
-    fun observeFullsStock(
-        onChange: (Map<String, FullsStock>) -> Unit
-    ) {
-        fullsListener?.let { fullsRef.removeEventListener(it) }
-
-        fullsListener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val result = mutableMapOf<String, FullsStock>()
-
-                snapshot.children.forEach { productSnap ->
-                    val productId = productSnap.key ?: return@forEach
-                    val stockSnap = productSnap.child("stock")
-
-                    val stock = stockSnap.getValue(FullsStock::class.java)
-                        ?: FullsStock()
-
-                    result[productId] = stock
-                }
-
-                onChange(result)
+    fun getStockData(products: List<Product>): MutableMap<String, Pair<Product, FullsStock>>{
+        val stockMap: MutableMap<String, Pair<Product, FullsStock>> = mutableMapOf()
+        products.forEach{
+            if (it.name!=null && it.stock!=null){
+                stockMap[it.name!!] = Pair(it, it.stock!!)
             }
-
-            override fun onCancelled(error: DatabaseError) = Unit
         }
-
-        fullsRef.addValueEventListener(fullsListener!!)
+        return stockMap
     }
+
+//    fun observeFullsStock(
+//        repo: DatabaseReference,
+//        map: MutableMap<String, Pair<Product, FullsStock>>,
+//        onChange: (Map<String, FullsStock>) -> Unit,
+//    ) {
+//        var listener = when(repo){
+//            FirebaseRefs.warehouseFulls -> warehouseFullsListener
+//            FirebaseRefs.HeadOfficeFulls -> headOfficeFullsListener
+//            else -> null
+//        }
+//        listener?.let { repo.removeEventListener(it) }
+//
+//        listener = object : ValueEventListener {
+//            override fun onDataChange(snapshot: DataSnapshot) {
+//                val result = mutableMapOf<String, FullsStock>()
+//
+//                snapshot.children.forEach { productSnap ->
+//                    //val productId = productSnap.key ?: return@forEach
+//                    val stockSnap = productSnap.child("stock")
+//
+//                    val stock = stockSnap.getValue(FullsStock::class.java)
+//                        ?: FullsStock()
+//                    result[productId] = stock
+//                }
+//
+//                onChange(result)
+//            }
+//
+//            override fun onCancelled(error: DatabaseError) = Unit
+//        }
+//
+//        repo.addValueEventListener(listener)
+//    }
 
     // ------------------------------------------------
     // EMPTIES (OBSERVE)
@@ -573,11 +1491,12 @@ class StockRepository {
 
     fun sellProduct(
         productId: String,
-        soldQty: Double
+        soldQty: Double,
+        repo: DatabaseReference
     ) {
         if (soldQty <= 0) return
 
-        val stockRef = fullsRef
+        val stockRef = repo
             .child(productId)
             .child("stock")
 
@@ -646,51 +1565,59 @@ class StockRepository {
     // DAILY RESET (CALLED BY AppMetaViewModel)
     // ------------------------------------------------
 
-    fun resetSoldToday() {
-        fullsRef.get().addOnSuccessListener { snapshot ->
-            snapshot.children.forEach { productSnap ->
-                val productId = productSnap.key ?: return@forEach
-
-                val stockRef = fullsRef
-                    .child(productId)
-                    .child("stock")
-
-                stockRef.runTransaction(object : Transaction.Handler {
-                    override fun doTransaction(data: MutableData): Transaction.Result {
-                        val stock = data.getValue(FullsStock::class.java)
-                            ?: return Transaction.success(data)
-
-                        val closing = stock.closingStock ?: 0.0
-
-                        stock.openingStock = closing
-                        stock.soldToday = 0.0
-
-                        data.value = stock
-                        return Transaction.success(data)
-                    }
-
-                    override fun onComplete(
-                        error: DatabaseError?,
-                        committed: Boolean,
-                        snapshot: DataSnapshot?
-                    ) = Unit
-                })
-            }
-        }
-    }
 
     // ------------------------------------------------
     // CLEANUP
     // ------------------------------------------------
 
-    fun clear() {
-        fullsListener?.let { fullsRef.removeEventListener(it) }
+    fun clear(repo: DatabaseReference) {
+        warehouseFullsListener?.let { FirebaseRefs.warehouseFulls.removeEventListener(it) }
+        headOfficeFullsListener?.let { FirebaseRefs.HeadOfficeFulls.removeEventListener(it) }
         emptiesListener?.let { emptiesRef.removeEventListener(it) }
 
-        fullsListener = null
+        warehouseFullsListener = null
+        headOfficeFullsListener = null
         emptiesListener = null
     }
 }
+```
+
+## File: app/src/main/java/com/guvnoh/boma/ui/theme/Type.kt
+```kotlin
+package com.guvnoh.boma.ui.theme
+
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+
+// Set of Material typography styles to start with
+val Typography = Typography(
+    bodyLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    )
+    /* Other default text styles to override
+    titleLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    ),
+    labelSmall = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Medium,
+        fontSize = 11.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
+    )
+    */
+)
 ```
 
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/cards/UpdateStock.kt
@@ -781,7 +1708,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
 import com.guvnoh.boma.R
-import com.guvnoh.boma.navigation.Screen
+import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.navigation.Navigation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -789,16 +1716,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.guvnoh.boma.navigation.MenuIcon
-import com.guvnoh.boma.navigation.Screen.AddProduct
-import com.guvnoh.boma.navigation.Screen.DeleteProduct
-import com.guvnoh.boma.navigation.Screen.PriceChange
-import com.guvnoh.boma.navigation.Screen.Products
-import com.guvnoh.boma.navigation.Screen.Receipt
-import com.guvnoh.boma.navigation.Screen.RecordDetails
-import com.guvnoh.boma.navigation.Screen.Records
-import com.guvnoh.boma.navigation.Screen.Stock
-import com.guvnoh.boma.viewmodels.BomaViewModel
+import com.guvnoh.boma.models.MenuIcon
+import com.guvnoh.boma.models.Screen.AddProduct
+import com.guvnoh.boma.models.Screen.DeleteProduct
+import com.guvnoh.boma.models.Screen.PriceChange
+import com.guvnoh.boma.models.Screen.Products
+import com.guvnoh.boma.models.Screen.Receipt
+import com.guvnoh.boma.models.Screen.RecordDetails
+import com.guvnoh.boma.models.Screen.Records
+import com.guvnoh.boma.models.Screen.Stock
+import com.guvnoh.boma.viewmodels.AppMetaViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -808,7 +1735,7 @@ fun Boma() {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val vm: BomaViewModel = viewModel()
+    val vm: AppMetaViewModel = viewModel()
     var selectedScreen by remember { mutableStateOf<Screen>(Products) }
 
     ModalNavigationDrawer(
@@ -1005,136 +1932,231 @@ fun DrawerPreview() {
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/viewmodels/BomaViewModel.kt
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/HeadOfficeStock.kt
 ```kotlin
-//package com.guvnoh.boma.models
+//package com.guvnoh.boma.uidesigns.screens
 //
-//import android.os.Build
-//import android.util.Log
-//import androidx.annotation.RequiresApi
-//import androidx.compose.runtime.State
-//import androidx.compose.runtime.mutableStateOf
-//import androidx.lifecycle.ViewModel
-//import androidx.lifecycle.viewModelScope
-//import com.guvnoh.boma.database.bomaStock
-//import com.guvnoh.boma.formatters.checkIfSoldToday
-//import com.guvnoh.boma.formatters.getDate
-//import com.guvnoh.boma.functions.getDBProductList
-//import com.guvnoh.boma.functions.getDBaseEmptiesStock
-//import kotlinx.coroutines.flow.MutableStateFlow
-//import kotlinx.coroutines.flow.StateFlow
-//import kotlinx.coroutines.launch
-//import kotlinx.coroutines.tasks.await
+//import androidx.compose.runtime.Composable
+//import com.guvnoh.boma.models.Screen
 //
-//class BomaViewModel : ViewModel() {
-//    //products
-//    private val _products = MutableStateFlow<List<Product>>(emptyList())
-//    val products: StateFlow<List<Product>> = getProductList()
-//
-//    //sold products
-//    private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
-//    val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
-//
-
-//
-
-//
-
-//
-//    //fulls stock
-//    private val _fullsStock = MutableStateFlow<List<FullsStock>>(emptyList())
-//    val fullsStock: StateFlow<List<FullsStock>> = getDBFullsStock()
-//
-
-//
-//    @RequiresApi(Build.VERSION_CODES.O)
-//    fun confirmSoldToday(productList: List<Product>){
-//        val stockDataBase = bomaStock.child("Fulls")
-//
-//        productList.forEach {
-//            val isSoldToday = checkIfSoldToday(it.stock?.lastTimeSold?:"")
-//            //Log.d("SendData", "Processing ${it.name} - soldToday=${it.stock.soldToday} - isSoldToday=$isSoldToday")
-//            if (!isSoldToday && (it.stock?.soldToday?:0.0) > 0){
-//                it.name?.let { brandName ->
-//                    stockDataBase
-//                        .child(brandName)
-//                        .child("stock")
-//                        .child("soldToday")
-//                        .setValue(0.0)
-//                }
-//            }
-//
-//        }
-//    }
-//
-//
-//    //get stock data from database
-//    private fun getDBFullsStock(): StateFlow<List<FullsStock>> {
-//        val list = mutableListOf<FullsStock>()
-//         _products.value.forEach {
-//             it.stock?.let { it1 -> list.add(it1) }
-//        }
-//        _fullsStock.value = list
-//        return _fullsStock
-//    }
-//
-//    private fun getDBEmpties(): StateFlow<List<EmptiesStock>> {
-//        getDBaseEmptiesStock {
-//            emptiesStock ->
-//            _emptiesStock.value = emptiesStock
-//        }
-//        return _emptiesStock
-//    }
-//
-//
-
-//
-
-//
-//    private fun getProductList(): StateFlow<List<Product>> {
-//        // Fetch products
-//        getDBProductList { dbList ->
-//            _products.value = dbList
-//        }
-//
-//        return _products
-//    }
-//
-//    fun updateCustomerName(name: String){
-//        _customerName.value = name
-//    }
-//
-
-//
-//    fun removeProduct(soldProduct: SoldProduct?) {
-//        val current = _soldProducts.value.toMutableList()
-//        val validSoldProduct = soldProduct ?: return
-//        current.removeAll { it.product?.name == validSoldProduct.product?.name }
-//        _soldProducts.value = current.toList()
-//    }
-//
-
+//@Composable
+//fun HeadOfficeStock(){
 //
 //}
-//
 
-package com.guvnoh.boma.viewmodels
+package com.guvnoh.boma.uidesigns.screens
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.ViewModel
-import com.guvnoh.boma.repositories.AppMetaRepository
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.wear.compose.material.Icon
+import com.guvnoh.boma.R
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.formatters.getDate
+import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.models.FullsStock
+import com.guvnoh.boma.models.StockSplashScreen
+import com.guvnoh.boma.uidesigns.cards.StockCard
+import com.guvnoh.boma.viewmodels.StockViewModel
 
-class BomaViewModel : ViewModel() {
 
-    private val metaRepo = AppMetaRepository()
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun StockScreen(
+    stockViewModel: StockViewModel,
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    stock: Map<String, FullsStock>,
+    title: String
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun checkDailyReset(onReset: () -> Unit) {
-        metaRepo.checkNewDay {
-            onReset()
+    ) {
+    //val products by productsViewModel.products.collectAsState()
+
+
+    var showSplash by remember { mutableStateOf(true) }
+//    var topBarTitle by remember { mutableStateOf("Full Stock") }
+
+    Scaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        containerColor = MaterialTheme.colorScheme.background,
+
+        // --- FAB ---
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = {},
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Update stock",
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Update",
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                },
+                containerColor = MaterialTheme.colorScheme.primary,
+                shape = RoundedCornerShape(12.dp),
+                elevation = FloatingActionButtonDefaults.elevation(6.dp)
+            )
+        },
+
+        // --- Top Bar ---
+        topBar = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Today: ${getDate()}",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                HorizontalDivider(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth(0.85f),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                    thickness = 1.dp
+                )
+            }
+        },
+
+        // --- Bottom Bar ---
+        bottomBar = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 4.dp
+            ) {
+                val bottomBarItems = listOf(BottomBarItem.Fulls, BottomBarItem.Empties)
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+
+                bottomBarItems.forEach { item ->
+                    val selected = currentRoute == item.route
+
+                    NavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            navController.navigate(item.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        icon = { item.icon },
+                        label = { Text(item.title) },
+                        alwaysShowLabel = true
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        // --- Screen Content ---
+        Box(
+            modifier = Modifier
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            if (showSplash) {
+                StockSplashScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    onTimeOut = { showSplash = false },
+                    stock = stock.values.toMutableList()
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 12.dp)
+                ) {
+                    items(stock.keys.toMutableList()) {
+                            brand ->
+                        val brandStock = stock[brand] ?: FullsStock()
+                        StockCard(brand, brandStock)
+                    }
+                }
+            }
         }
     }
+}
+
+//open class BottomBarItem(
+//    val route: String,
+//    val title: String,
+//    val icon: Int,
+//
+//    ){
+//    data object Fulls: BottomBarItem(route = "fulls", title = "Fulls", R.drawable.orijin)
+//    data object Empties: BottomBarItem(route = "empties", title = "Empties", R.drawable.bottle)
+//}
+
+//fun sendStockData(list: List<Product>){
+//
+//    list.forEach {
+//        val random1 = (20..800).random()
+//        val random2 = (20..800).random()
+//        val stock = FullsStock(
+//            closingStock = random1.toDouble(),
+//            openingStock = random2.toDouble(),
+//            depletion = 0.0,
+//            lastTimeSold = "Fri, Oct 31 2025"
+//        )
+//        it.stock = stock
+//        FirebaseRefs.fullStock
+//            .child(it.name?:"unknown")
+//            .setValue(it)
+//
+//    }
+//
+//}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview
+@Composable
+private fun ShowStock(){
+    // StockFullsScreen(stockViewModel = viewModel(), navController = rememberNavController(), )
+
 }
 ```
 
@@ -1142,15 +2164,29 @@ class BomaViewModel : ViewModel() {
 ```kotlin
 package com.guvnoh.boma.viewmodels
 
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.MutableData
+import com.google.firebase.database.Transaction
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.formatters.getDate
+import com.guvnoh.boma.formatters.getTime
 import com.guvnoh.boma.formatters.halfAndQuarter
 import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.SoldProduct
 import com.guvnoh.boma.repositories.ProductsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.update
 
 
@@ -1161,42 +2197,34 @@ class ProductsViewModel(
     private val _products = MutableStateFlow<List<Product>>(emptyList())
     val products: StateFlow<List<Product>> = _products
 
-        //customer
+    //customer
     private val _customerName = mutableStateOf("")
     var customerName: State<String> = _customerName
 
-        //sold products
+    //sold products
     private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
     val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
 
-        //price change products
-    private val _priceChangeProducts = MutableStateFlow<List<Product>>(emptyList())
-    val priceChangeProducts: StateFlow<List<Product>> = _priceChangeProducts
-
 
     init {
-        observeProducts()
+        observeProducts(FirebaseRefs.displayProductsRepo)
     }
 
     //get products from database
 
-    private fun observeProducts() {
-        repository.observeProducts { list ->
+    private fun observeProducts(repo: DatabaseReference) {
+        repository.observeProducts(repo) { list ->
             _products.value = list
         }
     }
 
     // customer name
 
-    fun setCustomerName(name: String){
+    fun setCustomerName(name: String) {
         _customerName.value = name
     }
 
     //sold products management
-
-    private fun updateSoldProducts(list: List<SoldProduct>){
-        _soldProducts.value = list
-    }
 
     fun updateSoldProduct(
         product: Product,
@@ -1207,7 +2235,7 @@ class ProductsViewModel(
             val updated = list.toMutableList()
             val index = updated.indexOfFirst { it.product?.name == product.name }
 
-            val total = ((product.doublePrice ?: 0.0) * doubleQuantity).toInt()
+            val total = ((product.stringPrice?.toDoubleOrNull() ?: 0.0) * doubleQuantity).toInt()
 
             val soldProduct = SoldProduct(
                 product = product,
@@ -1219,7 +2247,7 @@ class ProductsViewModel(
 
             if (index >= 0) {
                 updated[index] = soldProduct
-            } else if (doubleQuantity > 0) {
+            } else {
                 updated.add(soldProduct)
             }
 
@@ -1227,34 +2255,26 @@ class ProductsViewModel(
         }
     }
 
-
-    fun recordSoldProduct(soldProduct: SoldProduct?) {
-        val current = _soldProducts.value.toMutableList()
-        val validSoldProduct = soldProduct ?: return
-
-        // If product already exists, replace it instead of duplicating
-        val existingIndex = current.indexOfFirst {
-            it.product?.name?.trim()?.lowercase() == validSoldProduct.product?.name?.trim()?.lowercase()
-        }
-
-        if (existingIndex >= 0 ) {
-            current[existingIndex] = validSoldProduct
-        } else {
-            current.add(validSoldProduct)
-        }
-        updateSoldProducts(current.toList())
+    //generate receipt
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun generateReceipt(): Receipt {
+        val validSoldProducts = soldProducts.value.filter { (it.intTotal ?: 0) > 0 }.toList()
+        //val productList by vm.products.collectAsState()
+        val grandTotal = validSoldProducts.sumOf { it.intTotal ?: 0 }
+        val date = getDate()
+        val receipt = Receipt(
+            id = FirebaseRefs.bomaRoot.push().key.toString().replace("-", ""),
+            soldProducts = validSoldProducts,
+            customerName = customerName.value,
+            date = date,
+            grandTotal = grandTotal.toString()
+        )
+        return receipt
     }
 
 
-    // price change
-    fun updatePrice(productId: String, newPrice: Double) {
-        repository.updatePrice(productId, newPrice)
-    }
-    fun addToPriceChangeList(product: Product, newPrice: String ){
-        val current = _priceChangeProducts.value.toMutableList()
-        product.stringPrice = newPrice
-        current.add(product)
-        _priceChangeProducts.value = current
+    fun addProduct(product: Product) {
+        repository.addProduct(product)
     }
 
     fun deleteProduct(productId: String) {
@@ -1265,7 +2285,7 @@ class ProductsViewModel(
         _soldProducts.value = emptyList()
     }
 
-    fun clearName(){
+    fun clearName() {
         _customerName.value = ""
     }
 }
@@ -1275,9 +2295,15 @@ class ProductsViewModel(
 ```kotlin
 package com.guvnoh.boma.viewmodels
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.SoldProduct
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -1285,23 +2311,57 @@ import kotlinx.coroutines.flow.StateFlow
 
 class ReceiptViewmodel : ViewModel(){
 
-        //receipt
     private val _receipt = MutableStateFlow<Receipt?>(null)
     val receipt: StateFlow<Receipt?> = _receipt
+
+
 
     fun setCurrentReceipt(receipt: Receipt){
         _receipt.value = receipt
     }
     @RequiresApi(Build.VERSION_CODES.O)
-    fun saveSale(list: List<SoldProduct>, vm: StockViewModel){
+    fun saveSale(list: List<SoldProduct>, stockViewModel: StockViewModel, repo: DatabaseReference){
         list.forEach { soldProduct ->
             soldProduct.doubleQuantity?.let {
                 qty -> soldProduct.product?.name?.let {
-                    name -> vm.sellProduct(name, qty)
+                    name -> stockViewModel.sellProduct(name, qty, repo)
                 }
             }
 
         }
+    }
+
+    fun getGrandTotal(): Int{
+        val total = receipt.value?.soldProducts?.sumOf {
+            it.intTotal?:0
+        }
+        return total?:0
+    }
+
+    fun copy(receipt: Receipt, context: Context){
+        val textToCopy = copyToClipboard(receipt)
+        val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("label", textToCopy)
+        clipBoard.setPrimaryClip(clip)
+        Toast.makeText(context, "Text copied!", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun copyToClipboard(receipt: Receipt): String {
+        //The variable finalText holds the complete text to be sent to the clipboard
+        val finalText = StringBuilder()
+        val soldProductsRaw = receipt.soldProducts?: emptyList()
+        val soldProducts = soldProductsRaw.filter { it.intTotal!! >0 }.toList()
+        val grandTotal = soldProducts.sumOf { it.intTotal?:0 }
+        soldProducts.forEach {
+            val copiedQuantity: String = it.receiptQuantity?:"0"
+            val textToCopy = "$copiedQuantity ${it.product?.name} ${nairaFormat(it.intTotal?:0)}\n"
+
+            finalText.append(textToCopy)
+        }
+        if (soldProducts.size > 1) {
+            finalText.append("Total: $grandTotal")
+        }
+        return finalText.toString()
     }
 }
 ```
@@ -1342,35 +2402,89 @@ package com.guvnoh.boma.viewmodels
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.EmptiesStock
 import com.guvnoh.boma.models.FullsStock
-import com.guvnoh.boma.repositories.AppMetaRepository
+import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.repositories.ProductsRepository
 import com.guvnoh.boma.repositories.StockRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 @RequiresApi(Build.VERSION_CODES.O)
 class StockViewModel(
-    private val stockRepository: StockRepository = StockRepository(),
-    private val appMetaRepository: AppMetaRepository = AppMetaRepository()
 ) : ViewModel() {
 
-    private val _stock = MutableStateFlow<Map<String, FullsStock>>(emptyMap())
-    val stock: StateFlow<Map<String, FullsStock>> = _stock
+    private val _wareHouseFulls = MutableStateFlow<Map<Product, FullsStock>>(emptyMap())
+    val wareHouseStock: StateFlow<Map<Product, FullsStock>> = _wareHouseFulls
+
+    private val _headOfficeFulls = MutableStateFlow<Map<Product, FullsStock>>(emptyMap())
+    val headOfficeStock: StateFlow<Map<Product, FullsStock>> = _headOfficeFulls
 
         //empties stock
     private val _emptiesStock = MutableStateFlow<Map<String, EmptiesStock>>(emptyMap())
     val emptiesStock: StateFlow<Map<String, EmptiesStock>> = _emptiesStock
 
+
+
+    private val stockRepository: StockRepository = StockRepository()
+
     init {
-        observeFullsStock()
+        observeFullsStock(FirebaseRefs.warehouseFulls)
+        observeFullsStock(FirebaseRefs.HeadOfficeFulls)
         observeEmptiesStock()
-        checkDailyReset()
+        AppMetaViewModel().checkDailyReset {
+            AppMetaViewModel().resetSoldToday(FirebaseRefs.warehouseFulls)
+            AppMetaViewModel().resetSoldToday(FirebaseRefs.HeadOfficeFulls)
+        }
     }
 
-    private fun observeFullsStock() {
-        stockRepository.observeFullsStock { map ->
-            _stock.value = map
+    private fun convertListToMap(list: List<Product>): Map<Product, FullsStock>{
+        val map: MutableMap<Product, FullsStock> = mutableMapOf()
+
+        list.forEach {
+            val stock = it.stock?:FullsStock()
+            map[it] = stock
+        }
+        return map
+    }
+
+    private fun observeFullsStock(repo: DatabaseReference) {
+        val map: MutableMap<Product, FullsStock> = mutableMapOf()
+        val products = when(repo){
+            FirebaseRefs.warehouseFulls -> {
+                val stockLocation = FirebaseRefs.warehouseFulls
+                ProductsRepository().observeProducts(stockLocation){
+                    products ->
+                    _wareHouseFulls.value = convertListToMap(products)
+                }
+                _wareHouseFulls.value
+            }
+            FirebaseRefs.HeadOfficeFulls -> {
+                val stockLocation = FirebaseRefs.HeadOfficeFulls
+                ProductsRepository().observeProducts(stockLocation){
+                        products ->
+                    _headOfficeFulls.value = convertListToMap(products)
+                }
+                _headOfficeFulls.value
+            }
+            else -> {
+                val stockLocation = FirebaseRefs.warehouseFulls
+                ProductsRepository().observeProducts(stockLocation){
+                        products ->
+                    _wareHouseFulls.value = convertListToMap(products)
+                }
+                _wareHouseFulls.value
+            }
+        }
+        val productStockList: List<Product> = products.keys.toList()
+        stockRepository.getStockData(productStockList).forEach {
+            map[it.value.first] = it.value.second
+        }
+        when(repo){
+            FirebaseRefs.warehouseFulls -> _wareHouseFulls.value = map
+            FirebaseRefs.HeadOfficeFulls -> _headOfficeFulls.value = map
         }
     }
 
@@ -1380,318 +2494,15 @@ class StockViewModel(
         }
     }
 
-    fun sellProduct(productId: String, quantity: Double) {
+    fun sellProduct(productId: String, quantity: Double, repo: DatabaseReference) {
         stockRepository.sellProduct(
             productId = productId,
-            soldQty = quantity
+            soldQty = quantity,
+            repo = repo
         )
     }
 
-    private fun checkDailyReset() {
-        appMetaRepository.checkNewDay {
-            stockRepository.resetSoldToday()
-        }
-    }
 }
-```
-
-## File: .gitignore
-```
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-local.properties
-```
-
-## File: app/.gitignore
-```
-/build
-```
-
-## File: app/google-services.json
-```json
-{
-  "project_info": {
-    "project_number": "1036788853215",
-    "firebase_url": "https://freemann-firms-default-rtdb.firebaseio.com",
-    "project_id": "freemann-firms",
-    "storage_bucket": "freemann-firms.firebasestorage.app"
-  },
-  "client": [
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:1036788853215:android:cb4340cf04dc0b277cfc6a",
-        "android_client_info": {
-          "package_name": "com.guvnoh.binl"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBvT3qj25i69EE63fUFWwDE4XHx-07x7k8"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:1036788853215:android:2d49ef49181dd99f7cfc6a",
-        "android_client_info": {
-          "package_name": "com.guvnoh.boma"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBvT3qj25i69EE63fUFWwDE4XHx-07x7k8"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:1036788853215:android:a91464966917adc97cfc6a",
-        "android_client_info": {
-          "package_name": "com.guvnoh.freemannfirms"
-        }
-      },
-      "oauth_client": [],
-      "api_key": [
-        {
-          "current_key": "AIzaSyBvT3qj25i69EE63fUFWwDE4XHx-07x7k8"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": []
-        }
-      }
-    }
-  ],
-  "configuration_version": "1"
-}
-```
-
-## File: app/proguard-rules.pro
-```
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
-
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
-
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
-```
-
-## File: app/src/androidTest/java/com/guvnoh/boma/ExampleInstrumentedTest.kt
-```kotlin
-package com.guvnoh.boma
-
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.ext.junit.runners.AndroidJUnit4
-
-import org.junit.Test
-import org.junit.runner.RunWith
-
-import org.junit.Assert.*
-
-/**
- * Instrumented test, which will execute on an Android device.
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
-@RunWith(AndroidJUnit4::class)
-class ExampleInstrumentedTest {
-    @Test
-    fun useAppContext() {
-        // Context of the app under test.
-        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.guvnoh.boma", appContext.packageName)
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/formatters/CurrencyFormatter.kt
-```kotlin
-package com.guvnoh.boma.formatters
-
-import java.text.DecimalFormat
-
-fun nairaFormat(num: Double): String{
-    val format = DecimalFormat("#,###")
-    return if (num>0){"₦${format.format(num)}"}else{"₦0.00"}
-}
-
-fun nairaFormat(num: Int): String{
-    val format = DecimalFormat("#,###")
-    return if (num>0){"₦${format.format(num)}"}else{"₦0.00"}
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/formatters/NumberFormatter.kt
-```kotlin
-package com.guvnoh.boma.formatters
-
-fun halfAndQuarter(num: Double): String{
-    //converts 0.5 to display as '½', same for 0.25 (quarter)
-    //also converts them when they have integer companions e.g '1½' etc...
-    val integerPart = (num).toInt()
-    return if (num % 1 == 0.5){
-        if(integerPart==0){
-            "½"
-        } else "$integerPart½"
-    }else if (num % 1 == 0.25){
-        if(integerPart==0){
-            "¼"
-        } else "$integerPart¼"
-    }
-    else if (num>num.toInt()){
-        num.toString()
-    }else num.toInt().toString()
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/functions/Screenshot.kt
-```kotlin
-package com.guvnoh.boma.functions
-
-import android.content.ContentValues
-import android.content.Context
-import android.graphics.Bitmap
-import android.os.Environment
-import android.provider.MediaStore
-import android.view.View
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalView
-import java.io.OutputStream
-
-fun captureScreen(view: View): Bitmap {
-    val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
-    val canvas = android.graphics.Canvas(bitmap)
-    view.draw(canvas)
-    return bitmap
-}
-
-fun saveBitmapToGallery(context: Context, bitmap: Bitmap) {
-    val filename = "Screenshot_${System.currentTimeMillis()}.png"
-    val resolver = context.contentResolver
-    val contentValues = ContentValues().apply {
-        put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
-        put(MediaStore.MediaColumns.MIME_TYPE, "image/png")
-        put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_PICTURES)
-    }
-
-    val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-
-    uri?.let {
-        val outputStream: OutputStream? = resolver.openOutputStream(it)
-        outputStream.use { stream ->
-            if (stream != null) {
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
-            }
-        }
-    }
-    Toast.makeText(context, "Screenshot saved.", Toast.LENGTH_SHORT).show()
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/functions/VibratePhone.kt
-```kotlin
-package com.guvnoh.boma.functions
-
-import android.content.Context
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
-import android.os.Build
-import androidx.annotation.RequiresApi
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun vibratePhone(context: Context, duration: Long = 100L) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-        val vibrator = vibratorManager.defaultVibrator
-        vibrator.vibrate(
-            VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
-        )
-    } else {
-        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        vibrator.vibrate(
-            VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
-        )
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/ui/theme/Type.kt
-```kotlin
-package com.guvnoh.boma.ui.theme
-
-import androidx.compose.material3.Typography
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-
-// Set of Material typography styles to start with
-val Typography = Typography(
-    bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
-    ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
-    )
-    */
-)
 ```
 
 ## File: app/src/main/res/drawable/ic_launcher_foreground.xml
@@ -2240,90 +3051,6 @@ include(":app")
 </manifest>
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/models/AutoScrollingText.kt
-```kotlin
-package com.guvnoh.boma.models
-
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.layout.onGloballyPositioned
-
-@Composable
-fun AutoScrollingText(
-    text: String,
-    modifier: Modifier,
-    speed: Int = 40,
-
-) {
-    val scrollState = rememberScrollState()
-    var direction by remember { mutableIntStateOf(1) }
-
-    val textWidth = remember { mutableIntStateOf(0) }
-    val containerWidth = remember { mutableIntStateOf(0) }
-
-    Box(
-        modifier = modifier
-            .clipToBounds()
-            .onGloballyPositioned {
-                coordinates ->
-                containerWidth.intValue = coordinates.size.width
-            }
-    ){
-        Row (
-            modifier = Modifier
-                .horizontalScroll(scrollState, enabled = false)
-                .onGloballyPositioned {
-                    coordinates ->
-                    textWidth.intValue = coordinates.size.width
-                }
-        ){
-            Text(
-                text = text,
-                softWrap = false,
-                maxLines = 1
-            )
-        }
-    }
-    LaunchedEffect (
-        textWidth.intValue,
-        containerWidth.intValue
-    ){
-        val textBreadth= textWidth.intValue
-        val containerBreadth = containerWidth.intValue
-        if (textBreadth <= containerBreadth) return@LaunchedEffect
-        while (true){
-            val maxScroll = (textBreadth - containerBreadth).coerceAtLeast(0)
-            val next = when(direction){
-                1 -> maxScroll
-                -1 -> 0
-                else -> 0
-            }
-            scrollState.animateScrollTo(
-                next,
-                animationSpec = tween(
-                    durationMillis = (maxScroll * speed).coerceAtLeast(500),
-                    easing = LinearEasing
-                )
-            )
-            direction *= -1
-        }
-    }
-}
-```
-
 ## File: app/src/main/java/com/guvnoh/boma/ui/theme/Color.kt
 ```kotlin
 package com.guvnoh.boma.ui.theme
@@ -2477,6 +3204,266 @@ fun BOMATheme(
         shapes = AppShapes,
         content = content
     )
+}
+```
+
+## File: app/src/main/res/drawable/ic_launcher_background.xml
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<vector
+    android:height="108dp"
+    android:width="108dp"
+    android:viewportHeight="108"
+    android:viewportWidth="108"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <path android:fillColor="#3DDC84"
+          android:pathData="M0,0h108v108h-108z"/>
+    <path android:fillColor="#00000000" android:pathData="M9,0L9,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,0L19,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M29,0L29,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M39,0L39,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M49,0L49,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M59,0L59,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M69,0L69,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M79,0L79,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M89,0L89,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M99,0L99,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,9L108,9"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,19L108,19"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,29L108,29"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,39L108,39"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,49L108,49"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,59L108,59"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,69L108,69"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,79L108,79"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,89L108,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,99L108,99"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,29L89,29"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,39L89,39"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,49L89,49"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,59L89,59"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,69L89,69"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,79L89,79"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M29,19L29,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M39,19L39,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M49,19L49,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M59,19L59,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M69,19L69,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M79,19L79,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+</vector>
+```
+
+## File: app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+```
+
+## File: app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+```
+
+## File: build.gradle.kts
+```kotlin
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.google.gms.google.services) apply false
+}
+```
+
+## File: gradle/wrapper/gradle-wrapper.properties
+```
+#Tue Sep 23 21:00:45 WAT 2025
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=file:/C:/Users/machine/Desktop/GradleCache/.gradle/wrapper/dists/gradle-8.10.2-bin.zip
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+```
+
+## File: app/src/main/java/com/guvnoh/boma/MainActivity.kt
+```kotlin
+package com.guvnoh.boma
+
+
+import android.os.Build
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import com.guvnoh.boma.ui.theme.BOMATheme
+import com.guvnoh.boma.uidesigns.Boma
+
+class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContent {
+            BOMATheme {
+                Boma()
+            }
+        }
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/models/AutoScrollingText.kt
+```kotlin
+package com.guvnoh.boma.models
+
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.font.FontWeight
+
+@Composable
+fun AutoScrollingText(
+    text: String,
+    modifier: Modifier,
+    speed: Int = 40,
+
+) {
+    val scrollState = rememberScrollState()
+    var direction by remember { mutableIntStateOf(1) }
+
+    val textWidth = remember { mutableIntStateOf(0) }
+    val containerWidth = remember { mutableIntStateOf(0) }
+
+    Box(
+        modifier = modifier
+            .clipToBounds()
+            .onGloballyPositioned {
+                coordinates ->
+                containerWidth.intValue = coordinates.size.width
+            }
+    ){
+        Row (
+            modifier = Modifier
+                .horizontalScroll(scrollState, enabled = false)
+                .onGloballyPositioned {
+                    coordinates ->
+                    textWidth.intValue = coordinates.size.width
+                }
+        ){
+            Text(
+                text = text,
+                softWrap = false,
+                maxLines = 1,
+                fontWeight = FontWeight.ExtraBold
+            )
+        }
+    }
+    LaunchedEffect (
+        textWidth.intValue,
+        containerWidth.intValue
+    ){
+        val textBreadth= textWidth.intValue
+        val containerBreadth = containerWidth.intValue
+        if (textBreadth <= containerBreadth) return@LaunchedEffect
+        while (true){
+            val maxScroll = (textBreadth - containerBreadth).coerceAtLeast(0)
+            val next = when(direction){
+                1 -> maxScroll
+                -1 -> 0
+                else -> 0
+            }
+            scrollState.animateScrollTo(
+                next,
+                animationSpec = tween(
+                    durationMillis = (maxScroll * speed).coerceAtLeast(500),
+                    easing = LinearEasing
+                )
+            )
+            direction *= -1
+        }
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/models/Empties.kt
+```kotlin
+package com.guvnoh.boma.models
+
+data class Empties (
+    val company: EmptyCompany? = null,
+    var emptyType: EmptyType? = null
+)
+
+enum class EmptyCompany{
+    COCA_COLA,
+    HERO,
+    NBL,
+    GUINNESS,
+}
+
+enum class EmptyType{
+    TWENTY,
+    TWELVE,
+    TWENTY_FOUR,
+    EIGHTEEN,
+    SIX
 }
 ```
 
@@ -2703,7 +3690,7 @@ import com.guvnoh.boma.formatters.getDate
 import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.SoldProduct
 import com.guvnoh.boma.models.brandData
-import com.guvnoh.boma.navigation.Screen
+import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.viewmodels.RecordViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -2998,8 +3985,9 @@ import androidx.wear.compose.material.rememberSwipeableState
 import androidx.wear.compose.material.swipeable
 import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.functions.getImage
 import com.guvnoh.boma.functions.vibratePhone
+import com.guvnoh.boma.repositories.ProductsRepository
+import com.guvnoh.boma.viewmodels.ProductsViewModel
 import kotlin.math.roundToInt
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -3007,7 +3995,8 @@ import kotlin.math.roundToInt
 @Composable
 fun SwipeableProductCard(
     product: Product,
-    navController: NavController
+    navController: NavController,
+    productsViewModel: ProductsViewModel,
 ) {
     val scope = rememberCoroutineScope()
     val alert = remember { mutableStateOf(false) }
@@ -3079,8 +4068,7 @@ fun SwipeableProductCard(
         vibratePhone(context)
         AlertDialogg(
             onDelete = {
-                val type = product.type
-                FirebaseRefs.fullStock.child(product.name?:"unkno").removeValue()
+                productsViewModel.deleteProduct(product.id?:"")
                        },
             product = product,
             alert = alert,
@@ -3144,7 +4132,7 @@ fun DeleteProductCard(
 
     val context = LocalContext.current
     val resId =
-        getImage(context,product.imageName?:"bottle.jpg")
+        ProductsRepository().getImage(context,product.imageName?:"bottle.jpg")
 
     Card(
         modifier = Modifier
@@ -3387,14 +4375,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -3408,7 +4402,10 @@ fun RecordsScreen(
     navController: NavHostController,
     paddingValues: PaddingValues
     ){
-val records by vm.records.collectAsState()
+    val records by vm.records.collectAsState()
+
+    var date by remember { mutableStateOf("") }
+
 
     Scaffold (modifier = Modifier.padding(paddingValues)){
         Column(
@@ -3427,13 +4424,27 @@ val records by vm.records.collectAsState()
             }else{
 
                 LazyColumn {
+                    stickyHeader {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                text = date,
+                                style = MaterialTheme.typography.titleLarge,
+                            )
+                        }
+
+                    }
                     items(records){
                             record ->
+                        date = record.date.toString()
 
                         RecordCard(
                             record = record,
                             navController = navController,
-                            vm = vm)
+                            vm = vm
+                        )
                     }
                 }
             }
@@ -3441,150 +4452,6 @@ val records by vm.records.collectAsState()
     }
 
 }
-```
-
-## File: app/src/main/res/drawable/ic_launcher_background.xml
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<vector
-    android:height="108dp"
-    android:width="108dp"
-    android:viewportHeight="108"
-    android:viewportWidth="108"
-    xmlns:android="http://schemas.android.com/apk/res/android">
-    <path android:fillColor="#3DDC84"
-          android:pathData="M0,0h108v108h-108z"/>
-    <path android:fillColor="#00000000" android:pathData="M9,0L9,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,0L19,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M29,0L29,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M39,0L39,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M49,0L49,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M59,0L59,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M69,0L69,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M79,0L79,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M89,0L89,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M99,0L99,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,9L108,9"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,19L108,19"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,29L108,29"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,39L108,39"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,49L108,49"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,59L108,59"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,69L108,69"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,79L108,79"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,89L108,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,99L108,99"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,29L89,29"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,39L89,39"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,49L89,49"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,59L89,59"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,69L89,69"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,79L89,79"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M29,19L29,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M39,19L39,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M49,19L49,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M59,19L59,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M69,19L69,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M79,19L79,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-</vector>
-```
-
-## File: app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>
-```
-
-## File: app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>
-```
-
-## File: build.gradle.kts
-```kotlin
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-plugins {
-    alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
-    alias(libs.plugins.kotlin.compose) apply false
-    alias(libs.plugins.google.gms.google.services) apply false
-}
-```
-
-## File: gradle/wrapper/gradle-wrapper.properties
-```
-#Tue Sep 23 21:00:45 WAT 2025
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=file:/C:/Users/machine/Desktop/GradleCache/.gradle/wrapper/dists/gradle-8.10.2-bin.zip
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
-```
-
-## File: app/src/main/java/com/guvnoh/boma/database/Database.kt
-```kotlin
-//package com.guvnoh.boma.database
-//
-//import com.google.firebase.database.DatabaseReference
-//import com.google.firebase.database.FirebaseDatabase
-//
-//val database: FirebaseDatabase = FirebaseDatabase.getInstance()
-//
-////database root folder
-//val DBRoot: DatabaseReference = database.reference.child("Boma")
-//
-////daily depletion records per product
-//val dailyDepletion = DBRoot.child("BomaDailyDepletion")
-//
-////records
-//val bomaRecords: DatabaseReference = DBRoot.child("BomaDBRecords2")
-//
-////stock
-////val stockFulls = DBRoot.child("Stock").child("fulls ")
-//
-////val stockEmpties = DBRoot.child("Stock").child("empties")
-//val bomaStock = DBRoot.child("BomaStock")
-//
-//val fulls = bomaStock.child("Fulls")
 ```
 
 ## File: app/src/main/java/com/guvnoh/boma/functions/DatabaseFunctions.kt
@@ -3600,64 +4467,6 @@ import com.guvnoh.boma.R
 import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.EmptiesStock
-
-fun getDBProductList(onListReady: (MutableList<Product>) -> Unit) {
-
-    FirebaseRefs.fullStock.addValueEventListener(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            val brandList = mutableListOf<Product>()
-            for (eachBrand in snapshot.children) {
-
-                val product = eachBrand.getValue(Product::class.java)
-                val soldTodayDB = eachBrand
-                    .child("stock")
-                    .child("soldToday")
-                    .getValue(Double::class.java)
-                if (product!=null){
-                    if (soldTodayDB!=null) product.stock?.soldToday = soldTodayDB
-                    if (product.doublePrice==null)product.doublePrice = product.stringPrice?.toDouble()
-                    brandList.add(product)
-                }
-            }
-            onListReady(brandList)
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            // handle error if needed
-            Log.d("DB_getBottlesList_ERR", "onCancelled: $error")
-        }
-    })
-}
-
-
-
-fun getDBaseEmptiesStock(callback: (MutableList<EmptiesStock>) -> Unit) {
-
-    FirebaseRefs.empties.addValueEventListener(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            val stockList = mutableListOf<EmptiesStock>()
-            for (product in snapshot.children) {
-                val stock = product.getValue(EmptiesStock::class.java)
-                if (stock!=null){
-                    stockList.add(stock)
-                }
-            }
-            callback(stockList)
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            // handle error if needed
-            Log.d("DB_getDBStock_ERR", "onCancelled: $error")
-        }
-    })
-}
-
-
-
-fun getImage(context: Context, name: String):Int{
-    val resId = (context.resources.getIdentifier(name,"drawable",context.packageName))
-    return if(resId !=0)resId else R.drawable.bottle
-}
 ```
 
 ## File: app/src/main/java/com/guvnoh/boma/functions/FetchRecords.kt
@@ -3688,23 +4497,6 @@ fun getDatabaseRecords(callback: (MutableList<Receipt>) -> Unit) {
         }
     })
 }
-
-//fun getSoldToday(productName: String, callback: (Double) -> Unit){
-//
-//    fulls.child(productName).child("stock").child("soldToday")
-//        .addValueEventListener(object : ValueEventListener {
-//            override fun onDataChange(snapshot: DataSnapshot) {
-//                val qty = snapshot.getValue(Double::class.java)?:0.0
-//
-//                callback(qty)
-//            }
-//
-//            override fun onCancelled(error: DatabaseError) {
-//                Log.d("get records error: ", "$error")
-//            }
-//        })
-//
-//}
 ```
 
 ## File: app/src/main/java/com/guvnoh/boma/functions/PushRecord.kt
@@ -3725,63 +4517,6 @@ fun sendRecord(record: Receipt){
         "grandTotal" to record.grandTotal
     )
     newRef.setValue(recordMap)
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/MainActivity.kt
-```kotlin
-package com.guvnoh.boma
-
-
-import android.os.Build
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.guvnoh.boma.ui.theme.BOMATheme
-import com.guvnoh.boma.uidesigns.Boma
-
-class MainActivity : ComponentActivity() {
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        setContent {
-            BOMATheme {
-                Boma()
-            }
-        }
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/models/Empties.kt
-```kotlin
-package com.guvnoh.boma.models
-
-data class Empties (
-    val company: EmptyCompany? = null,
-    var emptyType: EmptyType? = null
-)
-
-enum class EmptyCompany{
-    COCA_COLA,
-    HERO,
-    NBL,
-    GUINNESS,
-}
-
-enum class EmptyType{
-    TWENTY,
-    TWELVE,
-    TWENTY_FOUR,
-    EIGHTEEN,
-    SIX
 }
 ```
 
@@ -3948,16 +4683,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.guvnoh.boma.repositories.StockRepository
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.screens.AddProduct
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
-import com.guvnoh.boma.uidesigns.screens.PriceChangePage
+import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangePage
 import com.guvnoh.boma.uidesigns.screens.ProductsPage
 import com.guvnoh.boma.uidesigns.screens.ReceiptPage
 import com.guvnoh.boma.uidesigns.screens.RecordDetails
 import com.guvnoh.boma.uidesigns.screens.RecordsScreen
-import com.guvnoh.boma.viewmodels.BomaViewModel
+import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangeViewmodel
+import com.guvnoh.boma.viewmodels.AppMetaViewModel
 import com.guvnoh.boma.viewmodels.ProductsViewModel
+import com.guvnoh.boma.viewmodels.ReceiptViewmodel
 import com.guvnoh.boma.viewmodels.RecordViewModel
 import com.guvnoh.boma.viewmodels.StockViewModel
 
@@ -3971,20 +4709,27 @@ fun Navigation(
 
     val records: RecordViewModel  = viewModel()
     val record by records.record.collectAsState()
-
     val productsViewModel: ProductsViewModel = viewModel()
-    val products by productsViewModel.products.collectAsState()
-
-    val bomaViewModel: BomaViewModel = viewModel()
+    val bomaViewModel: AppMetaViewModel = viewModel()
     val stockViewModel: StockViewModel = viewModel()
+    val receiptViewmodel: ReceiptViewmodel = viewModel()
+    val priceChangeViewmodel: PriceChangeViewmodel = viewModel()
 
 
 
 
 
     LaunchedEffect(Unit) {
-        bomaViewModel.checkDailyReset{ StockRepository().resetSoldToday() }
+        bomaViewModel.checkDailyReset{
+            AppMetaViewModel().resetSoldToday(FirebaseRefs.warehouseFulls)
+            AppMetaViewModel().resetSoldToday(FirebaseRefs.HeadOfficeFulls)
+        }
     }
+//    LaunchedEffect (products){
+//        if (products.isNotEmpty()){
+//            SendDummyData.createNewFullsStock(products)
+//        }
+//    }
 
 
     NavHost(
@@ -3992,12 +4737,13 @@ fun Navigation(
         navController = navController
 
     ){
-        composable(Screen.Products.route){ ProductsPage(navController, paddingValues, productsViewModel) }
-        composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, productsViewModel) }
-        composable(Screen.Receipt.route){ ReceiptPage(productsViewModel, stockViewModel) }
-        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController) }
+        composable(Screen.Products.route){ ProductsPage(navController, paddingValues, productsViewModel, receiptViewmodel) }
+        composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, priceChangeViewmodel) }
+        composable(Screen.Receipt.route){ ReceiptPage(stockViewModel, receiptViewmodel) }
+        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController, productsViewModel) }
         composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, productsViewModel) }
         composable(Screen.Stock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
+        composable(Screen.WarehouseStock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
         composable(Screen.Records.route){ RecordsScreen(records, navController, paddingValues) }
         composable(Screen.RecordDetails.route){
             record?.let { selectedRecord -> RecordDetails(selectedRecord) }
@@ -4036,7 +4782,12 @@ fun StockPageNav(
         navController = navController
     ){
         composable(BottomBarItem.Empties.route){ StockEmptiesScreen(paddingValues, vm, navController) }
-        composable(BottomBarItem.Fulls.route){ StockFullsScreen(stockViewModel = vm, navController = navController) }
+        composable(BottomBarItem.Fulls.route){
+            StockFullsScreen(
+                paddingValues = paddingValues,
+                stockViewModel = vm,
+                navController = navController
+            ) }
     }
 }
 ```
@@ -4068,18 +4819,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.guvnoh.boma.formatters.halfAndQuarter
 import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.functions.getImage
 import com.guvnoh.boma.models.AutoScrollingText
 import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.repositories.ProductsRepository
 import com.guvnoh.boma.viewmodels.ProductsViewModel
 
 @Composable
 fun ProductCard(
     product: Product,
-    viewModel: ProductsViewModel
+    viewModel: ProductsViewModel,
 ) {
     val soldProducts = viewModel.soldProducts.collectAsState()
 
@@ -4089,8 +4838,10 @@ fun ProductCard(
 
     val total = soldProduct?.intTotal?:0
 
+    val enabled: Boolean by remember { mutableStateOf((product.stock?.closingStock?:0.0)>0) }
+
     val context = LocalContext.current
-    val resId = getImage(context,product.imageName?:"bottle.jpg")
+    val resId = ProductsRepository().getImage(context,product.imageName?:"bottle.jpg")
 
     Card(
         modifier = Modifier
@@ -4098,7 +4849,11 @@ fun ProductCard(
             .padding(vertical = 8.dp, horizontal = 12.dp),
         shape = RoundedCornerShape(20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        colors = if (enabled){
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        }else{
+            CardDefaults.cardColors(containerColor = Color.LightGray)
+        }
     ) {
         Row(
             modifier = Modifier
@@ -4147,6 +4902,17 @@ fun ProductCard(
                         fontSize = 14.sp
                     )
                 )
+
+                if (!enabled) {
+                    Text( text = "⚠️out of stock!",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 14.sp
+                        )
+                    )
+                }
+
+                //TOTAL
                 Column (Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End){
                     // 🧮 Show Total if available
                     AnimatedVisibility(
@@ -4166,32 +4932,26 @@ fun ProductCard(
             }
 
             // 🔢 Quantity Input
-            OutlinedTextField(
-                value = quantity,
-                onValueChange = { newValue ->
-                    val inputToDouble = newValue.toDoubleOrNull()?:0.0
+            if (enabled){
+                OutlinedTextField(
+                    value = quantity,
+                    onValueChange = { newValue ->
+                        val input = newValue.toDoubleOrNull()?:0.0
 
-                    viewModel.updateSoldProduct(
-                        product = product,
-                        stringQuantity = newValue,
-                        doubleQuantity = inputToDouble
-                    )
-
-//                    val newSoldProduct = SoldProduct(
-//                        product = product,
-//                        doubleQuantity = inputToDouble ?: 0.0,
-//                        stringQuantity = newValue,
-//                        intTotal = ((product.doublePrice?:0.0) * (quantity.toDoubleOrNull()?:0.0)).toInt(),
-//                        receiptQuantity = halfAndQuarter(inputToDouble?:0.0)
-//                    )
-                },
-                label = { Text("Qty") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier
-                    .width(90.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
+                        viewModel.updateSoldProduct(
+                            product = product,
+                            stringQuantity = newValue,
+                            doubleQuantity = input
+                        )
+                    },
+                    label = { Text("Qty") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier
+                        .width(90.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
         }
     }
 }
@@ -4386,11 +5146,17 @@ package com.guvnoh.boma.uidesigns.screens
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -4412,6 +5178,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -4420,10 +5187,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material.Icon
+import com.google.firebase.database.DatabaseReference
 import com.guvnoh.boma.R
 import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.formatters.getDate
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.FullsStock
+import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.models.StockSplashScreen
 import com.guvnoh.boma.uidesigns.cards.StockCard
 import com.guvnoh.boma.viewmodels.StockViewModel
@@ -4432,29 +5202,29 @@ import com.guvnoh.boma.viewmodels.StockViewModel
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun StockFullsScreen(
+    paddingValues: PaddingValues,
     stockViewModel: StockViewModel,
     modifier: Modifier = Modifier,
     navController: NavHostController,
 
     ) {
     //val products by productsViewModel.products.collectAsState()
-    val stock by stockViewModel.stock.collectAsState()
+    val stock by stockViewModel.wareHouseStock.collectAsState()
 
     var showSplash by remember { mutableStateOf(true) }
-    var topBarTitle by remember { mutableStateOf("Full Stock") }
 
     Scaffold(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .padding(paddingValues),
+            //.background(MaterialTheme.colorScheme.background),
         containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
 
         // --- FAB ---
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = {
-                    // TODO: Navigate to update screen
-                },
+                onClick = {},
                 icon = {
                     Icon(
                         imageVector = Icons.Default.Edit,
@@ -4478,17 +5248,19 @@ fun StockFullsScreen(
         topBar = {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surface)
-                    .padding(vertical = 12.dp),
+                    .wrapContentHeight()
+                    .statusBarsPadding()
+                    .padding(vertical = 12.dp)
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = topBarTitle,
+                    text = getDate(),
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = Color.Black//MaterialTheme.colorScheme.onSurface
                 )
                 HorizontalDivider(
                     modifier = Modifier
@@ -4497,6 +5269,23 @@ fun StockFullsScreen(
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
                     thickness = 1.dp
                 )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+
+                ) {
+                    Text(
+                        text = Screen.WarehouseStock.title,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = Screen.HeadOfficeStock.title,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
             }
         },
 
@@ -4519,7 +5308,6 @@ fun StockFullsScreen(
                             navController.navigate(item.route) {
                                 launchSingleTop = true
                             }
-                            topBarTitle = if (item == BottomBarItem.Empties) "Empties" else "Full Stock"
                         },
                         icon = { item.icon },
                         label = { Text(item.title) },
@@ -4532,7 +5320,6 @@ fun StockFullsScreen(
         // --- Screen Content ---
         Box(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
@@ -4545,13 +5332,13 @@ fun StockFullsScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
                         .padding(horizontal = 12.dp)
                 ) {
                     items(stock.keys.toMutableList()) {
                         brand ->
+                        val name = brand.name?:"error"
                         val brandStock = stock[brand] ?: FullsStock()
-                        StockCard(brand, brandStock)
+                        StockCard(name, brandStock)
                     }
                 }
             }
@@ -4569,7 +5356,7 @@ open class BottomBarItem(
     data object Empties: BottomBarItem(route = "empties", title = "Empties", R.drawable.bottle)
 }
 
-fun sendStockData(list: List<Product>){
+fun sendStockData(list: List<Product>, repo: DatabaseReference){
 
     list.forEach {
         val random1 = (20..800).random()
@@ -4581,8 +5368,8 @@ fun sendStockData(list: List<Product>){
             lastTimeSold = "Fri, Oct 31 2025"
         )
         it.stock = stock
-            FirebaseRefs.fullStock
-                .child(it.name?:"unknown")
+            repo
+                .child(it.id?:"unknown")
                 .setValue(it)
 
     }
@@ -4597,8 +5384,129 @@ fun sendStockData(list: List<Product>){
 @Preview
 @Composable
 private fun ShowStock(){
-   // StockFullsScreen(stockViewModel = viewModel(), navController = rememberNavController(), )
+    val vm: StockViewModel = viewModel()
+   StockFullsScreen(
+       paddingValues = PaddingValues(),
+       stockViewModel = vm,
+       navController = rememberNavController(), )
 
+}
+```
+
+## File: gradle/libs.versions.toml
+```toml
+[versions]
+agp = "8.8.0"
+kotlin = "2.0.0"
+coreKtx = "1.13.1"
+junit = "4.13.2"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+lifecycleRuntimeKtx = "2.9.4"
+activityCompose = "1.9.2"
+composeBom = "2024.04.01"
+navigationCompose = "2.9.4"
+googleGmsGoogleServices = "4.4.3"
+firebaseDatabase = "22.0.1"
+composeMaterial = "1.5.2"
+ui = "1.9.4"
+
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+androidx-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
+ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+```
+
+## File: app/build.gradle.kts
+```kotlin
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.gms.google.services)
+}
+
+android {
+    namespace = "com.guvnoh.boma"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.guvnoh.boma"
+        minSdk = 25
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+
+    implementation(libs.ui) // or your Compose version
+
+
+
+    implementation(libs.androidx.navigation.compose )
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+    implementation(libs.firebase.database)
+    implementation(libs.androidx.compose.material)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }
 ```
 
@@ -4626,8 +5534,8 @@ fun getTime(): String{
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-fun getDay():Int{
-    return  LocalDateTime.now().dayOfMonth
+fun getDay(): String{
+    return  LocalDateTime.now().toString()
 }
 
 
@@ -4643,139 +5551,6 @@ fun checkIfSoldToday(timeSold: String): Boolean {
 
     return (timeSold.lowercase() == timeNow.lowercase())
 
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/cards/PriceChangeCard.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.cards
-
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.guvnoh.boma.R
-import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.functions.getImage
-import com.guvnoh.boma.models.AutoScrollingText
-import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.brandData
-import com.guvnoh.boma.viewmodels.BomaViewModel
-import com.guvnoh.boma.viewmodels.ProductsViewModel
-
-@Composable
-fun PriceChangeCard(
-    product: Product,
-    vm: ProductsViewModel
-) {
-    var newPrice by remember { mutableStateOf("") }
-    var priceError by remember { mutableStateOf<String?>(null) }
-
-    val context = LocalContext.current
-    val imageRes = getImage(context, product.imageName?:"bottle.jpg").takeIf { it != 0 } ?: R.drawable.bottle
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // 🖼️ Product Image
-            Image(
-                painter = painterResource(imageRes),
-                contentDescription = product.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape)
-            )
-
-            // 🧾 Product Info
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                AutoScrollingText(
-                    text = product.name ?: "unknown",
-                    modifier = Modifier,
-                )
-
-                Text(
-                    text = nairaFormat(product.doublePrice?:0.0),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 15.sp
-                    )
-                )
-            }
-
-             //New Price input
-            OutlinedTextField(
-                value = newPrice,
-                onValueChange = {
-                    newPrice = it.filter { ch -> ch.isDigit() || ch == '.' }
-                    val parsed = newPrice.toDoubleOrNull()
-                    if (parsed != null && parsed > 0.0) {
-                        product.stringPrice = newPrice
-                        vm.addToPriceChangeList(product, newPrice)
-                        priceError = null
-                    } else if (newPrice.isNotBlank()) {
-                        priceError = "Invalid price"
-                    }
-                },
-                label = { Text("New Price") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                isError = priceError != null,
-                supportingText = {
-                    if (priceError != null) {
-                        Text(priceError!!, color = MaterialTheme.colorScheme.error)
-                    }
-                },
-                modifier = Modifier.width(120.dp),
-                shape = RoundedCornerShape(12.dp)
-            )
-        }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun ShowCard() {
-    PriceChangeCard(brandData[1], viewModel())
 }
 ```
 
@@ -4818,9 +5593,9 @@ import com.guvnoh.boma.viewmodels.ProductsViewModel
 fun DeleteProduct(
     navController: NavController,
     paddingValues: PaddingValues,
-    vm: ProductsViewModel
+    productsViewModel: ProductsViewModel
 ) {
-    val productList by vm.products.collectAsState()
+    val productList by productsViewModel.products.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     Scaffold(
         modifier = Modifier
@@ -4853,7 +5628,8 @@ fun DeleteProduct(
                 items(productList.sortedBy { it.name }) { product ->
                     SwipeableProductCard(
                         product = product,
-                        navController = navController
+                        navController = navController,
+                        productsViewModel
                     )
                 }
             }
@@ -5057,293 +5833,8 @@ fun copyToClipboard(list: List<SoldProduct>): String {
 }
 ```
 
-## File: gradle/libs.versions.toml
-```toml
-[versions]
-agp = "8.8.0"
-kotlin = "2.0.0"
-coreKtx = "1.13.1"
-junit = "4.13.2"
-junitVersion = "1.3.0"
-espressoCore = "3.7.0"
-lifecycleRuntimeKtx = "2.9.4"
-activityCompose = "1.9.2"
-composeBom = "2024.04.01"
-navigationCompose = "2.9.4"
-googleGmsGoogleServices = "4.4.3"
-firebaseDatabase = "22.0.1"
-composeMaterial = "1.5.2"
-ui = "1.9.4"
-
-
-[libraries]
-androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
-androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
-androidx-ui = { group = "androidx.compose.ui", name = "ui" }
-androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
-androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
-androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
-androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
-androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
-firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
-androidx-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
-ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
-
-[plugins]
-android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
-```
-
-## File: app/build.gradle.kts
-```kotlin
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.google.gms.google.services)
-}
-
-android {
-    namespace = "com.guvnoh.boma"
-    compileSdk = 35
-
-    defaultConfig {
-        applicationId = "com.guvnoh.boma"
-        minSdk = 25
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
-    }
-}
-
-dependencies {
-
-    implementation(libs.ui) // or your Compose version
-
-
-
-    implementation(libs.androidx.navigation.compose )
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.firebase.database)
-    implementation(libs.androidx.compose.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-}
-```
-
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/AddProductPage.kt
 ```kotlin
-//package com.guvnoh.boma.uidesigns.screens
-//
-//import android.widget.Toast
-//import androidx.compose.foundation.layout.*
-//import androidx.compose.material.icons.Icons
-//import androidx.compose.material.icons.filled.Done
-//import androidx.compose.material3.*
-//import androidx.compose.runtime.*
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.platform.LocalContext
-//import androidx.compose.ui.unit.dp
-//import androidx.navigation.NavController
-//import androidx.navigation.NavGraph.Companion.findStartDestination
-//import com.guvnoh.boma.databasePrices
-//import com.guvnoh.boma.models.Product
-//import com.guvnoh.boma.models.SortCategory
-//import com.guvnoh.boma.navigation.Screen
-//
-//@OptIn(ExperimentalMaterial3Api::class)
-//@Composable
-//fun AddProduct(padding: PaddingValues, navController: NavController) {
-//    var productName by remember { mutableStateOf("") }
-//    var productPrice by remember { mutableStateOf("") }
-//    var category by remember { mutableStateOf("") }
-//    var expanded by remember { mutableStateOf(false) }
-//    val context = LocalContext.current
-//
-//    var nameError by remember { mutableStateOf<String?>(null) }
-//    var priceError by remember { mutableStateOf<String?>(null) }
-//    var categoryError by remember { mutableStateOf<String?>(null) }
-//
-//    val sortCategories = listOf(
-//        "COCACOLA", "HERO", "NBL", "GUINNESS", "PETS", "CANS", "OTHER"
-//    )
-//
-//    val newProduct = Product()
-//
-//    Scaffold(
-//        modifier = Modifier.padding(padding),
-//        topBar = {
-//            CenterAlignedTopAppBar(
-//                title = { Text("Add Product") }
-//            )
-//        }
-//    ) { innerPadding ->
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(innerPadding),
-//            contentAlignment = Alignment.TopCenter
-//        ) {
-//            Card(
-//                modifier = Modifier
-//                    .padding(16.dp)
-//                    .fillMaxWidth(),
-//                elevation = CardDefaults.cardElevation(6.dp),
-//                shape = MaterialTheme.shapes.extraLarge
-//            ) {
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(20.dp),
-//                    verticalArrangement = Arrangement.spacedBy(20.dp)
-//                ) {
-//                    // Product Name
-//                    OutlinedTextField(
-//                        value = productName,
-//                        onValueChange = { name ->
-//                            productName = name
-//                            newProduct.name = name
-//                            nameError = if (name.isBlank()) "Name is required" else null
-//                        },
-//                        label = { Text("Product Name") },
-//                        modifier = Modifier.fillMaxWidth(),
-//                        isError = nameError != null,
-//                        singleLine = true
-//                    )
-//
-//                    // Product Price
-//                    OutlinedTextField(
-//                        value = productPrice,
-//                        onValueChange = { input ->
-//                            productPrice = input.filter { it.isDigit() || it == '.' }
-//                            newProduct.stringPrice = productPrice
-//                            newProduct.doublePrice = productPrice.toDoubleOrNull() ?: 0.0
-//                            priceError = if (productPrice.isBlank()) "Price is required" else null
-//                        },
-//                        label = { Text("Product Price (₦)") },
-//                        modifier = Modifier.fillMaxWidth(),
-//                        isError = priceError != null,
-//                        singleLine = true
-//                    )
-//
-//                    // Category Dropdown
-//                    ExposedDropdownMenuBox(
-//                        expanded = expanded,
-//                        onExpandedChange = { expanded = !expanded }
-//                    ) {
-//                        OutlinedTextField(
-//                            value = category,
-//                            onValueChange = {
-//                                category = it
-//                            },
-//                            readOnly = true,
-//                            label = { Text("Category") },
-//                            trailingIcon = {
-//                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-//                            },
-//                            modifier = Modifier
-//                                .menuAnchor()
-//                                .fillMaxWidth()
-//                        )
-//                        ExposedDropdownMenu(
-//                            expanded = expanded,
-//                            onDismissRequest = { expanded = false }
-//                        ) {
-//                            sortCategories.forEach { option ->
-//                                DropdownMenuItem(
-//                                    text = { Text(option) },
-//                                    onClick = {
-//                                        category = option
-//                                        expanded = false
-//                                        newProduct.sortCategory = when (option) {
-//                                            "COCACOLA" -> SortCategory.COCACOLA
-//                                            "HERO" -> SortCategory.HERO
-//                                            "NBL" -> SortCategory.NBL
-//                                            "GUINNESS" -> SortCategory.GUINNESS
-//                                            "PETS" -> SortCategory.PETS
-//                                            "CANS" -> SortCategory.CANS
-//                                            else -> SortCategory.OTHER
-//                                        }
-//                                    }
-//                                )
-//                            }
-//                        }
-//                    }
-//
-//                    // Done Button
-//                    Button(
-//                        onClick = {
-//                            if (productName.isNotBlank() && productPrice.isNotBlank()) {
-//                                databasePrices.child(newProduct.name).setValue(newProduct)
-//                                navController.navigate(Screen.Products.route) {
-//                                    popUpTo(navController.graph.findStartDestination().id) {
-//                                        inclusive = true
-//                                    }
-//                                    launchSingleTop = true
-//                                }
-//                            }else{
-//                                Toast.makeText(context, "Please enter all fields", Toast.LENGTH_SHORT).show()
-//                            }
-//                        },
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(50.dp),
-//                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-//                        shape = MaterialTheme.shapes.medium
-//                    ) {
-//                        Icon(Icons.Filled.Done, contentDescription = "Done")
-//                        Spacer(Modifier.width(8.dp))
-//                        Text("Save Product")
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
 package com.guvnoh.boma.uidesigns.screens
 
 import android.widget.Toast
@@ -5362,22 +5853,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.Empties
 import com.guvnoh.boma.models.EmptyCompany
 import com.guvnoh.boma.models.EmptyType
-import com.guvnoh.boma.navigation.Screen
+import com.guvnoh.boma.models.ProductType
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.viewmodels.ProductsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddProduct(padding: PaddingValues, navController: NavController) {
+fun AddProduct(padding: PaddingValues,
+               navController: NavController,
+               productsViewModel: ProductsViewModel) {
+
     var productName by remember { mutableStateOf("") }
     var productPrice by remember { mutableStateOf("") }
-    var noOfBottles by remember { mutableStateOf("") }
+    val noOfBottles by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var isBottleProduct by remember { mutableStateOf(false) }
@@ -5391,9 +5887,6 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
 
     val sortCategories = listOf(
         "COCACOLA", "HERO", "NBL", "GUINNESS", "PETS", "CANS", "OTHER"
-    )
-    val noOfBottlesTypes= listOf(
-        12, 18, 20, 24
     )
 
     val newProduct = Product()
@@ -5595,8 +6088,12 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                     // Done Button
                     Button(
                         onClick = {
-                            if (productName.isNotBlank() && productPrice.isNotBlank() && category.isNotBlank() && isBottleProduct) {
-                                FirebaseRefs.fullStock.child(newProduct.name?:"unknown").setValue(newProduct)
+                            if (productName.isNotBlank()
+                                && productPrice.isNotBlank()
+                                && category.isNotBlank()
+                                && isBottleProduct) {
+                                newProduct.type = ProductType.BOTTLE
+                                productsViewModel.addProduct(newProduct)
                                 navController.navigate(Screen.Products.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         inclusive = true
@@ -5607,7 +6104,7 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
                                 if (productName.isBlank()) nameError = "Name is required"
                                 if (productPrice.isBlank()) priceError = "Price is required"
                                 if (category.isBlank()) categoryError = "Category is required"
-                                Toast.makeText(context, "Please enter all fields", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Incomplete product details!", Toast.LENGTH_SHORT).show()
                             }
                         },
                         modifier = Modifier
@@ -5629,183 +6126,8 @@ fun AddProduct(padding: PaddingValues, navController: NavController) {
 @Preview
 @Composable
 fun ShowAddScreen(){
-    AddProduct(PaddingValues(5.dp), rememberNavController())
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/navigation/Screen.kt
-```kotlin
-package com.guvnoh.boma.navigation
-
-import androidx.annotation.DrawableRes
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.guvnoh.boma.R
-
-sealed class MenuIcon {
-    data class Resource(@DrawableRes val resId: Int): MenuIcon()
-    data class Vector( val imageVector: ImageVector): MenuIcon()
-}
-
-open class Screen(
-    val route: String,
-    val title: String,
-    val icon: MenuIcon? = null
-) {
-    data object Products : Screen(
-        route = "products",
-        title = "Products",
-        icon = MenuIcon.Vector(Icons.Default.ShoppingCart)
-    )
-
-    data object PriceChange : Screen(
-        route = "price_change",
-        title = "Change Price",
-        icon = MenuIcon.Resource(R.drawable.naira)
-    )
-
-    data object Receipt : Screen(route = "receipt", title = "Receipt",)
-    data object AddProduct : Screen(
-        route = "add_product",
-        title = "Add Products",
-        icon = MenuIcon.Vector(Icons.Default.AddCircle)
-    )
-
-    data object DeleteProduct : Screen(
-        route = "delete_product",
-        title = "Delete Products",
-        icon = MenuIcon.Vector(Icons.Default.Delete)
-    )
-
-    data object Stock :
-        Screen(route = "stock", title = "Stock", icon = MenuIcon.Resource(R.drawable.stock))
-
-    data object Records :
-        Screen(route = "records", title = "Records", icon = MenuIcon.Resource(R.drawable.record))
-
-    data object RecordDetails : Screen(route = "record_details", title = "Record")
-
-
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/PriceChangePage.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens
-
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.navigation.Screen
-import com.guvnoh.boma.uidesigns.cards.PriceChangeCard
-import com.guvnoh.boma.viewmodels.ProductsViewModel
-
-
-@Composable
-fun PriceChangePage(
-    navController: NavController,
-    paddingValues: PaddingValues,
-    vm: ProductsViewModel
-) {
-//    brandData.forEach {
-//        if (it.type == ProductType.BOTTLE )DBBottleProducts.child(it.name).setValue(it)
-//        else DBPetsAndCans.child(it.name).setValue(it)
-//    }
-    val productList by vm.products.collectAsState()
-    val priceChangeList by vm.priceChangeProducts.collectAsState()
-
-    Scaffold(
-        modifier = Modifier.padding(paddingValues),
-//        topBar = {
-//            TopAppBar(
-//                title = {
-//                    Text(
-//                        "Change Prices",
-//                        style = MaterialTheme.typography.titleLarge.copy(
-//                            fontWeight = FontWeight.Bold
-//                        )
-//                    )
-//                }
-//            )
-//        },
-        bottomBar = {
-            Surface(
-                tonalElevation = 4.dp,
-                shadowElevation = 8.dp
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Button(
-                        onClick = {
-                            priceChangeList.forEach { product ->
-                                updatePrice(product, product.stringPrice?:"0.0")
-                            }
-
-                            navController.navigate(Screen.Products.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        enabled = priceChangeList.isNotEmpty(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(Icons.Filled.Done, contentDescription = "Save Changes")
-                        Spacer(Modifier.width(8.dp))
-                        Text("Save Changes")
-                    }
-                }
-            }
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            contentPadding = PaddingValues(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            items(productList.sortedBy { it.name }) { product ->
-                PriceChangeCard(product, vm)
-            }
-        }
-    }
-}
-
-fun updatePrice(product: Product, newPrice: String) {
-    FirebaseRefs.fullStock
-        .child(product.name?:"unknown")
-        .child("stringPrice")
-        .setValue(newPrice)
-    FirebaseRefs.fullStock
-        .child(product.name?:"unknown")
-        .child("doublePrice")
-        .setValue(newPrice.toDoubleOrNull() ?: 0.0)
+    val pvm: ProductsViewModel = viewModel()
+    AddProduct(PaddingValues(5.dp), rememberNavController(), pvm)
 }
 ```
 
@@ -5829,8 +6151,11 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -5838,13 +6163,20 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.getTime
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.captureScreen
 import com.guvnoh.boma.functions.saveBitmapToGallery
 import com.guvnoh.boma.functions.sendRecord
 import com.guvnoh.boma.functions.vibratePhone
+import com.guvnoh.boma.models.Receipt
+import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.repositories.ProductsRepository
+import com.guvnoh.boma.repositories.StockRepository
 import com.guvnoh.boma.viewmodels.ProductsViewModel
 import com.guvnoh.boma.viewmodels.ReceiptViewmodel
 import com.guvnoh.boma.viewmodels.StockViewModel
@@ -5852,22 +6184,23 @@ import com.guvnoh.boma.viewmodels.StockViewModel
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReceiptPage(productsViewModel: ProductsViewModel, stockViewModel: StockViewModel) {
+fun ReceiptPage( stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmodel) {
     val context = LocalContext.current
-    val soldProducts = productsViewModel.soldProducts.collectAsState()
-    val receiptViewmodel: ReceiptViewmodel = viewModel()
     val receipt by receiptViewmodel.receipt.collectAsState()
 
+    var activeRepo = FirebaseRefs.warehouseFulls
 
 
-    val grandTotal = receipt?.let {
-        it.soldProducts?.sumOf {
-            product -> product.intTotal?:0
-        }?.let {
-            productIntTotal -> nairaFormat(productIntTotal)
-        }
-    }
+
+//    val grandTotal = receipt?.let {
+//        it.soldProducts?.sumOf {
+//            product -> product.intTotal?:0
+//        }?.let {
+//            productIntTotal -> nairaFormat(productIntTotal)
+//        }
+//    }
     val view = LocalView.current
+    val setRepo = remember { mutableStateOf(false) }
 
 
     Scaffold(
@@ -5885,7 +6218,8 @@ fun ReceiptPage(productsViewModel: ProductsViewModel, stockViewModel: StockViewM
             ) {
                 //copy button
                 Button(onClick = {
-                    copy(productsViewModel, context)
+                    val nonNullReceipt = receipt?:Receipt()
+                    receiptViewmodel.copy(nonNullReceipt, context)
                 }) {
                     Icon(Icons.Filled.Menu, contentDescription = "Copy")
                     Spacer(Modifier.width(6.dp))
@@ -5903,10 +6237,14 @@ fun ReceiptPage(productsViewModel: ProductsViewModel, stockViewModel: StockViewM
                 //save button
                 Button(
                     onClick = {
+                        //trigger set repo alert dialog
+                        setRepo.value = true
                         //productsViewModel.(soldProducts)
-                        receiptViewmodel.saveSale(soldProducts.value, stockViewModel)
+                        receiptViewmodel.saveSale(
+                            receipt?.soldProducts!!,
+                            stockViewModel,
+                            activeRepo)
                         receipt?.let { sendRecord(it) }
-                        Toast.makeText(context, "Sale record saved!", Toast.LENGTH_SHORT).show()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                 ) {
@@ -5924,14 +6262,16 @@ fun ReceiptPage(productsViewModel: ProductsViewModel, stockViewModel: StockViewM
                 .padding(16.dp)
         ) {
             // Header Info
-            Text("Receipt #${receipt?.id}", style = MaterialTheme.typography.titleMedium)
-            Text("Customer: ${receipt?.customerName}", style = MaterialTheme.typography.bodyLarge)
+
+            Text("${receipt?.customerName}", style = MaterialTheme.typography.titleMedium)
+            Text("Receipt No. ${receipt?.id}", style = MaterialTheme.typography.bodyMedium)
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()) {
                 Text("Date: ${receipt?.date}", style = MaterialTheme.typography.bodyMedium)
                 Text("Time: ${getTime()}", style = MaterialTheme.typography.bodyMedium)
             }
+
             Spacer(Modifier.height(16.dp))
 
             // Products List
@@ -5975,13 +6315,90 @@ fun ReceiptPage(productsViewModel: ProductsViewModel, stockViewModel: StockViewM
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Grand Total", style = MaterialTheme.typography.titleMedium)
-                grandTotal?.let {
-                    Text(
-                        it.toString(),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                Text(
+                    nairaFormat(receiptViewmodel.getGrandTotal()),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+            }
+        }
+        if (setRepo.value){
+            RepoAlertDialog(
+                alert = setRepo,
+                soldProducts = receipt?.soldProducts?: emptyList(),
+                onSave = {activeRepo = it},
+                context = context
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RepoAlertDialog(
+    context: Context,
+    alert: MutableState<Boolean>,
+    soldProducts: List<SoldProduct>,
+    onSave: (activeRepo: DatabaseReference)-> Unit,
+){
+    BasicAlertDialog(
+        onDismissRequest = {alert.value = false},
+        properties = DialogProperties(dismissOnClickOutside = true, dismissOnBackPress = true)
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation,
+        ){
+            Column (
+                modifier = Modifier.padding(24.dp)
+            ){
+                Text(
+                    text = "Save sale?",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = "Choose stock to sell from",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row (
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(onClick = {
+                        onSave(FirebaseRefs.HeadOfficeFulls)
+                        soldProducts.forEach { soldProduct ->
+
+                            StockRepository().sellProduct(
+                                productId = soldProduct.product?.id ?: "no id found for sold product",
+                                soldQty = soldProduct.doubleQuantity ?: 0.0,
+                                repo = FirebaseRefs.warehouseFulls
+                            )
+                        }
+                        alert.value = false
+                        Toast.makeText(context, "Head Office Sale recorded!", Toast.LENGTH_SHORT).show()
+                    }) {
+                        Text(text = "HeadOffice")
+                    }
+
+                    TextButton(onClick = {
+                        onSave(FirebaseRefs.warehouseFulls)
+                        soldProducts.forEach { soldProduct ->
+
+                            StockRepository().sellProduct(
+                                soldProduct.product?.id?:"no id found for sold product",
+                                soldProduct.doubleQuantity?:0.0,
+                                repo = FirebaseRefs.warehouseFulls
+                            )
+                        }
+                        alert.value = false
+                        Toast.makeText(context, "Warehouse Sale recorded!", Toast.LENGTH_SHORT).show()
+                    }){
+                        Text(text = "Warehouse")
+                    }
                 }
             }
         }
@@ -5989,39 +6406,15 @@ fun ReceiptPage(productsViewModel: ProductsViewModel, stockViewModel: StockViewM
 }
 
 
-private fun copy(vm: ProductsViewModel, context: Context){
-    val textToCopy = copyToClipboard(vm)
-    val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val clip = ClipData.newPlainText("label", textToCopy)
-    clipBoard.setPrimaryClip(clip)
-    Toast.makeText(context, "Text copied!", Toast.LENGTH_SHORT).show()
-}
-
-private fun copyToClipboard(vm: ProductsViewModel): String {
-    //The variable finalText holds the complete text to be sent to the clipboard
-    val finalText = StringBuilder()
-    val grandTotal = nairaFormat(vm.soldProducts.value.sumOf { it.intTotal?:0 })
-    vm.soldProducts.value.forEach {
-        val copiedQuantity: String = it.receiptQuantity?:"0"
-        val textToCopy = "$copiedQuantity ${it.product?.name} ${nairaFormat(it.intTotal?:0)}\n"
-
-        finalText.append(textToCopy)
-    }
-    if (vm.soldProducts.value.size > 1) {
-        finalText.append("Total: $grandTotal")
-    }
-    return finalText.toString()
-}
-
-
 @RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
 fun ReceiptPagePreview() {
-    val productvm : ProductsViewModel = viewModel()
     val stockvm : StockViewModel = viewModel()
+    val rvm : ReceiptViewmodel = viewModel()
     ReceiptPage(
-        productvm, stockvm
+        stockvm,
+        rvm
     )
 }
 ```
@@ -6033,15 +6426,15 @@ package com.guvnoh.boma.models
 import com.guvnoh.boma.R
 
 data class Product (
-     var name: String? = null,
-     var stringPrice: String? = null,
-     var imageName: String? = null,
-     var image: Int = R.drawable.bottle,
-     val id: String? = null,
-     var doublePrice: Double? = null ,
-     var stock: FullsStock? = null,
-     val type: ProductType? = null,
-     var empties: Empties? = null
+    var name: String? = null,
+    var stringPrice: String? = null,
+    var imageName: String? = null,
+    var image: Int = R.drawable.bottle,
+    var id: String? = null,
+    var doublePrice: Double? = null,
+    var stock: FullsStock? = null,
+    var type: ProductType? = null,
+    var empties: Empties? = null
 
 )
 
@@ -6153,21 +6546,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.formatters.getDate
-import com.guvnoh.boma.formatters.getTime
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.EmptyCompany
 import com.guvnoh.boma.models.ProductSplashScreen
 import com.guvnoh.boma.models.ProductType
-import com.guvnoh.boma.models.Receipt
-import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.models.brandData
-import com.guvnoh.boma.navigation.Screen
+import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.cards.ProductCard
 import com.guvnoh.boma.viewmodels.ProductsViewModel
 import com.guvnoh.boma.viewmodels.ReceiptViewmodel
@@ -6178,7 +6563,8 @@ import com.guvnoh.boma.viewmodels.ReceiptViewmodel
 fun ProductsPage(
     navController: NavController,
     paddingValues: PaddingValues,
-    vm: ProductsViewModel
+    vm: ProductsViewModel,
+    receiptViewmodel: ReceiptViewmodel
 ) {
 
     var search: Boolean by rememberSaveable { mutableStateOf(false) }
@@ -6188,7 +6574,6 @@ fun ProductsPage(
     val productList by vm.products.collectAsState()
     val grandTotal = soldProducts.sumOf { it.intTotal?:0 }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-    val receiptViewmodel: ReceiptViewmodel = viewModel()
 
     //vm.confirmSoldToday(productList)
     //sendFullsDataToDB()
@@ -6282,8 +6667,8 @@ fun ProductsPage(
 
                             searchEntry = ""
                             navController.navigate(Screen.Receipt.route)
-                            generateReceipt(vm,soldProducts)
-                            receiptViewmodel.setCurrentReceipt(generateReceipt(vm,soldProducts))
+                            val receipt = vm.generateReceipt()
+                            receiptViewmodel.setCurrentReceipt(receipt)
 
                         },
                         colors = ButtonDefaults.buttonColors(
@@ -6359,9 +6744,14 @@ fun ProductsPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(40.dp)
-                                    .background(color = Color.White)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Coca_cola")
+                                Text(
+                                    text = "Coca_cola",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                )
                             }
                         }
 
@@ -6380,9 +6770,14 @@ fun ProductsPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(40.dp)
-                                    .background(color = Color.White)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("International Breweries")
+                                Text(
+                                    text = "International Breweries",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
                             }
                         }
                         items(heroGroup.sortedBy { it.name }) { product ->
@@ -6399,10 +6794,15 @@ fun ProductsPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(40.dp)
-                                    .background(color = Color.White)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
 
-                                Text("Nigerian Breweries")
+                                Text(
+                                    text = "Nigerian Breweries",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
                             }
                         }
                         items(nblGroup.sortedBy { it.name }) { product ->
@@ -6419,10 +6819,15 @@ fun ProductsPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(40.dp)
-                                    .background(color = Color.White)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
 
-                                Text("Guinness")
+                                Text(
+                                    text = "Guinness",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
 
                             }
                         }
@@ -6439,9 +6844,14 @@ fun ProductsPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(40.dp)
-                                    .background(color = Color.White)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Pets")
+                                Text(
+                                    text = "Pets",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
                             }
                         }
                         items(petsDisplay.sortedBy { it.name }) { product ->
@@ -6459,9 +6869,14 @@ fun ProductsPage(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(40.dp)
-                                    .background(color = Color.White)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Text("Cans")
+                                Text(
+                                    text = "Cans",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    )
                             }
                         }
                         items(cansDisplay.sortedBy { it.name }) { product ->
@@ -6497,24 +6912,6 @@ fun ProductsPage(
 }
 
 
-
-@RequiresApi(Build.VERSION_CODES.O)
-fun generateReceipt(vm: ProductsViewModel, soldProducts: List<SoldProduct>): Receipt{
-    val customerName by vm.customerName
-    val validSoldProducts = soldProducts.filter { (it.intTotal?:0)>0 }
-    //val productList by vm.products.collectAsState()
-    val grandTotal = validSoldProducts.sumOf { it.intTotal?:0 }
-    val date = getDate()
-    val time = getTime()
-    val receipt = Receipt(
-        soldProducts = validSoldProducts,
-        customerName = customerName,
-        date = date,
-        grandTotal = grandTotal.toString()
-    )
-    return receipt
-}
-
 fun getDisplayGroup(list: List<Product>, emptyCompany: EmptyCompany): List<Product>{
     val group = mutableListOf<Product>()
     list.forEach {
@@ -6531,6 +6928,6 @@ fun getDisplayGroup(list: List<Product>, emptyCompany: EmptyCompany): List<Produ
 @Preview(showBackground = true)
 @Composable
 fun ShowProducts() {
-    ProductsPage(rememberNavController(), PaddingValues(), viewModel())
+   // ProductsPage(rememberNavController(), PaddingValues(), viewModel())
 }
 ```

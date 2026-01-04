@@ -34,8 +34,8 @@ import androidx.wear.compose.material.rememberSwipeableState
 import androidx.wear.compose.material.swipeable
 import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.functions.getImage
 import com.guvnoh.boma.functions.vibratePhone
+import com.guvnoh.boma.repositories.ProductsRepository
 import com.guvnoh.boma.viewmodels.ProductsViewModel
 import kotlin.math.roundToInt
 
@@ -117,8 +117,7 @@ fun SwipeableProductCard(
         vibratePhone(context)
         AlertDialogg(
             onDelete = {
-                val type = product.type
-                productsViewModel.deleteProduct(product.name?:"")
+                productsViewModel.deleteProduct(product.id?:"")
                        },
             product = product,
             alert = alert,
@@ -182,7 +181,7 @@ fun DeleteProductCard(
 
     val context = LocalContext.current
     val resId =
-        getImage(context,product.imageName?:"bottle.jpg")
+        ProductsRepository().getImage(context,product.imageName?:"bottle.jpg")
 
     Card(
         modifier = Modifier

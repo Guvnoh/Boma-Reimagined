@@ -114,9 +114,15 @@ package com.guvnoh.boma.viewmodels
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.MutableData
+import com.google.firebase.database.Transaction
+import com.guvnoh.boma.models.FullsStock
 import com.guvnoh.boma.repositories.AppMetaRepository
 
-class BomaViewModel : ViewModel() {
+class AppMetaViewModel : ViewModel() {
 
     private val metaRepo = AppMetaRepository()
 
@@ -124,6 +130,39 @@ class BomaViewModel : ViewModel() {
     fun checkDailyReset(onReset: () -> Unit) {
         metaRepo.checkNewDay {
             onReset()
+        }
+    }
+
+    fun resetSoldToday(repo: DatabaseReference) {
+        repo.get().addOnSuccessListener { snapshot ->
+            snapshot.children.forEach { productSnap ->
+                val productId = productSnap.key ?: return@forEach
+
+                val stockRef = repo
+                    .child(productId)
+                    .child("stock")
+
+                stockRef.runTransaction(object : Transaction.Handler {
+                    override fun doTransaction(data: MutableData): Transaction.Result {
+                        val stock = data.getValue(FullsStock::class.java)
+                            ?: return Transaction.success(data)
+
+                        val closing = stock.closingStock ?: 0.0
+
+                        stock.openingStock = closing
+                        stock.soldToday = 0.0
+
+                        data.value = stock
+                        return Transaction.success(data)
+                    }
+
+                    override fun onComplete(
+                        error: DatabaseError?,
+                        committed: Boolean,
+                        snapshot: DataSnapshot?
+                    ) = Unit
+                })
+            }
         }
     }
 }
