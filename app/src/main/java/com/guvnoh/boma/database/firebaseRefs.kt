@@ -18,7 +18,7 @@ object FirebaseRefs {
     val HeadOfficeFulls = bomaRoot.child("HeadOffice").child("Fulls")
     val HeadOfficeEmpties = bomaRoot.child("HeadOffice").child("Empties")
 
-    val fullStock = root.child("BomaStock").child("Stock_Fulls")
+    val displayProductsRepo = root.child("BomaStock").child("Stock_Fulls")
     val empties = root.child("BomaStock").child("Empties")
     val records = root.child("BomaDBRecords2")
     val appMeta = root.child("appMeta")

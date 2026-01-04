@@ -45,7 +45,7 @@ import com.guvnoh.boma.models.Screen.Receipt
 import com.guvnoh.boma.models.Screen.RecordDetails
 import com.guvnoh.boma.models.Screen.Records
 import com.guvnoh.boma.models.Screen.Stock
-import com.guvnoh.boma.viewmodels.BomaViewModel
+import com.guvnoh.boma.viewmodels.AppMetaViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -55,7 +55,7 @@ fun Boma() {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val vm: BomaViewModel = viewModel()
+    val vm: AppMetaViewModel = viewModel()
     var selectedScreen by remember { mutableStateOf<Screen>(Products) }
 
     ModalNavigationDrawer(

@@ -7,6 +7,7 @@ import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DatabaseReference
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.SoldProduct
@@ -18,19 +19,28 @@ class ReceiptViewmodel : ViewModel(){
     private val _receipt = MutableStateFlow<Receipt?>(null)
     val receipt: StateFlow<Receipt?> = _receipt
 
+
+
     fun setCurrentReceipt(receipt: Receipt){
         _receipt.value = receipt
     }
     @RequiresApi(Build.VERSION_CODES.O)
-    fun saveSale(list: List<SoldProduct>, stockViewModel: StockViewModel){
+    fun saveSale(list: List<SoldProduct>, stockViewModel: StockViewModel, repo: DatabaseReference){
         list.forEach { soldProduct ->
             soldProduct.doubleQuantity?.let {
                 qty -> soldProduct.product?.name?.let {
-                    name -> stockViewModel.sellProduct(name, qty)
+                    name -> stockViewModel.sellProduct(name, qty, repo)
                 }
             }
 
         }
+    }
+
+    fun getGrandTotal(): Int{
+        val total = receipt.value?.soldProducts?.sumOf {
+            it.intTotal?:0
+        }
+        return total?:0
     }
 
     fun copy(receipt: Receipt, context: Context){

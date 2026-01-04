@@ -44,6 +44,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material.Icon
+import com.google.firebase.database.DatabaseReference
 import com.guvnoh.boma.R
 import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.getDate
@@ -192,8 +193,9 @@ fun StockFullsScreen(
                 ) {
                     items(stock.keys.toMutableList()) {
                         brand ->
+                        val name = brand.name?:"error"
                         val brandStock = stock[brand] ?: FullsStock()
-                        StockCard(brand, brandStock)
+                        StockCard(name, brandStock)
                     }
                 }
             }
@@ -211,7 +213,7 @@ open class BottomBarItem(
     data object Empties: BottomBarItem(route = "empties", title = "Empties", R.drawable.bottle)
 }
 
-fun sendStockData(list: List<Product>){
+fun sendStockData(list: List<Product>, repo: DatabaseReference){
 
     list.forEach {
         val random1 = (20..800).random()
@@ -223,8 +225,8 @@ fun sendStockData(list: List<Product>){
             lastTimeSold = "Fri, Oct 31 2025"
         )
         it.stock = stock
-            FirebaseRefs.fullStock
-                .child(it.name?:"unknown")
+            repo
+                .child(it.id?:"unknown")
                 .setValue(it)
 
     }

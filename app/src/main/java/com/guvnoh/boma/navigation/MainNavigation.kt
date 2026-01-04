@@ -11,16 +11,17 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.repositories.StockRepository
 import com.guvnoh.boma.uidesigns.screens.AddProduct
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
-import com.guvnoh.boma.uidesigns.screens.PriceChangePage
+import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangePage
 import com.guvnoh.boma.uidesigns.screens.ProductsPage
 import com.guvnoh.boma.uidesigns.screens.ReceiptPage
 import com.guvnoh.boma.uidesigns.screens.RecordDetails
 import com.guvnoh.boma.uidesigns.screens.RecordsScreen
-import com.guvnoh.boma.viewmodels.BomaViewModel
+import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangeViewmodel
+import com.guvnoh.boma.viewmodels.AppMetaViewModel
 import com.guvnoh.boma.viewmodels.ProductsViewModel
 import com.guvnoh.boma.viewmodels.ReceiptViewmodel
 import com.guvnoh.boma.viewmodels.RecordViewModel
@@ -36,30 +37,25 @@ fun Navigation(
 
     val records: RecordViewModel  = viewModel()
     val record by records.record.collectAsState()
-
     val productsViewModel: ProductsViewModel = viewModel()
-    val products by productsViewModel.products.collectAsState()
-
-    val bomaViewModel: BomaViewModel = viewModel()
+    val bomaViewModel: AppMetaViewModel = viewModel()
     val stockViewModel: StockViewModel = viewModel()
-
     val receiptViewmodel: ReceiptViewmodel = viewModel()
+    val priceChangeViewmodel: PriceChangeViewmodel = viewModel()
 
 
 
 
 
     LaunchedEffect(Unit) {
-        bomaViewModel.checkDailyReset{ StockRepository().resetSoldToday() }
+        bomaViewModel.checkDailyReset{
+            AppMetaViewModel().resetSoldToday(FirebaseRefs.warehouseFulls)
+            AppMetaViewModel().resetSoldToday(FirebaseRefs.HeadOfficeFulls)
+        }
     }
 //    LaunchedEffect (products){
 //        if (products.isNotEmpty()){
-//            products.forEach {
-//                FirebaseRefs.bomaRoot
-//                    .child("Stock_Fulls")
-//                    .child(it.id?:"unknown")
-//                    .setValue(it)
-//            }
+//            SendDummyData.createNewFullsStock(products)
 //        }
 //    }
 
@@ -70,7 +66,7 @@ fun Navigation(
 
     ){
         composable(Screen.Products.route){ ProductsPage(navController, paddingValues, productsViewModel, receiptViewmodel) }
-        composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, productsViewModel) }
+        composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, priceChangeViewmodel) }
         composable(Screen.Receipt.route){ ReceiptPage(stockViewModel, receiptViewmodel) }
         composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController, productsViewModel) }
         composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, productsViewModel) }

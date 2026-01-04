@@ -1,5 +1,5 @@
 
-package com.guvnoh.boma.uidesigns.screens
+package com.guvnoh.boma.uidesigns.screens.priceChange
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.uidesigns.cards.PriceChangeCard
 import com.guvnoh.boma.viewmodels.ProductsViewModel
 
 
@@ -24,29 +23,13 @@ import com.guvnoh.boma.viewmodels.ProductsViewModel
 fun PriceChangePage(
     navController: NavController,
     paddingValues: PaddingValues,
-    vm: ProductsViewModel
+    priceChangeViewmodel: PriceChangeViewmodel
 ) {
-//    brandData.forEach {
-//        if (it.type == ProductType.BOTTLE )DBBottleProducts.child(it.name).setValue(it)
-//        else DBPetsAndCans.child(it.name).setValue(it)
-//    }
-    val productList by vm.products.collectAsState()
-    val priceChangeList by vm.priceChangeProducts.collectAsState()
+    val productList by priceChangeViewmodel.products.collectAsState()
+    val priceChangeList by priceChangeViewmodel.priceChangeProducts.collectAsState()
 
     Scaffold(
         modifier = Modifier.padding(paddingValues),
-//        topBar = {
-//            TopAppBar(
-//                title = {
-//                    Text(
-//                        "Change Prices",
-//                        style = MaterialTheme.typography.titleLarge.copy(
-//                            fontWeight = FontWeight.Bold
-//                        )
-//                    )
-//                }
-//            )
-//        },
         bottomBar = {
             Surface(
                 tonalElevation = 4.dp,
@@ -63,7 +46,7 @@ fun PriceChangePage(
                         onClick = {
                             priceChangeList.forEach { product ->
                                 if (product.id!=null && product.doublePrice!=null){
-                                    vm.updatePrice(product.id!!, product.doublePrice!!)
+                                    priceChangeViewmodel.updatePrice(product)
                                 }
 
                             }
@@ -97,7 +80,7 @@ fun PriceChangePage(
                 .padding(innerPadding)
         ) {
             items(productList.sortedBy { it.name }) { product ->
-                PriceChangeCard(product, vm)
+                PriceChangeCard(product, priceChangeViewmodel)
             }
         }
     }

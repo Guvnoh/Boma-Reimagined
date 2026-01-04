@@ -16,8 +16,11 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -25,7 +28,10 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.getTime
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.captureScreen
@@ -33,6 +39,9 @@ import com.guvnoh.boma.functions.saveBitmapToGallery
 import com.guvnoh.boma.functions.sendRecord
 import com.guvnoh.boma.functions.vibratePhone
 import com.guvnoh.boma.models.Receipt
+import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.repositories.ProductsRepository
+import com.guvnoh.boma.repositories.StockRepository
 import com.guvnoh.boma.viewmodels.ProductsViewModel
 import com.guvnoh.boma.viewmodels.ReceiptViewmodel
 import com.guvnoh.boma.viewmodels.StockViewModel
@@ -44,16 +53,19 @@ fun ReceiptPage( stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmo
     val context = LocalContext.current
     val receipt by receiptViewmodel.receipt.collectAsState()
 
+    var activeRepo = FirebaseRefs.warehouseFulls
 
 
-    val grandTotal = receipt?.let {
-        it.soldProducts?.sumOf {
-            product -> product.intTotal?:0
-        }?.let {
-            productIntTotal -> nairaFormat(productIntTotal)
-        }
-    }
+
+//    val grandTotal = receipt?.let {
+//        it.soldProducts?.sumOf {
+//            product -> product.intTotal?:0
+//        }?.let {
+//            productIntTotal -> nairaFormat(productIntTotal)
+//        }
+//    }
     val view = LocalView.current
+    val setRepo = remember { mutableStateOf(false) }
 
 
     Scaffold(
@@ -90,10 +102,14 @@ fun ReceiptPage( stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmo
                 //save button
                 Button(
                     onClick = {
+                        //trigger set repo alert dialog
+                        setRepo.value = true
                         //productsViewModel.(soldProducts)
-                        receiptViewmodel.saveSale(receipt?.soldProducts!!, stockViewModel)
+                        receiptViewmodel.saveSale(
+                            receipt?.soldProducts!!,
+                            stockViewModel,
+                            activeRepo)
                         receipt?.let { sendRecord(it) }
-                        Toast.makeText(context, "Sale record saved!", Toast.LENGTH_SHORT).show()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                 ) {
@@ -164,13 +180,90 @@ fun ReceiptPage( stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmo
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Grand Total", style = MaterialTheme.typography.titleMedium)
-                grandTotal?.let {
-                    Text(
-                        it,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                Text(
+                    nairaFormat(receiptViewmodel.getGrandTotal()),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+            }
+        }
+        if (setRepo.value){
+            RepoAlertDialog(
+                alert = setRepo,
+                soldProducts = receipt?.soldProducts?: emptyList(),
+                onSave = {activeRepo = it},
+                context = context
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RepoAlertDialog(
+    context: Context,
+    alert: MutableState<Boolean>,
+    soldProducts: List<SoldProduct>,
+    onSave: (activeRepo: DatabaseReference)-> Unit,
+){
+    BasicAlertDialog(
+        onDismissRequest = {alert.value = false},
+        properties = DialogProperties(dismissOnClickOutside = true, dismissOnBackPress = true)
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation,
+        ){
+            Column (
+                modifier = Modifier.padding(24.dp)
+            ){
+                Text(
+                    text = "Save sale?",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = "Choose stock to sell from",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row (
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    TextButton(onClick = {
+                        onSave(FirebaseRefs.HeadOfficeFulls)
+                        soldProducts.forEach { soldProduct ->
+
+                            StockRepository().sellProduct(
+                                productId = soldProduct.product?.id ?: "no id found for sold product",
+                                soldQty = soldProduct.doubleQuantity ?: 0.0,
+                                repo = FirebaseRefs.warehouseFulls
+                            )
+                        }
+                        alert.value = false
+                        Toast.makeText(context, "Head Office Sale recorded!", Toast.LENGTH_SHORT).show()
+                    }) {
+                        Text(text = "HeadOffice")
+                    }
+
+                    TextButton(onClick = {
+                        onSave(FirebaseRefs.warehouseFulls)
+                        soldProducts.forEach { soldProduct ->
+
+                            StockRepository().sellProduct(
+                                soldProduct.product?.id?:"no id found for sold product",
+                                soldProduct.doubleQuantity?:0.0,
+                                repo = FirebaseRefs.warehouseFulls
+                            )
+                        }
+                        alert.value = false
+                        Toast.makeText(context, "Warehouse Sale recorded!", Toast.LENGTH_SHORT).show()
+                    }){
+                        Text(text = "Warehouse")
+                    }
                 }
             }
         }

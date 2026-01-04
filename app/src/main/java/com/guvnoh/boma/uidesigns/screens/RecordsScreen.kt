@@ -36,7 +36,6 @@ fun RecordsScreen(
     val records by vm.records.collectAsState()
 
     var date by remember { mutableStateOf("") }
-    var mumu by remember { mutableIntStateOf(0) }
 
 
     Scaffold (modifier = Modifier.padding(paddingValues)){
@@ -70,7 +69,6 @@ fun RecordsScreen(
                     }
                     items(records){
                             record ->
-                        mumu++
                         date = record.date.toString()
 
                         RecordCard(

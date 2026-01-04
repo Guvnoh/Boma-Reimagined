@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.MutableData
 import com.google.firebase.database.Transaction
 import com.guvnoh.boma.database.FirebaseRefs
@@ -32,34 +33,30 @@ class ProductsViewModel(
     private val _products = MutableStateFlow<List<Product>>(emptyList())
     val products: StateFlow<List<Product>> = _products
 
-        //customer
+    //customer
     private val _customerName = mutableStateOf("")
     var customerName: State<String> = _customerName
 
-        //sold products
+    //sold products
     private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
     val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
 
-        //price change products
-    private val _priceChangeProducts = MutableStateFlow<List<Product>>(emptyList())
-    val priceChangeProducts: StateFlow<List<Product>> = _priceChangeProducts
-
 
     init {
-        observeProducts()
+        observeProducts(FirebaseRefs.displayProductsRepo)
     }
 
     //get products from database
 
-    private fun observeProducts() {
-        repository.observeProducts { list ->
+    private fun observeProducts(repo: DatabaseReference) {
+        repository.observeProducts(repo) { list ->
             _products.value = list
         }
     }
 
     // customer name
 
-    fun setCustomerName(name: String){
+    fun setCustomerName(name: String) {
         _customerName.value = name
     }
 
@@ -97,12 +94,12 @@ class ProductsViewModel(
     //generate receipt
     @RequiresApi(Build.VERSION_CODES.O)
     fun generateReceipt(): Receipt {
-        val validSoldProducts = soldProducts.value.filter { (it.intTotal?:0)>0 }.toList()
+        val validSoldProducts = soldProducts.value.filter { (it.intTotal ?: 0) > 0 }.toList()
         //val productList by vm.products.collectAsState()
-        val grandTotal = validSoldProducts.sumOf { it.intTotal?:0 }
+        val grandTotal = validSoldProducts.sumOf { it.intTotal ?: 0 }
         val date = getDate()
         val receipt = Receipt(
-            id = FirebaseRefs.bomaRoot.push().key.toString().replace("-",""),
+            id = FirebaseRefs.bomaRoot.push().key.toString().replace("-", ""),
             soldProducts = validSoldProducts,
             customerName = customerName.value,
             date = date,
@@ -112,19 +109,7 @@ class ProductsViewModel(
     }
 
 
-
-    // price change
-    fun updatePrice(productId: String, newPrice: Double) {
-        repository.updatePrice(productId, newPrice)
-    }
-    fun addToPriceChangeList(product: Product, newPrice: String ){
-        val current = _priceChangeProducts.value.toMutableList()
-        product.stringPrice = newPrice
-        current.add(product)
-        _priceChangeProducts.value = current
-    }
-
-    fun addProduct(product: Product){
+    fun addProduct(product: Product) {
         repository.addProduct(product)
     }
 
@@ -136,29 +121,7 @@ class ProductsViewModel(
         _soldProducts.value = emptyList()
     }
 
-    fun clearName(){
+    fun clearName() {
         _customerName.value = ""
     }
-
-//    fun idCheck(productId: String){
-//        FirebaseRefs.fullStock.child(productId).child("id")
-//            .runTransaction(object : Transaction.Handler{
-//                override fun doTransaction(data: MutableData): Transaction.Result {
-//                    if (data.value == null || data.value == "") {
-//                        val id = FirebaseRefs.fullStock.child(productId).push().key
-//                        data.value = id
-//                        return Transaction.success(data)
-//                    }else return Transaction.abort()
-//
-//                }
-//
-//                override fun onComplete(
-//                    error: DatabaseError?,
-//                    committed: Boolean,
-//                    currentData: DataSnapshot?
-//                ) {}
-//            }
-//            )
-//    }
-
 }
