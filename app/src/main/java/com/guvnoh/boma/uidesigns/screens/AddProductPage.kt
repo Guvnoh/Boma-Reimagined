@@ -276,7 +276,7 @@ fun AddProduct(padding: PaddingValues,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = CircleShape
                     ) {
-                        Icon(Icons.Filled.Done, contentDescription = "Done")
+                        Icon(Icons.Filled.Done, contentDescription = "Lmaooooooooo")
                         Spacer(Modifier.width(8.dp))
                         Text("Save Product", style = MaterialTheme.typography.labelLarge)
                     }
