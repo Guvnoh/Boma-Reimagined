@@ -12,6 +12,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.functions.SendDummyData
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.screens.AddProduct
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
@@ -49,15 +50,10 @@ fun Navigation(
 
     LaunchedEffect(Unit) {
         bomaViewModel.checkDailyReset{
-            AppMetaViewModel().resetSoldToday(FirebaseRefs.warehouseFulls)
-            AppMetaViewModel().resetSoldToday(FirebaseRefs.HeadOfficeFulls)
+            AppMetaViewModel().resetSoldToday()
         }
     }
-//    LaunchedEffect (products){
-//        if (products.isNotEmpty()){
-//            SendDummyData.createNewFullsStock(products)
-//        }
-//    }
+
 
 
     NavHost(

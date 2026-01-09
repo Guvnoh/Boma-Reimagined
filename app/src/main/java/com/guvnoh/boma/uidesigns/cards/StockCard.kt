@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.guvnoh.boma.formatters.checkIfSoldToday
 import com.guvnoh.boma.formatters.halfAndQuarter
 import com.guvnoh.boma.models.FullsStock
-import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.brandData
 import kotlinx.coroutines.launch
 

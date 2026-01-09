@@ -1,6 +1,7 @@
 
 package com.guvnoh.boma.uidesigns.screens.priceChange
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -27,6 +29,7 @@ fun PriceChangePage(
 ) {
     val productList by priceChangeViewmodel.products.collectAsState()
     val priceChangeList by priceChangeViewmodel.priceChangeProducts.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         modifier = Modifier.padding(paddingValues),
@@ -48,8 +51,8 @@ fun PriceChangePage(
                                 if (product.id!=null && product.doublePrice!=null){
                                     priceChangeViewmodel.updatePrice(product)
                                 }
-
                             }
+                            Toast.makeText(context, "Prices updated", Toast.LENGTH_SHORT).show()
 
                             navController.navigate(Screen.Products.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {

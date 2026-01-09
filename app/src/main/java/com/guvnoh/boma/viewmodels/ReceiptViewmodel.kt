@@ -25,11 +25,11 @@ class ReceiptViewmodel : ViewModel(){
         _receipt.value = receipt
     }
     @RequiresApi(Build.VERSION_CODES.O)
-    fun saveSale(list: List<SoldProduct>, stockViewModel: StockViewModel, repo: DatabaseReference){
+    fun saveSale(list: List<SoldProduct>, stockViewModel: StockViewModel, store: String){
         list.forEach { soldProduct ->
             soldProduct.doubleQuantity?.let {
                 qty -> soldProduct.product?.name?.let {
-                    name -> stockViewModel.sellProduct(name, qty, repo)
+                    name -> stockViewModel.sellProduct(name, qty, store)
                 }
             }
 

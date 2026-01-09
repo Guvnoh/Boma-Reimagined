@@ -9,18 +9,23 @@ data class FullsStock(
     var lastTimeSold: String? = null,
     var soldLast: Double? = null,
     var soldToday: Double? = null,
-    var receivedStock: ReceivedStock? = null
+    var receivedStock: ReceivedStock? = null,
+)
+
+data class Store(
+    var warehouse: FullsStock? = null,
+    var headOffice: FullsStock? = null
 )
 
 data class ReceivedStock(
     val date: String? = null,
-    val product: Product? = null,
+    val product: Products? = null,
     var quantity: Double? = null,
     var source: String? = null
 )
 
 data class Return(
-    val product: Product? = null,
+    val product: Products? = null,
     var quantity: Double? = null,
     var type: ReturnType? = null
 )

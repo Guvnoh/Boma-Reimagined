@@ -20,7 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.Empties
 import com.guvnoh.boma.models.EmptyCompany
 import com.guvnoh.boma.models.EmptyType
@@ -52,7 +52,7 @@ fun AddProduct(padding: PaddingValues,
         "COCACOLA", "HERO", "NBL", "GUINNESS", "PETS", "CANS", "OTHER"
     )
 
-    val newProduct = Product()
+    val newProduct = Products()
 
     Scaffold(
         modifier = Modifier.padding(padding),
@@ -276,7 +276,7 @@ fun AddProduct(padding: PaddingValues,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = CircleShape
                     ) {
-                        Icon(Icons.Filled.Done, contentDescription = "Lmaooooooooo")
+                        Icon(Icons.Filled.Done, contentDescription = "Done")
                         Spacer(Modifier.width(8.dp))
                         Text("Save Product", style = MaterialTheme.typography.labelLarge)
                     }
