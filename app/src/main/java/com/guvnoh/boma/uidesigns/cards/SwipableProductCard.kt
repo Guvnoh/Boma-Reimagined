@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.models.Products
 import kotlinx.coroutines.launch
 import androidx.wear.compose.material.ExperimentalWearMaterialApi
 import androidx.wear.compose.material.FractionalThreshold
@@ -43,7 +43,7 @@ import kotlin.math.roundToInt
 @OptIn(ExperimentalWearMaterialApi::class)
 @Composable
 fun SwipeableProductCard(
-    product: Product,
+    product: Products,
     navController: NavController,
     productsViewModel: ProductsViewModel,
 ) {
@@ -128,8 +128,8 @@ fun SwipeableProductCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlertDialogg(
-    onDelete: (Product) -> Unit,
-    product: Product,
+    onDelete: (Products) -> Unit,
+    product: Products,
     alert: MutableState<Boolean>,
     navController: NavController){
     if (alert.value){
@@ -176,7 +176,7 @@ fun AlertDialogg(
 
 @Composable
 fun DeleteProductCard(
-    product: Product
+    product: Products
 ) {
 
     val context = LocalContext.current

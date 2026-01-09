@@ -53,7 +53,7 @@ fun ReceiptPage( stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmo
     val context = LocalContext.current
     val receipt by receiptViewmodel.receipt.collectAsState()
 
-    var activeRepo = FirebaseRefs.warehouseFulls
+    var activeRepo = "warehouse"
 
 
 
@@ -194,7 +194,7 @@ fun ReceiptPage( stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmo
                 alert = setRepo,
                 soldProducts = receipt?.soldProducts?: emptyList(),
                 onSave = {activeRepo = it},
-                context = context
+                context = context,
             )
         }
     }
@@ -206,7 +206,7 @@ fun RepoAlertDialog(
     context: Context,
     alert: MutableState<Boolean>,
     soldProducts: List<SoldProduct>,
-    onSave: (activeRepo: DatabaseReference)-> Unit,
+    onSave: (store: String)-> Unit,
 ){
     BasicAlertDialog(
         onDismissRequest = {alert.value = false},
@@ -234,13 +234,13 @@ fun RepoAlertDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     TextButton(onClick = {
-                        onSave(FirebaseRefs.HeadOfficeFulls)
+                        onSave("headOffice")
                         soldProducts.forEach { soldProduct ->
 
                             StockRepository().sellProduct(
                                 productId = soldProduct.product?.id ?: "no id found for sold product",
                                 soldQty = soldProduct.doubleQuantity ?: 0.0,
-                                repo = FirebaseRefs.warehouseFulls
+                                store = "headOffice"
                             )
                         }
                         alert.value = false
@@ -250,13 +250,13 @@ fun RepoAlertDialog(
                     }
 
                     TextButton(onClick = {
-                        onSave(FirebaseRefs.warehouseFulls)
+                        onSave("warehouse")
                         soldProducts.forEach { soldProduct ->
 
                             StockRepository().sellProduct(
                                 soldProduct.product?.id?:"no id found for sold product",
                                 soldProduct.doubleQuantity?:0.0,
-                                repo = FirebaseRefs.warehouseFulls
+                                store = "warehouse"
                             )
                         }
                         alert.value = false

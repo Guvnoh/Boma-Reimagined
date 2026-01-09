@@ -28,64 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.guvnoh.boma.formatters.halfAndQuarter
-import com.guvnoh.boma.models.FullsStock
-import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.brandData
 import kotlinx.coroutines.launch
-
-//@Composable
-//fun EmptiesStockCard(emptiesStock: EmptiesStock){
-//    val scope = rememberCoroutineScope()
-//    Card(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(horizontal = 12.dp, vertical = 8.dp),
-//        shape = CardDefaults.shape,
-//        elevation = CardDefaults.cardElevation(6.dp),
-//        onClick = {
-//            scope.launch {
-//            }
-//        },
-//        colors = CardDefaults.cardColors(
-//            containerColor = MaterialTheme.colorScheme.surfaceVariant
-//        )
-//    ) {
-//        Column(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .padding(16.dp),
-//            verticalArrangement = Arrangement.spacedBy(12.dp)
-//        ) {
-//            // Product Name
-//            Text(
-//                text = emptiesStock.company.name,
-//                style = MaterialTheme.typography.titleLarge,
-//                color = MaterialTheme.colorScheme.primary,
-//                fontWeight = FontWeight.Bold
-//            )
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.SpaceBetween
-//            ) {
-//                Text(
-//                    text = "Available: ",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    fontWeight = FontWeight.Medium
-//                )
-//                Text(
-//                    text = "${emptiesStock.quantity?.let {  halfAndQuarter(it)}}",
-//                    style = MaterialTheme.typography.bodyMedium,
-//                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-//                    fontWeight = FontWeight.Medium,
-//                    modifier = Modifier.padding(end = 30.dp)
-//
-//                )
-//            }
-//
-//        }
-//
-//    }
-//}
 
 @Composable
 fun EmptiesStockCard(emptiesStock: EmptiesStock) {

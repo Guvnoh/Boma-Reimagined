@@ -1,28 +1,20 @@
 package com.guvnoh.boma.viewmodels
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.MutableData
-import com.google.firebase.database.Transaction
 import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.getDate
-import com.guvnoh.boma.formatters.getTime
 import com.guvnoh.boma.formatters.halfAndQuarter
-import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.SoldProduct
 import com.guvnoh.boma.repositories.ProductsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.update
 
 
@@ -30,8 +22,8 @@ class ProductsViewModel(
     private val repository: ProductsRepository = ProductsRepository()
 ) : ViewModel() {
 
-    private val _products = MutableStateFlow<List<Product>>(emptyList())
-    val products: StateFlow<List<Product>> = _products
+    private val _products = MutableStateFlow<List<Products>>(emptyList())
+    val products: StateFlow<List<Products>> = _products
 
     //customer
     private val _customerName = mutableStateOf("")
@@ -43,7 +35,7 @@ class ProductsViewModel(
 
 
     init {
-        observeProducts(FirebaseRefs.displayProductsRepo)
+        observeProducts(FirebaseRefs.Products)
     }
 
     //get products from database
@@ -63,7 +55,7 @@ class ProductsViewModel(
     //sold products management
 
     fun updateSoldProduct(
-        product: Product,
+        product: Products,
         stringQuantity: String,
         doubleQuantity: Double
     ) {
@@ -99,7 +91,7 @@ class ProductsViewModel(
         val grandTotal = validSoldProducts.sumOf { it.intTotal ?: 0 }
         val date = getDate()
         val receipt = Receipt(
-            id = FirebaseRefs.bomaRoot.push().key.toString().replace("-", ""),
+            id = FirebaseRefs.records.push().key.toString().replace("-", ""),
             soldProducts = validSoldProducts,
             customerName = customerName.value,
             date = date,
@@ -109,7 +101,7 @@ class ProductsViewModel(
     }
 
 
-    fun addProduct(product: Product) {
+    fun addProduct(product: Products) {
         repository.addProduct(product)
     }
 

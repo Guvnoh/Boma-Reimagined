@@ -24,10 +24,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.models.Product
 import com.guvnoh.boma.models.EmptyCompany
 import com.guvnoh.boma.models.ProductSplashScreen
 import com.guvnoh.boma.models.ProductType
+import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.cards.ProductCard
 import com.guvnoh.boma.viewmodels.ProductsViewModel
@@ -191,20 +191,20 @@ fun ProductsPage(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        val bottlesDisplay: MutableList<Product> = mutableListOf()
+                        val bottlesDisplay: MutableList<Products> = mutableListOf()
                         val  unsortedBottles = productList.filter {
                                 it.type == ProductType.BOTTLE }
                         unsortedBottles.forEach {
                                 bottlesDisplay.add(it)
                         }
 
-                        val petsDisplay: MutableList<Product> = mutableListOf()
+                        val petsDisplay: MutableList<Products> = mutableListOf()
                         val  unsortedPets = productList.filter {
                             it.type == ProductType.PET }
                         unsortedPets.forEach {
                             petsDisplay.add(it)
                         }
-                        val cansDisplay: MutableList<Product> = mutableListOf()
+                        val cansDisplay: MutableList<Products> = mutableListOf()
                         val  unsortedCans = productList.filter {
                             it.type == ProductType.CAN }
                         unsortedCans.forEach {
@@ -368,7 +368,7 @@ fun ProductsPage(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        val newList = mutableListOf<Product>()
+                        val newList = mutableListOf<Products>()
                         productList.forEach {
                             if (it.name?.lowercase()?.contains(searchEntry) == true) {
                                 newList.add(it)
@@ -388,8 +388,8 @@ fun ProductsPage(
 }
 
 
-fun getDisplayGroup(list: List<Product>, emptyCompany: EmptyCompany): List<Product>{
-    val group = mutableListOf<Product>()
+fun getDisplayGroup(list: List<Products>, emptyCompany: EmptyCompany): List<Products>{
+    val group = mutableListOf<Products>()
     list.forEach {
         if (it.type == ProductType.BOTTLE && it.empties?.company == emptyCompany)
             group.add(it)

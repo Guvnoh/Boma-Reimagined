@@ -1,25 +1,43 @@
 package com.guvnoh.boma.functions
-
-import com.google.firebase.database.DatabaseReference
 import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.models.Product
-import com.guvnoh.boma.models.brandData
 
 object SendDummyData {
 
-    fun createNewFullsStock(products: List<Product>){
-        products.forEach { product ->
-            product.id?.let { productId ->
+//    private fun convertProductToProducts(product: Product, store: Store){
+//        product.id?.let {
+//            productId ->
+//            FirebaseRefs.Products.child(productId).setValue(Products().copy(
+//                name = product.name?:"error",
+//                stringPrice = product.stringPrice?:"",
+//                doublePrice = product.doublePrice?:0.0,
+//                id = productId,
+//                imageName = product.imageName?:"",
+//                image = product.image?: R.drawable.bottle,
+//                type = product.type?:ProductType.BOTTLE,
+//                empties = product.empties,
+//                store = store
+//            ))
+//        }
+//    }
+//
+//    fun createNewFullsStock(wareHouse: List<Product>, headOffice: List<Product>){
+//
+//        wareHouse.forEach { product ->
+//            val store = Store()
+//            store.warehouse = product.stock
+//            headOffice.forEach {
+//                if (it == product){
+//                    store.headOffice = it.stock
+//                }
+//            }
+//            convertProductToProducts(product, store)
+//        }
+//
+//
+//
+//    }
 
-                //populate 'root.bomastock.warehouse.fulls' with fulls stock data
-                FirebaseRefs.warehouseFulls
-                    .child(productId).setValue(product)
-
-                //populate 'root.bomastock.headoffice.fulls' with fulls stock data
-                FirebaseRefs.HeadOfficeFulls
-                    .child(productId).setValue(product)
-            }
-        }
-
+    fun cleardb(){
+        FirebaseRefs.Products.removeValue()
     }
 }

@@ -75,7 +75,7 @@ fun StockSplashScreen(
 fun ProductSplashScreen(
     modifier: Modifier,
     onTimeOut: () -> Unit,
-    list: MutableList<Product>,
+    list: MutableList<Products>,
 ){
     Box (
         modifier = modifier

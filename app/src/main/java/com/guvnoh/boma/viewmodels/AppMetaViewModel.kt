@@ -119,6 +119,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.MutableData
 import com.google.firebase.database.Transaction
+import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.FullsStock
 import com.guvnoh.boma.repositories.AppMetaRepository
 
@@ -132,38 +133,52 @@ class AppMetaViewModel : ViewModel() {
             onReset()
         }
     }
+    private fun resetStockData(ref: DatabaseReference){
+        ref.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(data: MutableData): Transaction.Result {
+                val stock = data.getValue(FullsStock::class.java)
+                    ?: return Transaction.success(data)
 
-    fun resetSoldToday(repo: DatabaseReference) {
+                val closing = stock.closingStock ?: 0.0
+
+                stock.openingStock = closing
+                stock.soldToday = 0.0
+
+                data.value = stock
+                return Transaction.success(data)
+            }
+
+            override fun onComplete(
+                error: DatabaseError?,
+                committed: Boolean,
+                currentData: DataSnapshot?
+            ) {}
+        })
+    }
+
+    fun resetSoldToday() {
+        val repo = FirebaseRefs.Products
         repo.get().addOnSuccessListener { snapshot ->
             snapshot.children.forEach { productSnap ->
                 val productId = productSnap.key ?: return@forEach
 
-                val stockRef = repo
+                val warehouseStock = repo
                     .child(productId)
-                    .child("stock")
+                    .child("store")
+                    .child("warehouse")
 
-                stockRef.runTransaction(object : Transaction.Handler {
-                    override fun doTransaction(data: MutableData): Transaction.Result {
-                        val stock = data.getValue(FullsStock::class.java)
-                            ?: return Transaction.success(data)
+                val headOfficeStock = repo
+                    .child(productId)
+                    .child("store")
+                    .child("headOffice")
 
-                        val closing = stock.closingStock ?: 0.0
+                resetStockData(warehouseStock)
+                resetStockData(headOfficeStock)
 
-                        stock.openingStock = closing
-                        stock.soldToday = 0.0
-
-                        data.value = stock
-                        return Transaction.success(data)
-                    }
-
-                    override fun onComplete(
-                        error: DatabaseError?,
-                        committed: Boolean,
-                        snapshot: DataSnapshot?
-                    ) = Unit
-                })
             }
         }
     }
 }
+
+
 

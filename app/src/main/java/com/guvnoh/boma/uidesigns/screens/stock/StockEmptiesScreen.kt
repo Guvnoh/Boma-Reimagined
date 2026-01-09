@@ -1,4 +1,4 @@
-package com.guvnoh.boma.uidesigns.screens
+package com.guvnoh.boma.uidesigns.screens.stock
 
 import android.os.Build
 import androidx.annotation.RequiresApi

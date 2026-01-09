@@ -26,13 +26,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.AutoScrollingText
-import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.repositories.ProductsRepository
 import com.guvnoh.boma.viewmodels.ProductsViewModel
 
 @Composable
 fun ProductCard(
-    product: Product,
+    product: Products,
     viewModel: ProductsViewModel,
 ) {
     val soldProducts = viewModel.soldProducts.collectAsState()
@@ -43,7 +43,9 @@ fun ProductCard(
 
     val total = soldProduct?.intTotal?:0
 
-    val enabled: Boolean by remember { mutableStateOf((product.stock?.closingStock?:0.0)>0) }
+    val stock = product.store?.warehouse?.closingStock?:0.0
+
+    val enabled: Boolean by remember { mutableStateOf((stock > 0)) }
 
     val context = LocalContext.current
     val resId = ProductsRepository().getImage(context,product.imageName?:"bottle.jpg")

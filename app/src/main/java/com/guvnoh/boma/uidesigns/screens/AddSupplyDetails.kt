@@ -33,13 +33,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.ReceivedStock
+import com.guvnoh.boma.models.brandData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UpdateStockCard(padding: PaddingValues,product: Product){
+fun UpdateStockCard(padding: PaddingValues,product: Products){
     var quantity by remember { mutableStateOf("") }
     val source by remember { mutableStateOf("") }
     val stock = ReceivedStock(product = product, quantity = 0.0, source = source)
@@ -157,4 +159,10 @@ fun UpdateStockCard(padding: PaddingValues,product: Product){
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ShowDemo(){
+    UpdateStockCard(padding = PaddingValues(), product = brandData[1])
 }

@@ -26,7 +26,7 @@ import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.captureScreen
 import com.guvnoh.boma.functions.saveBitmapToGallery
 import com.guvnoh.boma.functions.vibratePhone
-import com.guvnoh.boma.models.Product
+import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.SoldProduct
 
@@ -147,13 +147,13 @@ fun RecordCardDetailsDemo() {
         SoldProduct().apply {
             receiptQuantity = "2"
             intTotal = 1200
-            product = Product()
+            product = Products()
             product?.name = "Toothpaste"
         },
         SoldProduct().apply {
             receiptQuantity = "1"
             intTotal = 800
-            product = Product()
+            product = Products()
             product?.name = "Soap"
         }
     )
