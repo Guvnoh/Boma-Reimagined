@@ -30,8 +30,8 @@ import com.guvnoh.boma.models.ProductType
 import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.cards.ProductCard
+import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptViewmodel
 import com.guvnoh.boma.viewmodels.ProductsViewModel
-import com.guvnoh.boma.viewmodels.ReceiptViewmodel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)

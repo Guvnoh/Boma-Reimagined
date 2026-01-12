@@ -1,7 +1,5 @@
-package com.guvnoh.boma.uidesigns.screens
+package com.guvnoh.boma.uidesigns.screens.receipt
 
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import android.widget.Toast
@@ -30,40 +28,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.firebase.database.DatabaseReference
-import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.getTime
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.captureScreen
 import com.guvnoh.boma.functions.saveBitmapToGallery
-import com.guvnoh.boma.functions.sendRecord
 import com.guvnoh.boma.functions.vibratePhone
-import com.guvnoh.boma.models.Receipt
 import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.repositories.ProductsRepository
 import com.guvnoh.boma.repositories.StockRepository
-import com.guvnoh.boma.viewmodels.ProductsViewModel
-import com.guvnoh.boma.viewmodels.ReceiptViewmodel
-import com.guvnoh.boma.viewmodels.StockViewModel
+import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReceiptPage( stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmodel) {
+fun ReceiptPage(stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmodel) {
     val context = LocalContext.current
     val receipt by receiptViewmodel.receipt.collectAsState()
+    val notes by receiptViewmodel.notes
 
     var activeRepo = "warehouse"
 
-
-
-//    val grandTotal = receipt?.let {
-//        it.soldProducts?.sumOf {
-//            product -> product.intTotal?:0
-//        }?.let {
-//            productIntTotal -> nairaFormat(productIntTotal)
-//        }
-//    }
     val view = LocalView.current
     val setRepo = remember { mutableStateOf(false) }
 
@@ -83,7 +66,7 @@ fun ReceiptPage( stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmo
             ) {
                 //copy button
                 Button(onClick = {
-                    val nonNullReceipt = receipt?:Receipt()
+                    val nonNullReceipt = receipt?: Receipt()
                     receiptViewmodel.copy(nonNullReceipt, context)
                 }) {
                     Icon(Icons.Filled.Menu, contentDescription = "Copy")
@@ -109,7 +92,11 @@ fun ReceiptPage( stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmo
                             receipt?.soldProducts!!,
                             stockViewModel,
                             activeRepo)
-                        receipt?.let { sendRecord(it) }
+                        receipt?.let {
+                            it.notes = notes
+                            it.time = getTime()
+                            receiptViewmodel.saveRecord(it)
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                 ) {
@@ -169,6 +156,18 @@ fun ReceiptPage( stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmo
                     }
                 }
             }
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+
+                // 📝 ADDITIONAL NOTES FIELD
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { receiptViewmodel.setNotes(it) },
+                    label = { Text("Notes / Comments") },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 4,
+                    placeholder = { Text("Cash or bottles balance... ") }
+                )
+            }
 
             // Total Section
             Spacer(Modifier.height(8.dp))
@@ -193,7 +192,17 @@ fun ReceiptPage( stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmo
             RepoAlertDialog(
                 alert = setRepo,
                 soldProducts = receipt?.soldProducts?: emptyList(),
-                onSave = {activeRepo = it},
+                onSave = { store, soldProducts ->
+                    activeRepo = store
+                    soldProducts.forEach { soldProduct ->
+
+                        StockRepository().sellProduct(
+                            productId = soldProduct.product?.id ?: "no id found for sold product",
+                            soldQty = soldProduct.doubleQuantity ?: 0.0,
+                            store = store
+                        )
+                    }
+                         },
                 context = context,
             )
         }
@@ -206,7 +215,7 @@ fun RepoAlertDialog(
     context: Context,
     alert: MutableState<Boolean>,
     soldProducts: List<SoldProduct>,
-    onSave: (store: String)-> Unit,
+    onSave: (store: String, soldProducts: List<SoldProduct>)-> Unit,
 ){
     BasicAlertDialog(
         onDismissRequest = {alert.value = false},
@@ -234,15 +243,7 @@ fun RepoAlertDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     TextButton(onClick = {
-                        onSave("headOffice")
-                        soldProducts.forEach { soldProduct ->
-
-                            StockRepository().sellProduct(
-                                productId = soldProduct.product?.id ?: "no id found for sold product",
-                                soldQty = soldProduct.doubleQuantity ?: 0.0,
-                                store = "headOffice"
-                            )
-                        }
+                        onSave("headOffice", soldProducts)
                         alert.value = false
                         Toast.makeText(context, "Head Office Sale recorded!", Toast.LENGTH_SHORT).show()
                     }) {
@@ -250,15 +251,7 @@ fun RepoAlertDialog(
                     }
 
                     TextButton(onClick = {
-                        onSave("warehouse")
-                        soldProducts.forEach { soldProduct ->
-
-                            StockRepository().sellProduct(
-                                soldProduct.product?.id?:"no id found for sold product",
-                                soldProduct.doubleQuantity?:0.0,
-                                store = "warehouse"
-                            )
-                        }
+                        onSave("warehouse", soldProducts)
                         alert.value = false
                         Toast.makeText(context, "Warehouse Sale recorded!", Toast.LENGTH_SHORT).show()
                     }){
