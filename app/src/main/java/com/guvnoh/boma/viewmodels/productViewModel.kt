@@ -10,7 +10,7 @@ import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.getDate
 import com.guvnoh.boma.formatters.halfAndQuarter
 import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.Receipt
+import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
 import com.guvnoh.boma.models.SoldProduct
 import com.guvnoh.boma.repositories.ProductsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -87,7 +87,7 @@ class ProductsViewModel(
     @RequiresApi(Build.VERSION_CODES.O)
     fun generateReceipt(): Receipt {
         val validSoldProducts = soldProducts.value.filter { (it.intTotal ?: 0) > 0 }.toList()
-        //val productList by vm.products.collectAsState()
+
         val grandTotal = validSoldProducts.sumOf { it.intTotal ?: 0 }
         val date = getDate()
         val receipt = Receipt(
@@ -95,8 +95,9 @@ class ProductsViewModel(
             soldProducts = validSoldProducts,
             customerName = customerName.value,
             date = date,
-            grandTotal = grandTotal.toString()
+            grandTotal = grandTotal.toString(),
         )
+
         return receipt
     }
 

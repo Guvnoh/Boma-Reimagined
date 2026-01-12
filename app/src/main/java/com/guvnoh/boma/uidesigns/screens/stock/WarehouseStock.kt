@@ -46,14 +46,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.wear.compose.material.Icon
-import com.google.firebase.database.DatabaseReference
 import com.guvnoh.boma.R
 import com.guvnoh.boma.formatters.getDate
 import com.guvnoh.boma.models.FullsStock
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.models.StockSplashScreen
 import com.guvnoh.boma.uidesigns.cards.StockCard
-import com.guvnoh.boma.viewmodels.StockViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.O)

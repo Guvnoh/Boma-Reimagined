@@ -1,4 +1,4 @@
-package com.guvnoh.boma.uidesigns.screens
+package com.guvnoh.boma.uidesigns.screens.records
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -27,13 +27,13 @@ import com.guvnoh.boma.functions.captureScreen
 import com.guvnoh.boma.functions.saveBitmapToGallery
 import com.guvnoh.boma.functions.vibratePhone
 import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.Receipt
+import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
 import com.guvnoh.boma.models.SoldProduct
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecordDetails(receipt: Receipt) {
+fun RecordDetails(record: Receipt) {
     val context = LocalContext.current
     val view = LocalView.current
 
@@ -50,7 +50,7 @@ fun RecordDetails(receipt: Receipt) {
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Button(onClick = {receipt.soldProducts?.let{ copy(it, context) }}) {
+                Button(onClick = {record.soldProducts?.let{ copy(it, context) }}) {
                     Icon(Icons.Filled.Menu, contentDescription = "Copy")
                     Spacer(Modifier.width(6.dp))
                     Text("Copy")
@@ -73,9 +73,16 @@ fun RecordDetails(receipt: Receipt) {
                 .padding(16.dp)
         ) {
             // Header Info
-            Text("Receipt #${receipt.id}", style = MaterialTheme.typography.titleMedium)
-            Text("Customer: ${receipt.customerName}", style = MaterialTheme.typography.bodyLarge)
-            Text("Date: ${(receipt.date?:"error")}", style = MaterialTheme.typography.bodyMedium)
+            Text("Receipt No. ${record.id}", style = MaterialTheme.typography.titleMedium)
+            Text("${record.customerName}", style = MaterialTheme.typography.bodyLarge)
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()) {
+                Text("Date: ${record.date}", style = MaterialTheme.typography.bodyMedium)
+                if (record.time?.isNotBlank() == true){
+                    Text("Time: ${record.time}", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
 
             Spacer(Modifier.height(16.dp))
 
@@ -88,7 +95,7 @@ fun RecordDetails(receipt: Receipt) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    receipt.soldProducts?.let {
+                    record.soldProducts?.let {
                         items(it) { product ->
                             Row(
                                 modifier = Modifier
@@ -111,6 +118,9 @@ fun RecordDetails(receipt: Receipt) {
                     }
                 }
             }
+            if (record.notes?.isNotBlank() == true){
+                Text(record.notes!!)
+            }
 
             // Total Section
             Spacer(Modifier.height(8.dp))
@@ -122,7 +132,7 @@ fun RecordDetails(receipt: Receipt) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Grand Total", style = MaterialTheme.typography.titleMedium)
-                val grandTotal = receipt.soldProducts?.let {
+                val grandTotal = record.soldProducts?.let {
                     soldProducts ->
                     nairaFormat(soldProducts.sumOf { it.intTotal?:0 })
                 }
@@ -159,7 +169,7 @@ fun RecordCardDetailsDemo() {
     )
 
     RecordDetails(
-        receipt = Receipt(
+        record = Receipt(
             id = "001",
             customerName = "John Doe",
             date = "Thu, Oct 30 2025",

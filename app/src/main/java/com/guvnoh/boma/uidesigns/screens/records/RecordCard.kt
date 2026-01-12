@@ -1,4 +1,4 @@
-package com.guvnoh.boma.uidesigns.cards
+package com.guvnoh.boma.uidesigns.screens.records
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -7,11 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -19,42 +16,43 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.formatters.getDate
-import com.guvnoh.boma.models.Receipt
-import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.models.brandData
+import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
 import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.viewmodels.RecordViewModel
+import com.guvnoh.boma.models.SelectableCard
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun RecordCard(
     record: Receipt,
     navController: NavHostController,
-    vm: RecordViewModel
+    vm: RecordViewModel,
+    selected : Boolean,
+    selectedItems: MutableList<Receipt>
 ) {
-    Card(
+    SelectableCard (
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp) ,
         onClick = {
+            if (selectedItems.isNotEmpty() && selectedItems.contains(record)) {
+                selectedItems.remove(record)
+            } else if (selectedItems.isNotEmpty() && !selectedItems.contains(record)) {
+                selectedItems.add(record)
+            }else{
                 vm.setCurrentRecord(record)
                 navController.navigate(Screen.RecordDetails.route) {
                     launchSingleTop = true
                 }
+            }
                   },
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        onLongPress = { selectedItems.add(record)},
+        selected = selected
+
     ) {
         Row(
+
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
@@ -107,22 +105,22 @@ fun RecordCard(
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-private fun RecordsCardDemo(){
-    RecordCard(
-        Receipt(
-            customerName = "Chukwuka",
-            date = getDate(),
-            soldProducts = listOf(
-                SoldProduct(
-                    product = brandData[0],
-                    stringQuantity = "1",
-                    doubleQuantity = 1.0,
-
-                    )
-            ),
-        ), rememberNavController(), viewModel()
-    )
-}
+//@RequiresApi(Build.VERSION_CODES.O)
+//@Preview(showBackground = true)
+//@Composable
+//private fun RecordsCardDemo(){
+//    RecordCard(
+//        Receipt(
+//            customerName = "Chukwuka",
+//            date = getDate(),
+//            soldProducts = listOf(
+//                SoldProduct(
+//                    product = brandData[0],
+//                    stringQuantity = "1",
+//                    doubleQuantity = 1.0,
+//
+//                    )
+//            ),
+//        ), rememberNavController(), viewModel()
+//    )
+//}

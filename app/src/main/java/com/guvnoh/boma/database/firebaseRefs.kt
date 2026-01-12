@@ -20,6 +20,6 @@ object FirebaseRefs {
 
     //val displayProductsRepo = root.child("BomaStock").child("Stock_Fulls")
     val empties = root.child("BomaStock").child("Empties")
-    val records = root.child("BomaDBRecords2")
+    val records = root.child("BomaDBRecords3")
     val appMeta = root.child("appMeta")
 }

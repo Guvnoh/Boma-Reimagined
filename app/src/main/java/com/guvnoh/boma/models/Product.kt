@@ -42,14 +42,14 @@ data class SoldProduct(
     var intTotal: Int? = null,
 )
 
-data class Receipt(
-    val timeStamp: Long? = null,
-    var id: String? = null,
-    var soldProducts: List<SoldProduct>? = null,
-    var customerName: String? = null,
-    var date: String? = null,
-    var grandTotal: String? = null
-)
+//data class Receipt(
+//
+//
+//    var soldProducts: List<SoldProduct>? = null,
+//    var customerName: String? = null,
+//    var date: String? = null,
+//    var grandTotal: String? = null
+//)
 
 val brandData = mutableListOf(
     //coca cola

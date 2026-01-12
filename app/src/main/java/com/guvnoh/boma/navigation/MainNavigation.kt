@@ -11,22 +11,20 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.functions.SendDummyData
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.screens.AddProduct
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
 import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangePage
 import com.guvnoh.boma.uidesigns.screens.ProductsPage
-import com.guvnoh.boma.uidesigns.screens.ReceiptPage
-import com.guvnoh.boma.uidesigns.screens.RecordDetails
-import com.guvnoh.boma.uidesigns.screens.RecordsScreen
+import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptPage
+import com.guvnoh.boma.uidesigns.screens.records.RecordDetails
+import com.guvnoh.boma.uidesigns.screens.records.RecordsScreen
 import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangeViewmodel
+import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptViewmodel
+import com.guvnoh.boma.uidesigns.screens.records.RecordViewModel
 import com.guvnoh.boma.viewmodels.AppMetaViewModel
 import com.guvnoh.boma.viewmodels.ProductsViewModel
-import com.guvnoh.boma.viewmodels.ReceiptViewmodel
-import com.guvnoh.boma.viewmodels.RecordViewModel
-import com.guvnoh.boma.viewmodels.StockViewModel
+import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -36,7 +34,7 @@ fun Navigation(
     navController: NavHostController,
     ){
 
-    val records: RecordViewModel  = viewModel()
+    val records: RecordViewModel = viewModel()
     val record by records.record.collectAsState()
     val productsViewModel: ProductsViewModel = viewModel()
     val bomaViewModel: AppMetaViewModel = viewModel()
