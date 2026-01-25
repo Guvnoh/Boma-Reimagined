@@ -189,10 +189,11 @@ fun ReceiptPage(stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmod
             }
         }
         if (setRepo.value){
-            RepoAlertDialog(
+            SaveSaleDialog(
                 alert = setRepo,
                 soldProducts = receipt?.soldProducts?: emptyList(),
                 onSave = { store, soldProducts ->
+                    receiptViewmodel.setNotes("")
                     activeRepo = store
                     soldProducts.forEach { soldProduct ->
 
@@ -211,7 +212,7 @@ fun ReceiptPage(stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmod
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RepoAlertDialog(
+fun SaveSaleDialog(
     context: Context,
     alert: MutableState<Boolean>,
     soldProducts: List<SoldProduct>,

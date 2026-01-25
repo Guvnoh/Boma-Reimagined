@@ -7,10 +7,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.screens.AddProduct
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
@@ -25,6 +27,7 @@ import com.guvnoh.boma.uidesigns.screens.records.RecordViewModel
 import com.guvnoh.boma.viewmodels.AppMetaViewModel
 import com.guvnoh.boma.viewmodels.ProductsViewModel
 import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
+import kotlinx.coroutines.flow.forEach
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -44,13 +47,18 @@ fun Navigation(
 
 
 
-
-
     LaunchedEffect(Unit) {
         bomaViewModel.checkDailyReset{
             AppMetaViewModel().resetSoldToday()
         }
     }
+//    val products by productsViewModel.products.collectAsState()
+//    LaunchedEffect (products){
+//        val test =  FirebaseRefs.root.child("testProducts")
+//        products.forEach {
+//            test.child(it.id.toString()).setValue(it)
+//        }
+//    }
 
 
 

@@ -18,13 +18,12 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.guvnoh.boma.models.Screen
 
-
 @Composable
 fun PriceChangePage(
     navController: NavController,
     paddingValues: PaddingValues,
     priceChangeViewmodel: PriceChangeViewmodel
-) {
+){
     val productList by priceChangeViewmodel.products.collectAsState()
     val priceChangeList by priceChangeViewmodel.priceChangeProducts.collectAsState()
     val context = LocalContext.current
@@ -58,6 +57,7 @@ fun PriceChangePage(
                                 }
                                 launchSingleTop = true
                                 restoreState = true
+
                             }
                         },
                         enabled = priceChangeList.isNotEmpty(),
