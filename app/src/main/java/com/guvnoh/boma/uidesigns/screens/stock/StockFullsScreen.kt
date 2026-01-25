@@ -51,7 +51,6 @@ import com.guvnoh.boma.formatters.getDate
 import com.guvnoh.boma.models.FullsStock
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.models.StockSplashScreen
-import com.guvnoh.boma.uidesigns.cards.StockCard
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -63,10 +62,13 @@ fun StockFullsScreen(
     navController: NavHostController,
 
     ) {
-    //val products by productsViewModel.products.collectAsState()
     val warehouse by stockViewModel.wareHouseStock.collectAsState()
     val headOffice by stockViewModel.headOfficeStock.collectAsState()
-    var stockChoice by remember { mutableStateOf(warehouse) }
+    var store by remember { mutableStateOf(Store.WAREHOUSE)}
+    var stockChoice = when(store){
+        Store.WAREHOUSE -> warehouse
+        Store.HEAD_OFFICE -> headOffice
+    }
 
     var showSplash by remember { mutableStateOf(true) }
 
@@ -74,32 +76,8 @@ fun StockFullsScreen(
         modifier = modifier
             .fillMaxSize()
             .padding(paddingValues),
-            //.background(MaterialTheme.colorScheme.background),
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-
-        // --- FAB ---
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {},
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Update stock",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                },
-                text = {
-                    Text(
-                        text = "Update",
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                },
-                containerColor = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(12.dp),
-                elevation = FloatingActionButtonDefaults.elevation(6.dp)
-            )
-        },
 
         // --- Top Bar ---
         topBar = {
@@ -133,11 +111,12 @@ fun StockFullsScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
 
                 ) {
-                    // choose stock
+                    // warehouse stock button
 
                     Button(
                         onClick = {
                             stockChoice = warehouse
+                            store = Store.WAREHOUSE
                         },
                         colors = if (stockChoice != warehouse) {
                             ButtonDefaults.buttonColors(containerColor = Color.LightGray)
@@ -150,10 +129,11 @@ fun StockFullsScreen(
 
                     }
 
-
+                    //headOffice button
                     Button(
                         onClick = {
                             stockChoice = headOffice
+                            store = Store.HEAD_OFFICE
                         },
                         colors = if (stockChoice != headOffice) {
                             ButtonDefaults.buttonColors(containerColor = Color.LightGray)
@@ -219,7 +199,11 @@ fun StockFullsScreen(
                         brand ->
                         val name = brand.name?:"error"
                         val brandStock = stockChoice[brand] ?: FullsStock()
-                        StockCard(name, brandStock)
+                        StockCard(
+                            product = brand,
+                            stock = brandStock,
+                            viewModel = stockViewModel,
+                            store = store )
                     }
                 }
             }

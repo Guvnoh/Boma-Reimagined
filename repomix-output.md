@@ -47,11 +47,8 @@ app/src/main/java/com/guvnoh/boma/dateProvider/DateProvider.kt
 app/src/main/java/com/guvnoh/boma/formatters/CurrencyFormatter.kt
 app/src/main/java/com/guvnoh/boma/formatters/NumberFormatter.kt
 app/src/main/java/com/guvnoh/boma/formatters/TimeFormatter.kt
-app/src/main/java/com/guvnoh/boma/functions/FetchRecords.kt
-app/src/main/java/com/guvnoh/boma/functions/PushRecord.kt
 app/src/main/java/com/guvnoh/boma/functions/Screenshot.kt
 app/src/main/java/com/guvnoh/boma/functions/SendDummyData.kt
-app/src/main/java/com/guvnoh/boma/functions/stockCalculator.kt
 app/src/main/java/com/guvnoh/boma/functions/VibratePhone.kt
 app/src/main/java/com/guvnoh/boma/MainActivity.kt
 app/src/main/java/com/guvnoh/boma/models/AutoScrollingText.kt
@@ -59,6 +56,7 @@ app/src/main/java/com/guvnoh/boma/models/Empties.kt
 app/src/main/java/com/guvnoh/boma/models/FullsStock.kt
 app/src/main/java/com/guvnoh/boma/models/Product.kt
 app/src/main/java/com/guvnoh/boma/models/Screen.kt
+app/src/main/java/com/guvnoh/boma/models/selectableCard.kt
 app/src/main/java/com/guvnoh/boma/models/SplashScreen.kt
 app/src/main/java/com/guvnoh/boma/navigation/MainNavigation.kt
 app/src/main/java/com/guvnoh/boma/navigation/StockPageNavigation.kt
@@ -70,8 +68,6 @@ app/src/main/java/com/guvnoh/boma/ui/theme/Theme.kt
 app/src/main/java/com/guvnoh/boma/ui/theme/Type.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/cards/EmptiesStockCard.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/cards/ProductCard.kt
-app/src/main/java/com/guvnoh/boma/uidesigns/cards/RecordCard.kt
-app/src/main/java/com/guvnoh/boma/uidesigns/cards/StockCard.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/cards/SwipableProductCard.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/cards/UpdateStock.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/DrawerMenu.kt
@@ -82,17 +78,20 @@ app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeCard.
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangePage.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/ProductsPage.kt
-app/src/main/java/com/guvnoh/boma/uidesigns/screens/Receipt.kt
-app/src/main/java/com/guvnoh/boma/uidesigns/screens/RecordDetailsScreen.kt
-app/src/main/java/com/guvnoh/boma/uidesigns/screens/RecordsScreen.kt
-app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/HeadOfficeStock.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/receipt/Receipt.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/receipt/ReceiptData.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/receipt/ReceiptViewmodel.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/records/RecordCard.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/records/RecordDetailsScreen.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/records/RecordsRepository.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/records/RecordsScreen.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/records/RecordViewModel.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockCard.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockEmptiesScreen.kt
-app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/WarehouseStock.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockFullsScreen.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockViewmodel.kt
 app/src/main/java/com/guvnoh/boma/viewmodels/AppMetaViewModel.kt
 app/src/main/java/com/guvnoh/boma/viewmodels/productViewModel.kt
-app/src/main/java/com/guvnoh/boma/viewmodels/ReceiptViewmodel.kt
-app/src/main/java/com/guvnoh/boma/viewmodels/RecordViewModel.kt
-app/src/main/java/com/guvnoh/boma/viewmodels/StockViewmodel.kt
 app/src/main/res/drawable/amstel.jpg
 app/src/main/res/drawable/aquafina.jpg
 app/src/main/res/drawable/beta_malt.jpg
@@ -167,6 +166,670 @@ settings.gradle.kts
 ```
 
 # Files
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/records/RecordsRepository.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.records
+
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
+
+class RecordsRepository() {
+
+    private val recordsRef = FirebaseRefs.records
+
+
+    fun getDatabaseRecords(callback: (MutableList<Receipt>) -> Unit) {
+
+        FirebaseRefs.records.orderByChild("timeStamp")
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val records = snapshot.children.mapNotNull {
+                        it.getValue(Receipt::class.java)
+                    }.sortedByDescending { it.timeStamp }
+
+                    callback(records.toMutableList())
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.d("get records error: ", "$error")
+                }
+            })
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun sendRecord(record: Receipt) {
+        val newRef = recordsRef.push()
+        val recordMap = mapOf(
+            "timeStamp" to record.timeStamp,
+            "ref" to newRef.key,
+            "id" to record.id,
+            "soldProducts" to record.soldProducts,
+            "customerName" to record.customerName,
+            "date" to record.date,
+            "time" to record.time,
+            "grandTotal" to record.grandTotal,
+            "notes" to record.notes
+        )
+        newRef.setValue(recordMap)
+    }
+
+    fun deleteRecord(record: Receipt) {
+        recordsRef.child(record.ref ?: "").removeValue()
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockCard.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.stock
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import com.guvnoh.boma.formatters.halfAndQuarter
+import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.models.FullsStock
+import com.guvnoh.boma.models.Products
+import kotlinx.coroutines.launch
+
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun StockCard(
+    product: Products,
+    stock: FullsStock,
+    viewModel: StockViewModel,
+    store: String) {
+    val scope = rememberCoroutineScope()
+    val soldToday = stock.soldToday
+    var isExpanded by remember { mutableStateOf(false) }
+    var newQty by remember { mutableStateOf("") }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        onClick = { scope.launch { isExpanded = !isExpanded} },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // --- Header Row ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = product.name?:"error",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                // Optional visual indicator for low stock
+                val isLowStock = (stock.closingStock ?: 0.0) < 5.0
+                val indicatorColor = if (isLowStock)
+                    MaterialTheme.colorScheme.error
+                else
+                    MaterialTheme.colorScheme.primary
+
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .background(indicatorColor, CircleShape)
+                )
+            }
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                thickness = 1.dp
+            )
+
+            // --- Sold Today ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Sold Today",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = halfAndQuarter(soldToday?:0.0),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            // --- Current Stock ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Current Stock",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = halfAndQuarter(stock.closingStock ?: 0.0),
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = if ((stock.closingStock ?: 0.0) < 5.0)
+                        MaterialTheme.colorScheme.error
+                    else
+                        MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            // --- Optional Footer Highlight ---
+            if ((stock.closingStock ?: 0.0) < 5.0) {
+                Text(
+                    text = "⚠️ Low stock — restock soon",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.error
+                    ),
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+            // Expanded Section: Input + Stats
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    var stockError by remember { mutableStateOf<String?>(null) }
+                    // Input Field
+                    OutlinedTextField(
+                        value = newQty,
+                        onValueChange = {
+                            newQty = it
+                            viewModel.errorCheck(newQty)?.let {
+                                viewModel.stockOVC(
+                                    input = newQty,
+                                    store = store,
+                                    productId = product.id!!
+                                )
+                            }
+                        },
+                        label = { Text("Enter New Price") },
+                        leadingIcon = {
+                            Text(
+                                "₦",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        },
+                        trailingIcon = {
+                            if (newQty.isNotEmpty()) {
+                                IconButton(onClick = {
+                                    newQty = ""
+                                    stockError = null
+                                }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Clear",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        },
+                        placeholder = {
+                            Text(
+                                stock.closingStock.toString(),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            )
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        isError = stockError != null,
+                        supportingText = {
+                            if (stockError != null) {
+                                Text(stockError!!, color = MaterialTheme.colorScheme.error)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+
+                    // Price Change Stats
+                    if (stockError == null) {
+                        val currentStock by remember { mutableDoubleStateOf(
+                            stock.closingStock?: 0.0)
+                        }
+                        val pendingStock = newQty.toDoubleOrNull()?:0.0
+                        val change  = pendingStock - currentStock
+                        val changePercent  = if (currentStock >0.0 && pendingStock >0.0 ) {
+                            ((pendingStock - currentStock) / currentStock) * 100
+                        } else 0.0
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Change Amount
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+
+                                    Text(
+                                        text = "Change",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "${if (change > 0) "+" else ""}${nairaFormat(change)}",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = if (change > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+                                    )
+                                }
+                            }
+
+                            // Percentage Change
+
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Percent",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "${if (changePercent > 0) "+" else ""}%.1f%%".format(changePercent),
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = if (changePercent > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Confirm Button
+                    if (stockError == null) {
+                        Button(
+                            onClick = {
+                                newQty = ""
+                                isExpanded = false
+                                viewModel.updateStock(
+                                    productId = product.id?:"",
+                                    store = store,
+                                    newStock = newQty.toDoubleOrNull()?:0.0
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Update Stock",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+//@RequiresApi(Build.VERSION_CODES.O)
+//@Preview
+//@Composable
+//private fun ShowStockCard(){
+//    StockCard("P",FullsStock())
+//}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockFullsScreen.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.stock
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.wear.compose.material.Icon
+import com.guvnoh.boma.R
+import com.guvnoh.boma.formatters.getDate
+import com.guvnoh.boma.models.FullsStock
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.models.StockSplashScreen
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun StockFullsScreen(
+    paddingValues: PaddingValues,
+    stockViewModel: StockViewModel,
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+
+    ) {
+    val warehouse by stockViewModel.wareHouseStock.collectAsState()
+    val headOffice by stockViewModel.headOfficeStock.collectAsState()
+    var stockChoice by remember { mutableStateOf(warehouse) }
+    var store by remember { mutableStateOf( "warehouse" ) }
+//        when(stockChoice){
+//        warehouse -> ""
+//        headOffice -> "headOffice"
+//        else -> "error"
+//    }
+
+    var showSplash by remember { mutableStateOf(true) }
+
+    Scaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(paddingValues),
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+
+        // --- Top Bar ---
+        topBar = {
+            Column(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.surface)
+                    .wrapContentHeight()
+                    .statusBarsPadding()
+                    .padding(vertical = 12.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = getDate(),
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color.Black//MaterialTheme.colorScheme.onSurface
+                )
+                HorizontalDivider(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth(0.85f),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                    thickness = 1.dp
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+
+                ) {
+                    // choose stock
+
+                    Button(
+                        onClick = {
+                            stockChoice = warehouse
+                        },
+                        colors = if (stockChoice != warehouse) {
+                            ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                        }else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ){
+                        Text(
+                            text = Screen.WarehouseStock.title,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                    }
+
+                    //headOffice button
+                    Button(
+                        onClick = {
+                            stockChoice = headOffice
+                            store = "headOffice"
+                        },
+                        colors = if (stockChoice != headOffice) {
+                            ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                        }else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ){
+                        Text(
+                            text = Screen.HeadOfficeStock.title,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                    }
+                }
+
+            }
+        },
+
+        // --- Bottom Bar ---
+        bottomBar = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 4.dp
+            ) {
+                val bottomBarItems = listOf(BottomBarItem.Fulls, BottomBarItem.Empties)
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+
+                bottomBarItems.forEach { item ->
+                    val selected = currentRoute == item.route
+
+                    NavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            navController.navigate(item.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        icon = { item.icon },
+                        label = { Text(item.title) },
+                        alwaysShowLabel = true
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        // --- Screen Content ---
+        Box(
+            modifier = Modifier
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            if (showSplash) {
+                StockSplashScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    onTimeOut = { showSplash = false },
+                    stock = stockChoice.values.toMutableList()
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                ) {
+                    items(stockChoice.keys.toMutableList()) {
+                        brand ->
+                        val name = brand.name?:"error"
+                        val brandStock = stockChoice[brand] ?: FullsStock()
+                        StockCard(
+                            product = brand,
+                            stock = brandStock,
+                            viewModel = stockViewModel,
+                            store = store )
+                    }
+                }
+            }
+        }
+    }
+}
+
+open class BottomBarItem(
+    val route: String,
+    val title: String,
+    val icon: Int,
+
+    ){
+    data object Fulls: BottomBarItem(route = "fulls", title = "Fulls", R.drawable.orijin)
+    data object Empties: BottomBarItem(route = "empties", title = "Empties", R.drawable.bottle)
+}
+
+
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview
+@Composable
+private fun ShowStock(){
+    val vm: StockViewModel = viewModel()
+   StockFullsScreen(
+       paddingValues = PaddingValues(),
+       stockViewModel = vm,
+       navController = rememberNavController(),
+       modifier = Modifier,
+   )
+
+}
+```
 
 ## File: .gitignore
 ```
@@ -405,22 +1068,6 @@ fun saveBitmapToGallery(context: Context, bitmap: Bitmap) {
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/functions/stockCalculator.kt
-```kotlin
-package com.guvnoh.boma.functions
-
-object StockCalculator {
-
-    fun calculateClosingStock(
-        opening: Double,
-        received: Double,
-        sold: Double
-    ): Double {
-        return (opening + received - sold).coerceAtLeast(0.0)
-    }
-}
-```
-
 ## File: app/src/main/java/com/guvnoh/boma/functions/VibratePhone.kt
 ```kotlin
 package com.guvnoh.boma.functions
@@ -511,6 +1158,60 @@ open class Screen(
     data object RecordDetails : Screen(route = "record_details", title = "Record")
 
 
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/models/selectableCard.kt
+```kotlin
+package com.guvnoh.boma.models
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+@Composable
+fun SelectableCard(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
+    onLongPress: () -> Unit,
+    selected: Boolean,
+    content: @Composable () -> Unit
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .combinedClickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = LocalIndication.current,
+                onClick = onClick,
+                onLongClick = onLongPress
+            ),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (selected)
+                MaterialTheme.colorScheme.surface
+            else
+                MaterialTheme.colorScheme.surface
+        ),
+        border = if (selected)
+            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        else null
+    ) {
+        content()
+    }
 }
 ```
 
@@ -650,182 +1351,267 @@ package com.guvnoh.boma.uidesigns.cards
 //
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/HeadOfficeStock.kt
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/receipt/Receipt.kt
 ```kotlin
-//package com.guvnoh.boma.uidesigns.screens
-//
-//import androidx.compose.runtime.Composable
-//import com.guvnoh.boma.models.Screen
-//
-//@Composable
-//fun HeadOfficeStock(){
-//
-//}
+package com.guvnoh.boma.uidesigns.screens.receipt
 
-package com.guvnoh.boma.uidesigns.screens.stock
-
+import android.content.Context
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.wear.compose.material.Icon
-import com.guvnoh.boma.formatters.getDate
-import com.guvnoh.boma.models.FullsStock
-import com.guvnoh.boma.models.StockSplashScreen
-import com.guvnoh.boma.uidesigns.cards.StockCard
-import com.guvnoh.boma.viewmodels.StockViewModel
-
+import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.guvnoh.boma.formatters.getTime
+import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.functions.captureScreen
+import com.guvnoh.boma.functions.saveBitmapToGallery
+import com.guvnoh.boma.functions.vibratePhone
+import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.repositories.StockRepository
+import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StockScreen(
-    stockViewModel: StockViewModel,
-    modifier: Modifier = Modifier,
-    navController: NavHostController,
-    stock: Map<String, FullsStock>,
-    title: String
+fun ReceiptPage(stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmodel) {
+    val context = LocalContext.current
+    val receipt by receiptViewmodel.receipt.collectAsState()
+    val notes by receiptViewmodel.notes
 
-    ) {
-    //val products by productsViewModel.products.collectAsState()
+    var activeRepo = "warehouse"
 
+    val view = LocalView.current
+    val setRepo = remember { mutableStateOf(false) }
 
-    var showSplash by remember { mutableStateOf(true) }
-//    var topBarTitle by remember { mutableStateOf("Full Stock") }
 
     Scaffold(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        containerColor = MaterialTheme.colorScheme.background,
-
-        // --- FAB ---
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {},
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Update stock",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                },
-                text = {
-                    Text(
-                        text = "Update",
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                },
-                containerColor = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(12.dp),
-                elevation = FloatingActionButtonDefaults.elevation(6.dp)
+        topBar = {
+            TopAppBar(
+                title = { Text("Receipt", style = MaterialTheme.typography.titleLarge) }
             )
         },
-
-        // --- Top Bar ---
-        topBar = {
-            Column(
+        bottomBar = {
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
-                    .padding(vertical = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text(
-                    text = "Today: ${getDate()}",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                HorizontalDivider(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .fillMaxWidth(0.85f),
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                    thickness = 1.dp
-                )
-            }
-        },
-
-        // --- Bottom Bar ---
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 4.dp
-            ) {
-                val bottomBarItems = listOf(BottomBarItem.Fulls, BottomBarItem.Empties)
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
-
-                bottomBarItems.forEach { item ->
-                    val selected = currentRoute == item.route
-
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(item.route) {
-                                launchSingleTop = true
-                            }
-                        },
-                        icon = { item.icon },
-                        label = { Text(item.title) },
-                        alwaysShowLabel = true
-                    )
+                //copy button
+                Button(onClick = {
+                    val nonNullReceipt = receipt?: Receipt()
+                    receiptViewmodel.copy(nonNullReceipt, context)
+                }) {
+                    Icon(Icons.Filled.Menu, contentDescription = "Copy")
+                    Spacer(Modifier.width(6.dp))
+                    Text("Copy")
+                }
+                //screenshot button
+                Button(onClick = {
+                    vibratePhone(context, 100L)
+                    saveBitmapToGallery(context, captureScreen(view))
+                }) {
+                    Icon(Icons.Filled.Share, contentDescription = "Screenshot")
+                    Spacer(Modifier.width(6.dp))
+                    Text("Screenshot")
+                }
+                //save button
+                Button(
+                    onClick = {
+                        //trigger set repo alert dialog
+                        setRepo.value = true
+                        //productsViewModel.(soldProducts)
+                        receiptViewmodel.saveSale(
+                            receipt?.soldProducts!!,
+                            stockViewModel,
+                            activeRepo)
+                        receipt?.let {
+                            it.notes = notes
+                            it.time = getTime()
+                            receiptViewmodel.saveRecord(it)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                ) {
+                    Icon(Icons.Filled.CheckCircle, contentDescription = "Save")
+                    Spacer(Modifier.width(6.dp))
+                    Text("Save")
                 }
             }
         }
     ) { innerPadding ->
-        // --- Screen Content ---
-        Box(
+        Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            if (showSplash) {
-                StockSplashScreen(
-                    modifier = Modifier.fillMaxSize(),
-                    onTimeOut = { showSplash = false },
-                    stock = stock.values.toMutableList()
+            // Header Info
+
+            Text("${receipt?.customerName}", style = MaterialTheme.typography.titleMedium)
+            Text("Receipt No. ${receipt?.id}", style = MaterialTheme.typography.bodyMedium)
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()) {
+                Text("Date: ${receipt?.date}", style = MaterialTheme.typography.bodyMedium)
+                Text("Time: ${getTime()}", style = MaterialTheme.typography.bodyMedium)
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Products List
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                receipt?.let {
+                    items(it.soldProducts?: emptyList()) { soldProduct ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            //qty of item sold (display)
+                            Text(
+                                soldProduct.receiptQuantity?:"0",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            //name of item sold (display)
+                            Text(
+                                soldProduct.product?.name?:"unknown",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(nairaFormat(soldProduct.intTotal?:0), fontWeight = FontWeight.Bold)
+                        }
+                        HorizontalDivider()
+                    }
+                }
+            }
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+
+                // 📝 ADDITIONAL NOTES FIELD
+                OutlinedTextField(
+                    value = notes,
+                    onValueChange = { receiptViewmodel.setNotes(it) },
+                    label = { Text("Notes / Comments") },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 4,
+                    placeholder = { Text("Cash or bottles balance... ") }
                 )
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 12.dp)
+            }
+
+            // Total Section
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFF5F5F5))
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Grand Total", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    nairaFormat(receiptViewmodel.getGrandTotal()),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+            }
+        }
+        if (setRepo.value){
+            SaveSaleDialog(
+                alert = setRepo,
+                soldProducts = receipt?.soldProducts?: emptyList(),
+                onSave = { store, soldProducts ->
+                    receiptViewmodel.setNotes("")
+                    activeRepo = store
+                    soldProducts.forEach { soldProduct ->
+
+                        StockRepository().sellProduct(
+                            productId = soldProduct.product?.id ?: "no id found for sold product",
+                            soldQty = soldProduct.doubleQuantity ?: 0.0,
+                            store = store
+                        )
+                    }
+                         },
+                context = context,
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SaveSaleDialog(
+    context: Context,
+    alert: MutableState<Boolean>,
+    soldProducts: List<SoldProduct>,
+    onSave: (store: String, soldProducts: List<SoldProduct>)-> Unit,
+){
+    BasicAlertDialog(
+        onDismissRequest = {alert.value = false},
+        properties = DialogProperties(dismissOnClickOutside = true, dismissOnBackPress = true)
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation,
+        ){
+            Column (
+                modifier = Modifier.padding(24.dp)
+            ){
+                Text(
+                    text = "Save sale?",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text(
+                    text = "Choose stock to sell from",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row (
+                    horizontalArrangement = Arrangement.End,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    items(stock.keys.toMutableList()) {
-                            brand ->
-                        val brandStock = stock[brand] ?: FullsStock()
-                        StockCard(brand, brandStock)
+                    TextButton(onClick = {
+                        onSave("headOffice", soldProducts)
+                        alert.value = false
+                        Toast.makeText(context, "Head Office Sale recorded!", Toast.LENGTH_SHORT).show()
+                    }) {
+                        Text(text = "HeadOffice")
+                    }
+
+                    TextButton(onClick = {
+                        onSave("warehouse", soldProducts)
+                        alert.value = false
+                        Toast.makeText(context, "Warehouse Sale recorded!", Toast.LENGTH_SHORT).show()
+                    }){
+                        Text(text = "Warehouse")
                     }
                 }
             }
@@ -833,513 +1619,814 @@ fun StockScreen(
     }
 }
 
-//open class BottomBarItem(
-//    val route: String,
-//    val title: String,
-//    val icon: Int,
-//
-//    ){
-//    data object Fulls: BottomBarItem(route = "fulls", title = "Fulls", R.drawable.orijin)
-//    data object Empties: BottomBarItem(route = "empties", title = "Empties", R.drawable.bottle)
-//}
-
-//fun sendStockData(list: List<Product>){
-//
-//    list.forEach {
-//        val random1 = (20..800).random()
-//        val random2 = (20..800).random()
-//        val stock = FullsStock(
-//            closingStock = random1.toDouble(),
-//            openingStock = random2.toDouble(),
-//            depletion = 0.0,
-//            lastTimeSold = "Fri, Oct 31 2025"
-//        )
-//        it.stock = stock
-//        FirebaseRefs.fullStock
-//            .child(it.name?:"unknown")
-//            .setValue(it)
-//
-//    }
-//
-//}
 
 @RequiresApi(Build.VERSION_CODES.O)
-@Preview
+@Preview(showBackground = true)
 @Composable
-private fun ShowStock(){
-    // StockFullsScreen(stockViewModel = viewModel(), navController = rememberNavController(), )
-
+fun ReceiptPagePreview() {
+    val stockvm : StockViewModel = viewModel()
+    val rvm : ReceiptViewmodel = viewModel()
+    ReceiptPage(
+        stockvm,
+        rvm
+    )
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockEmptiesScreen.kt
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/receipt/ReceiptData.kt
 ```kotlin
-package com.guvnoh.boma.uidesigns.screens.stock
+package com.guvnoh.boma.uidesigns.screens.receipt
+
+import com.guvnoh.boma.models.SoldProduct
+
+data class Receipt(
+    var id: String? = null,
+    val timeStamp: Long? = null,
+    val ref: String? = null,
+    var customerName: String? = "",
+    var date: String? = "",
+    var time: String? = "",
+    var soldProducts: List<SoldProduct>? = null,
+    var grandTotal: String? = null,
+    var notes: String? = ""
+)
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/receipt/ReceiptViewmodel.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.receipt
+
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.os.Build
+import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.uidesigns.screens.records.RecordsRepository
+import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+class ReceiptViewmodel : ViewModel(){
+
+    private val _receipt = MutableStateFlow<Receipt?>(null)
+    val receipt: StateFlow<Receipt?> = _receipt
+
+    private val _notes = mutableStateOf("")
+    val notes: State<String> = _notes
+
+
+    fun setNotes(value: String) {
+        _notes.value = value
+    }
+
+
+    fun setCurrentReceipt(receipt: Receipt){
+        _receipt.value = receipt
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun saveRecord(record: Receipt){
+        RecordsRepository().sendRecord(record)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun saveSale(list: List<SoldProduct>, stockViewModel: StockViewModel, store: String){
+        list.forEach { soldProduct ->
+            soldProduct.doubleQuantity?.let {
+                qty -> soldProduct.product?.name?.let {
+                    name -> stockViewModel.sellProduct(name, qty, store)
+                }
+            }
+
+        }
+    }
+
+    fun getGrandTotal(): Int{
+        val total = receipt.value?.soldProducts?.sumOf {
+            it.intTotal?:0
+        }
+        return total?:0
+    }
+
+    fun copy(receipt: Receipt, context: Context){
+        val textToCopy = copyToClipboard(receipt)
+        val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = ClipData.newPlainText("label", textToCopy)
+        clipBoard.setPrimaryClip(clip)
+        Toast.makeText(context, "Text copied!", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun copyToClipboard(receipt: Receipt): String {
+        //The variable finalText holds the complete text to be sent to the clipboard
+        val finalText = StringBuilder()
+        val soldProductsRaw = receipt.soldProducts?: emptyList()
+        val soldProducts = soldProductsRaw.filter { it.intTotal!! >0 }.toList()
+        val grandTotal = soldProducts.sumOf { it.intTotal?:0 }
+        soldProducts.forEach {
+            val copiedQuantity: String = it.receiptQuantity?:"0"
+            val textToCopy = "$copiedQuantity ${it.product?.name} ${nairaFormat(it.intTotal?:0)}\n"
+
+            finalText.append(textToCopy)
+        }
+        if (soldProducts.size > 1) {
+            finalText.append("Total: ${nairaFormat(grandTotal)}")
+        }
+        return finalText.toString()
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/records/RecordCard.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.records
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.guvnoh.boma.uidesigns.cards.EmptiesStockCard
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.models.SelectableCard
 
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun RecordCard(
+    record: Receipt,
+    navController: NavHostController,
+    vm: RecordViewModel,
+    selected : Boolean,
+    selectedItems: MutableList<Receipt>
+) {
+    SelectableCard (
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp) ,
+        onClick = {
+            if (selectedItems.isNotEmpty() && selectedItems.contains(record)) {
+                selectedItems.remove(record)
+            } else if (selectedItems.isNotEmpty() && !selectedItems.contains(record)) {
+                selectedItems.add(record)
+            }else{
+                vm.setCurrentRecord(record)
+                navController.navigate(Screen.RecordDetails.route) {
+                    launchSingleTop = true
+                }
+            }
+                  },
+        onLongPress = { selectedItems.add(record)},
+        selected = selected
+
+    ) {
+        Row(
+
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Customer name
+                Text(
+                    text = record.customerName?:"noName",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                // Date (smaller and lighter)
+                Text(
+                    text = record.date?:"noDATE",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+            }
+
+            // Optional amount or indicator (if available in Receipt)
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "₦${"%,.2f".format(record.grandTotal?.toDoubleOrNull())}",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = "View Details",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+
+//@RequiresApi(Build.VERSION_CODES.O)
+//@Preview(showBackground = true)
+//@Composable
+//private fun RecordsCardDemo(){
+//    RecordCard(
+//        Receipt(
+//            customerName = "Chukwuka",
+//            date = getDate(),
+//            soldProducts = listOf(
+//                SoldProduct(
+//                    product = brandData[0],
+//                    stringQuantity = "1",
+//                    doubleQuantity = 1.0,
+//
+//                    )
+//            ),
+//        ), rememberNavController(), viewModel()
+//    )
+//}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/records/RecordDetailsScreen.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.records
+
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.os.Build
+import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.functions.captureScreen
+import com.guvnoh.boma.functions.saveBitmapToGallery
+import com.guvnoh.boma.functions.vibratePhone
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
+import com.guvnoh.boma.models.SoldProduct
+
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun RecordDetails(record: Receipt) {
+    val context = LocalContext.current
+    val view = LocalView.current
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Record", style = MaterialTheme.typography.titleLarge) }
+            )
+        },
+        bottomBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(onClick = {record.soldProducts?.let{ copy(it, context) }}) {
+                    Icon(Icons.Filled.Menu, contentDescription = "Copy")
+                    Spacer(Modifier.width(6.dp))
+                    Text("Copy")
+                }
+                Button(onClick = {
+                    vibratePhone(context, 100L)
+                    saveBitmapToGallery(context, captureScreen(view))
+                } ){
+                    Icon(Icons.Filled.Share, contentDescription = "Screenshot")
+                    Spacer(Modifier.width(6.dp))
+                    Text("Screenshot")
+                }
+            }
+        },
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // Header Info
+            Text("Receipt No. ${record.id}", style = MaterialTheme.typography.titleMedium)
+            Text("${record.customerName}", style = MaterialTheme.typography.bodyLarge)
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()) {
+                Text("Date: ${record.date}", style = MaterialTheme.typography.bodyMedium)
+                if (record.time?.isNotBlank() == true){
+                    Text("Time: ${record.time}", style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            // Products List (scrollable)
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    record.soldProducts?.let {
+                        items(it) { product ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    product.receiptQuantity?:"0",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(
+                                    product.product?.name?:"unknown",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Text(nairaFormat(product.intTotal?:0), fontWeight = FontWeight.Bold)
+                            }
+                            HorizontalDivider()
+                        }
+                    }
+                }
+            }
+            if (record.notes?.isNotBlank() == true){
+                Text(record.notes!!)
+            }
+
+            // Total Section
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFF5F5F5))
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Grand Total", style = MaterialTheme.typography.titleMedium)
+                val grandTotal = record.soldProducts?.let {
+                    soldProducts ->
+                    nairaFormat(soldProducts.sumOf { it.intTotal?:0 })
+                }
+                Text(
+                    text = grandTotal?:"0.00",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true)
+@Composable
+fun RecordCardDetailsDemo() {
+
+    val sampleProducts = listOf(
+        SoldProduct().apply {
+            receiptQuantity = "2"
+            intTotal = 1200
+            product = Products()
+            product?.name = "Toothpaste"
+        },
+        SoldProduct().apply {
+            receiptQuantity = "1"
+            intTotal = 800
+            product = Products()
+            product?.name = "Soap"
+        }
+    )
+
+    RecordDetails(
+        record = Receipt(
+            id = "001",
+            customerName = "John Doe",
+            date = "Thu, Oct 30 2025",
+            soldProducts = sampleProducts
+        )
+    )
+}
+
+// --- Clipboard copy helpers ---
+
+private fun copy(list: List<SoldProduct>, context: Context) {
+    val textToCopy = copyToClipboard(list)
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = ClipData.newPlainText("Receipt", textToCopy)
+    clipboard.setPrimaryClip(clip)
+    Toast.makeText(context, "Receipt copied!", Toast.LENGTH_SHORT).show()
+}
+
+fun copyToClipboard(list: List<SoldProduct>): String {
+    val builder = StringBuilder()
+    val grandTotal = nairaFormat(list.sumOf { it.intTotal?:0 })
+
+    list.forEach {
+        builder.append("${it.receiptQuantity} ${it.product?.name} ${nairaFormat(it.intTotal?:0)}\n")
+    }
+
+    if (list.isNotEmpty()) builder.append("Total: $grandTotal")
+    return builder.toString()
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/records/RecordsScreen.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.records
+
+import android.os.Build
+import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import androidx.wear.compose.material.Icon
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.models.EmptiesStock
-import com.guvnoh.boma.models.EmptyCompany
-import com.guvnoh.boma.models.EmptyType
-import com.guvnoh.boma.models.StockSplashScreen
-import com.guvnoh.boma.viewmodels.StockViewModel
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun StockEmptiesScreen(
-    paddingValues: PaddingValues,
-    vm: StockViewModel,
-    navController: NavController,
-
-    ){
-
-    val emptiesStock by vm.emptiesStock.collectAsState()
-    var showSplash by remember { mutableStateOf(true) }
-    //var topBarTitle by remember { mutableStateOf("Empties") }
-
-    Scaffold(
-        floatingActionButton = {FloatingActionButton(
-            onClick = {
-                //navController.navigate()
-            }
-        ) {
-            Row (
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(horizontal = 10.dp)
-            ){
-                Icon(
-                    imageVector = Icons.Filled.Edit,
-                    contentDescription = "",
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                Spacer(modifier = Modifier.padding(horizontal = 3.dp))
-                Text(text = "Update")
-            }
-        }},
-        modifier = Modifier.padding(paddingValues),
-        topBar = {
-            Column (
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()){
-                Text(
-                    text = "Empties",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        },
-        bottomBar = {
-            NavigationBar {
-                val bottomBarItems = listOf(BottomBarItem.Fulls, BottomBarItem.Empties)
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
-                bottomBarItems.forEach {
-                    val selected = currentRoute == it.route
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            val route = it.route
-                            navController.navigate(route){launchSingleTop = true
-                            } },
-                        icon = {it.icon},
-                        label = { Text(it.title) }
-                    )
-                }
-            }
-        }
-    ){
-        if (showSplash){
-            StockSplashScreen(
-                modifier = Modifier.padding(it),
-                onTimeOut = {showSplash = false},
-                empties = emptiesStock.values.toMutableList()
-            )
-        }else{
-            LazyColumn(
-                modifier = Modifier.padding(it)
-            ) {
-                items(emptiesStock.values.toMutableList()){
-                        brandStock ->
-                    EmptiesStockCard(brandStock)
-                }
-            }
-        }
-    }
-}
-
-fun sendEmptiesData(){
-    val list: List<EmptyCompany> = EmptyCompany.entries
-
-    list.forEach {
-        val random1 = (20..800).random()
-        val random2 = (20..800).random()
-        val emptiesStock =
-            when(it){
-                EmptyCompany.HERO ->
-                    EmptiesStock(
-                        company = it,
-                        emptyType = EmptyType.TWELVE,
-                        quantity = random2.toDouble(),
-                    )
-                EmptyCompany.NBL ->
-                    EmptiesStock(
-                        company = it,
-                        emptyType = EmptyType.TWELVE,
-                        quantity = random2.toDouble(),
-                    )
-                EmptyCompany.COCA_COLA ->
-                    EmptiesStock(
-                        company = it,
-                        emptyType = EmptyType.TWENTY_FOUR,
-                        quantity = random2.toDouble(),
-                    )
-                EmptyCompany.GUINNESS ->
-                    EmptiesStock(
-                        company = it,
-                        emptyType = EmptyType.EIGHTEEN,
-                        quantity = random2.toDouble(),
-                    )
-
-            }
-        FirebaseRefs.empties
-            .child(emptiesStock.company?.name?:"unknown")
-            .setValue(emptiesStock)
-    }
-
-}
-
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview
-@Composable
-private fun ShowStock(){
-    StockEmptiesScreen(PaddingValues(), viewModel(), navController = rememberNavController())
-
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/WarehouseStock.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens.stock
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import androidx.wear.compose.material.Icon
-import com.google.firebase.database.DatabaseReference
-import com.guvnoh.boma.R
-import com.guvnoh.boma.formatters.getDate
-import com.guvnoh.boma.models.FullsStock
-import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.models.StockSplashScreen
-import com.guvnoh.boma.uidesigns.cards.StockCard
-import com.guvnoh.boma.viewmodels.StockViewModel
+import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun StockFullsScreen(
-    paddingValues: PaddingValues,
-    stockViewModel: StockViewModel,
-    modifier: Modifier = Modifier,
+fun RecordsScreen(
+    vm: RecordViewModel,
     navController: NavHostController,
+    paddingValues: PaddingValues
+    ){
+    val records by vm.records.collectAsState()
 
-    ) {
-    //val products by productsViewModel.products.collectAsState()
-    val warehouse by stockViewModel.wareHouseStock.collectAsState()
-    val headOffice by stockViewModel.headOfficeStock.collectAsState()
-    var stockChoice by remember { mutableStateOf(warehouse) }
+    var date by remember { mutableStateOf("") }
 
-    var showSplash by remember { mutableStateOf(true) }
+    val selectedItems = remember { mutableStateListOf<Receipt>() }
 
-    Scaffold(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(paddingValues),
-            //.background(MaterialTheme.colorScheme.background),
-        containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+    val alert = remember { mutableStateOf(false) }
 
-        // --- FAB ---
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {},
-                icon = {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Update stock",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                },
-                text = {
-                    Text(
-                        text = "Update",
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                },
-                containerColor = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(12.dp),
-                elevation = FloatingActionButtonDefaults.elevation(6.dp)
-            )
-        },
 
-        // --- Top Bar ---
+    Scaffold (
+        modifier = Modifier.padding(paddingValues),
         topBar = {
-            Column(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surface)
-                    .wrapContentHeight()
-                    .statusBarsPadding()
-                    .padding(vertical = 12.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = getDate(),
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = Color.Black//MaterialTheme.colorScheme.onSurface
-                )
-                HorizontalDivider(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .fillMaxWidth(0.85f),
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                    thickness = 1.dp
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-
-                ) {
-                    // choose stock
-
-                    Button(
-                        onClick = {
-                            stockChoice = warehouse
-                        },
-                        colors = if (stockChoice != warehouse) {
-                            ButtonDefaults.buttonColors(containerColor = Color.LightGray)
-                        }else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ){
-                        Text(
-                            text = Screen.WarehouseStock.title,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
+            if (selectedItems.isNotEmpty()) {
+                TopAppBar(
+                    title = { Text("${selectedItems.size} selected") },
+                    actions = {
+                        IconButton(onClick = {
+                            alert.value = true
+                        }) {
+                            Icon(Icons.Default.Delete, null)
+                        }
                     }
-
-
-                    Button(
-                        onClick = {
-                            stockChoice = headOffice
-                        },
-                        colors = if (stockChoice != headOffice) {
-                            ButtonDefaults.buttonColors(containerColor = Color.LightGray)
-                        }else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ){
-                        Text(
-                            text = Screen.HeadOfficeStock.title,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                    }
-                }
-
+                )
             }
-        },
+        }
 
-        // --- Bottom Bar ---
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 4.dp
-            ) {
-                val bottomBarItems = listOf(BottomBarItem.Fulls, BottomBarItem.Empties)
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
+    ){
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (records.isEmpty()){
+                Column (
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    Text("No Records Yet!")
+                }
+            }else{
 
-                bottomBarItems.forEach { item ->
-                    val selected = currentRoute == item.route
+                LazyColumn {
+                    stickyHeader {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                text = date,
+                                style = MaterialTheme.typography.titleLarge,
+                            )
+                        }
 
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(item.route) {
-                                launchSingleTop = true
-                            }
-                        },
-                        icon = { item.icon },
-                        label = { Text(item.title) },
-                        alwaysShowLabel = true
-                    )
+                    }
+                    items(records){
+                            record ->
+                        date = record.date.toString()
+
+                        RecordCard(
+                            record = record,
+                            navController = navController,
+                            vm = vm,
+                            selected = selectedItems.contains(record),
+                            selectedItems = selectedItems
+                        )
+                    }
                 }
             }
         }
-    ) { innerPadding ->
-        // --- Screen Content ---
-        Box(
-            modifier = Modifier
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            if (showSplash) {
-                StockSplashScreen(
-                    modifier = Modifier.fillMaxSize(),
-                    onTimeOut = { showSplash = false },
-                    stock = stockChoice.values.toMutableList()
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                ) {
-                    items(stockChoice.keys.toMutableList()) {
-                        brand ->
-                        val name = brand.name?:"error"
-                        val brandStock = stockChoice[brand] ?: FullsStock()
-                        StockCard(name, brandStock)
+    }
+
+    val context = LocalContext.current
+    if (alert.value) {
+        DeleteRecordAlertDialog(
+            onDelete = {
+                vm.deleteRecords(it)
+
+                if (it.size == 1)
+                    Toast.makeText(
+                        context,
+                        "${it.size} record deleted",
+                        Toast.LENGTH_SHORT).show()
+                else
+                    Toast.makeText(
+                        context,
+                        "${it.size} records deleted",
+                        Toast.LENGTH_SHORT).show()
+                selectedItems.removeAll(it)
+            },
+            records = selectedItems,
+            alert = alert,
+        )
+    }
+
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DeleteRecordAlertDialog(
+    onDelete: (List<Receipt>) -> Unit,
+    records: List<Receipt>,
+    alert: MutableState<Boolean>,
+){
+    if (alert.value){
+        BasicAlertDialog(
+            onDismissRequest = {},
+        ){
+            Surface(
+                shape = MaterialTheme.shapes.large,
+                tonalElevation = AlertDialogDefaults.TonalElevation,
+            ){
+                Column (
+                    modifier = Modifier.padding(24.dp)
+                ){
+                    Text(
+                        text = "Delete Record(s)?",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        text = "Are you sure you want to delete selected record(s)?",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Row (
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        TextButton(onClick = {alert.value = false}) {
+                            Text(text = "Cancel")
+
+                        }
+                        TextButton(onClick = {
+                            onDelete(records)
+                            alert.value = false}) {
+                            Text(
+                                text = "Continue",
+                                color = Color.Red
+                                )
+                        }
                     }
                 }
             }
         }
     }
 }
-
-open class BottomBarItem(
-    val route: String,
-    val title: String,
-    val icon: Int,
-
-    ){
-    data object Fulls: BottomBarItem(route = "fulls", title = "Fulls", R.drawable.orijin)
-    data object Empties: BottomBarItem(route = "empties", title = "Empties", R.drawable.bottle)
-}
-
-
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview
-@Composable
-private fun ShowStock(){
-    val vm: StockViewModel = viewModel()
-   StockFullsScreen(
-       paddingValues = PaddingValues(),
-       stockViewModel = vm,
-       navController = rememberNavController(),
-       modifier = Modifier,
-   )
-
-}
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/viewmodels/RecordViewModel.kt
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/records/RecordViewModel.kt
 ```kotlin
-package com.guvnoh.boma.viewmodels
+package com.guvnoh.boma.uidesigns.screens.records
 
 import androidx.lifecycle.ViewModel
-import com.guvnoh.boma.functions.getDatabaseRecords
-import com.guvnoh.boma.models.Receipt
+import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class RecordViewModel: ViewModel(){
+    private val recordsRepo = RecordsRepository()
     private val _records = MutableStateFlow<List<Receipt>> (emptyList())
-    val records: StateFlow<List<Receipt>> = getDbRecords()
+    val records: StateFlow<List<Receipt>> = _records
     private var _record = MutableStateFlow<Receipt?>(null)
     val record: StateFlow<Receipt?> = _record
 
-    private fun getDbRecords(): StateFlow<List<Receipt>>{
-        getDatabaseRecords {
+    init {
+        getDbRecords()
+    }
+
+
+    fun deleteRecords(list: List<Receipt>){
+        list.forEach {
+            deleteRecord(it)
+        }
+    }
+
+    private fun deleteRecord(record: Receipt){
+        RecordsRepository().deleteRecord(record)
+    }
+
+    private fun getDbRecords(){
+        recordsRepo.getDatabaseRecords {
             dbRecords ->
             _records.value = dbRecords.asReversed()
         }
-        return _records
     }
     fun setCurrentRecord(receipt: Receipt){
         _record.value = receipt
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockViewmodel.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.stock
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModel
+import com.guvnoh.boma.models.EmptiesStock
+import com.guvnoh.boma.models.FullsStock
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.repositories.StockRepository
+import com.guvnoh.boma.viewmodels.AppMetaViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+@RequiresApi(Build.VERSION_CODES.O)
+class StockViewModel(
+) : ViewModel() {
+
+    private val _wareHouseFulls = MutableStateFlow<Map<Products, FullsStock>>(emptyMap())
+    val wareHouseStock: StateFlow<Map<Products, FullsStock>> = _wareHouseFulls
+
+    private val _headOfficeFulls = MutableStateFlow<Map<Products, FullsStock>>(emptyMap())
+    val headOfficeStock: StateFlow<Map<Products, FullsStock>> = _headOfficeFulls
+
+        //empties stock
+    private val _emptiesStock = MutableStateFlow<Map<String, EmptiesStock>>(emptyMap())
+    val emptiesStock: StateFlow<Map<String, EmptiesStock>> = _emptiesStock
+
+
+
+    private val stockRepository: StockRepository = StockRepository()
+
+    init {
+        observeFullsStock("warehouse")
+        observeFullsStock("headOffice")
+        observeEmptiesStock()
+        AppMetaViewModel().checkDailyReset {
+            AppMetaViewModel().resetSoldToday()
+        }
+    }
+
+//    private fun convertListToMap(list: List<Products>): Map<Products, FullsStock>{
+//        val map: MutableMap<Products, FullsStock> = mutableMapOf()
+//
+//        list.forEach {
+//            val stock = it.stock?:FullsStock()
+//            map[it] = stock
+//        }
+//        return map
+//    }
+
+    private fun observeFullsStock(store: String) {
+        stockRepository.observeFullsStock(store){ stock ->
+            when(store){
+                "warehouse" -> {_wareHouseFulls.value = stock.values.toMap()}
+                "headOffice" -> {_headOfficeFulls.value = stock.values.toMap()}
+            }
+        }
+
+    }
+
+    private fun observeEmptiesStock() {
+        stockRepository.observeEmptiesStock { map ->
+            _emptiesStock.value = map
+        }
+    }
+
+    fun sellProduct(productId: String, quantity: Double, store: String) {
+        stockRepository.sellProduct(
+            productId = productId,
+            soldQty = quantity,
+            store = store
+        )
+    }
+
+    fun updateStock(productId: String, store: String, newStock: Double? = null){
+        StockRepository().updateStock(productId,store,newStock)
+    }
+
+    fun errorCheck(newPrice: String): String?{
+        val double = newPrice.toDoubleOrNull()
+        val result = when{
+            newPrice.isEmpty() -> "Empty Field"
+            double == null -> "Invalid Price"
+            double >= 0 -> null
+            else -> "Invalid Price"
+        }
+
+        return  result
+    }
+    fun stockOVC(input: String, store: String, productId: String): String{
+        val filtered = input.filter { it.isDigit() || it == '.' }
+        if (filtered.count { it == '.' } <= 1) {
+            if (filtered.isNotEmpty()) {
+                updateStock(
+                    productId = productId,
+                    store = store,
+                    newStock = filtered.toDoubleOrNull()
+                )
+            }
+        }
+        return filtered
     }
 }
 ```
@@ -2360,6 +3447,1045 @@ fun DrawerPreview() {
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.priceChange
+
+import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.repositories.ProductsRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+class PriceChangeViewmodel: ViewModel() {
+
+    //product list
+    private val _products = MutableStateFlow<List<Products>>(emptyList())
+    val products: StateFlow<List<Products>> = _products
+
+    //price change products
+    private val _priceChangeProducts = MutableStateFlow<List<Products>>(emptyList())
+    val priceChangeProducts: StateFlow<List<Products>> = _priceChangeProducts
+
+    init {
+        observeProducts(FirebaseRefs.Products)
+    }
+
+    private fun observeProducts(repo: DatabaseReference) {
+        val repository = ProductsRepository()
+        repository.observeProducts(repo) { list ->
+            _products.value = list
+        }
+    }
+
+
+    private fun addToPriceChangeList(product: Products, newPrice: String ){
+        val current = _priceChangeProducts.value.toMutableList()
+        product.stringPrice = newPrice
+        current.add(product)
+        _priceChangeProducts.value = current
+    }
+
+//    // price change
+//    fun updatePrice(product: Products) {
+//        val repository = ProductsRepository()
+//        repository.updatePrice(product)
+//    }
+
+    // Update price
+    fun updatePrice(product: Products) {
+        val productsRepo = FirebaseRefs.Products
+        // update string and double price of product parameter
+        productsRepo.child(product.id ?: "error")
+            .child("stringPrice")
+            .setValue(product.stringPrice)
+
+        productsRepo.child(product.id?:"error")
+            .child("doublePrice")
+            .setValue(product.doublePrice)
+
+    }
+
+    fun changePrices(newPrice: String, product: Products){
+        val parsedNewPrice = newPrice.filter { ch -> ch.isDigit() || ch == '.' }
+        val parsed = parsedNewPrice.toDoubleOrNull()
+        if (parsed != null && parsed > 0.0) {
+            product.stringPrice = newPrice
+            product.doublePrice = parsed
+            addToPriceChangeList(product, newPrice)
+        }
+    }
+
+    fun errorCheck(newPrice: String): String?{
+        val double = newPrice.toDoubleOrNull()
+        val result = when{
+            newPrice.isEmpty() -> "Empty Field"
+            double == null -> "Invalid Price"
+            double >= 0 -> null
+            else -> "Invalid Price"
+        }
+
+        return  result
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockEmptiesScreen.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.stock
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import com.guvnoh.boma.uidesigns.cards.EmptiesStockCard
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.wear.compose.material.Icon
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.EmptiesStock
+import com.guvnoh.boma.models.EmptyCompany
+import com.guvnoh.boma.models.EmptyType
+import com.guvnoh.boma.models.StockSplashScreen
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun StockEmptiesScreen(
+    paddingValues: PaddingValues,
+    vm: StockViewModel,
+    navController: NavController,
+
+    ){
+
+    val emptiesStock by vm.emptiesStock.collectAsState()
+    var showSplash by remember { mutableStateOf(true) }
+    //var topBarTitle by remember { mutableStateOf("Empties") }
+
+    Scaffold(
+        floatingActionButton = {FloatingActionButton(
+            onClick = {
+                //navController.navigate()
+            }
+        ) {
+            Row (
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(horizontal = 10.dp)
+            ){
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = "",
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Spacer(modifier = Modifier.padding(horizontal = 3.dp))
+                Text(text = "Update")
+            }
+        }},
+        modifier = Modifier.padding(paddingValues),
+        topBar = {
+            Column (
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()){
+                Text(
+                    text = "Empties",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        },
+        bottomBar = {
+            NavigationBar {
+                val bottomBarItems = listOf(BottomBarItem.Fulls, BottomBarItem.Empties)
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+                bottomBarItems.forEach {
+                    val selected = currentRoute == it.route
+                    NavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            val route = it.route
+                            navController.navigate(route){launchSingleTop = true
+                            } },
+                        icon = {it.icon},
+                        label = { Text(it.title) }
+                    )
+                }
+            }
+        }
+    ){
+        if (showSplash){
+            StockSplashScreen(
+                modifier = Modifier.padding(it),
+                onTimeOut = {showSplash = false},
+                empties = emptiesStock.values.toMutableList()
+            )
+        }else{
+            LazyColumn(
+                modifier = Modifier.padding(it)
+            ) {
+                items(emptiesStock.values.toMutableList()){
+                        brandStock ->
+                    EmptiesStockCard(brandStock)
+                }
+            }
+        }
+    }
+}
+
+fun sendEmptiesData(){
+    val list: List<EmptyCompany> = EmptyCompany.entries
+
+    list.forEach {
+        val random1 = (20..800).random()
+        val random2 = (20..800).random()
+        val emptiesStock =
+            when(it){
+                EmptyCompany.HERO ->
+                    EmptiesStock(
+                        company = it,
+                        emptyType = EmptyType.TWELVE,
+                        quantity = random2.toDouble(),
+                    )
+                EmptyCompany.NBL ->
+                    EmptiesStock(
+                        company = it,
+                        emptyType = EmptyType.TWELVE,
+                        quantity = random2.toDouble(),
+                    )
+                EmptyCompany.COCA_COLA ->
+                    EmptiesStock(
+                        company = it,
+                        emptyType = EmptyType.TWENTY_FOUR,
+                        quantity = random2.toDouble(),
+                    )
+                EmptyCompany.GUINNESS ->
+                    EmptiesStock(
+                        company = it,
+                        emptyType = EmptyType.EIGHTEEN,
+                        quantity = random2.toDouble(),
+                    )
+
+            }
+        FirebaseRefs.empties
+            .child(emptiesStock.company?.name?:"unknown")
+            .setValue(emptiesStock)
+    }
+
+}
+
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview
+@Composable
+private fun ShowStock(){
+    StockEmptiesScreen(PaddingValues(), viewModel(), navController = rememberNavController())
+
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/viewmodels/AppMetaViewModel.kt
+```kotlin
+//package com.guvnoh.boma.models
+//
+//import android.os.Build
+//import android.util.Log
+//import androidx.annotation.RequiresApi
+//import androidx.compose.runtime.State
+//import androidx.compose.runtime.mutableStateOf
+//import androidx.lifecycle.ViewModel
+//import androidx.lifecycle.viewModelScope
+//import com.guvnoh.boma.database.bomaStock
+//import com.guvnoh.boma.formatters.checkIfSoldToday
+//import com.guvnoh.boma.formatters.getDate
+//import com.guvnoh.boma.functions.getDBProductList
+//import com.guvnoh.boma.functions.getDBaseEmptiesStock
+//import kotlinx.coroutines.flow.MutableStateFlow
+//import kotlinx.coroutines.flow.StateFlow
+//import kotlinx.coroutines.launch
+//import kotlinx.coroutines.tasks.await
+//
+//class BomaViewModel : ViewModel() {
+//    //products
+//    private val _products = MutableStateFlow<List<Product>>(emptyList())
+//    val products: StateFlow<List<Product>> = getProductList()
+//
+//    //sold products
+//    private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
+//    val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
+//
+
+//
+
+//
+
+//
+//    //fulls stock
+//    private val _fullsStock = MutableStateFlow<List<FullsStock>>(emptyList())
+//    val fullsStock: StateFlow<List<FullsStock>> = getDBFullsStock()
+//
+
+//
+//    @RequiresApi(Build.VERSION_CODES.O)
+//    fun confirmSoldToday(productList: List<Product>){
+//        val stockDataBase = bomaStock.child("Fulls")
+//
+//        productList.forEach {
+//            val isSoldToday = checkIfSoldToday(it.stock?.lastTimeSold?:"")
+//            //Log.d("SendData", "Processing ${it.name} - soldToday=${it.stock.soldToday} - isSoldToday=$isSoldToday")
+//            if (!isSoldToday && (it.stock?.soldToday?:0.0) > 0){
+//                it.name?.let { brandName ->
+//                    stockDataBase
+//                        .child(brandName)
+//                        .child("stock")
+//                        .child("soldToday")
+//                        .setValue(0.0)
+//                }
+//            }
+//
+//        }
+//    }
+//
+//
+//    //get stock data from database
+//    private fun getDBFullsStock(): StateFlow<List<FullsStock>> {
+//        val list = mutableListOf<FullsStock>()
+//         _products.value.forEach {
+//             it.stock?.let { it1 -> list.add(it1) }
+//        }
+//        _fullsStock.value = list
+//        return _fullsStock
+//    }
+//
+//    private fun getDBEmpties(): StateFlow<List<EmptiesStock>> {
+//        getDBaseEmptiesStock {
+//            emptiesStock ->
+//            _emptiesStock.value = emptiesStock
+//        }
+//        return _emptiesStock
+//    }
+//
+//
+
+//
+
+//
+//    private fun getProductList(): StateFlow<List<Product>> {
+//        // Fetch products
+//        getDBProductList { dbList ->
+//            _products.value = dbList
+//        }
+//
+//        return _products
+//    }
+//
+//    fun updateCustomerName(name: String){
+//        _customerName.value = name
+//    }
+//
+
+//
+//    fun removeProduct(soldProduct: SoldProduct?) {
+//        val current = _soldProducts.value.toMutableList()
+//        val validSoldProduct = soldProduct ?: return
+//        current.removeAll { it.product?.name == validSoldProduct.product?.name }
+//        _soldProducts.value = current.toList()
+//    }
+//
+
+//
+//}
+//
+
+package com.guvnoh.boma.viewmodels
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.MutableData
+import com.google.firebase.database.Transaction
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.FullsStock
+import com.guvnoh.boma.repositories.AppMetaRepository
+
+class AppMetaViewModel : ViewModel() {
+
+    private val metaRepo = AppMetaRepository()
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun checkDailyReset(onReset: () -> Unit) {
+        metaRepo.checkNewDay {
+            onReset()
+        }
+    }
+    private fun resetStockData(ref: DatabaseReference){
+        ref.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(data: MutableData): Transaction.Result {
+                val stock = data.getValue(FullsStock::class.java)
+                    ?: return Transaction.success(data)
+
+                val closing = stock.closingStock ?: 0.0
+
+                stock.openingStock = closing
+                stock.soldToday = 0.0
+
+                data.value = stock
+                return Transaction.success(data)
+            }
+
+            override fun onComplete(
+                error: DatabaseError?,
+                committed: Boolean,
+                currentData: DataSnapshot?
+            ) {}
+        })
+    }
+
+    fun resetSoldToday() {
+        val repo = FirebaseRefs.Products
+        repo.get().addOnSuccessListener { snapshot ->
+            snapshot.children.forEach { productSnap ->
+                val productId = productSnap.key ?: return@forEach
+
+                val warehouseStock = repo
+                    .child(productId)
+                    .child("store")
+                    .child("warehouse")
+
+                val headOfficeStock = repo
+                    .child(productId)
+                    .child("store")
+                    .child("headOffice")
+
+                resetStockData(warehouseStock)
+                resetStockData(headOfficeStock)
+
+            }
+        }
+    }
+}
+```
+
+## File: app/src/main/res/drawable/ic_launcher_background.xml
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<vector
+    android:height="108dp"
+    android:width="108dp"
+    android:viewportHeight="108"
+    android:viewportWidth="108"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <path android:fillColor="#3DDC84"
+          android:pathData="M0,0h108v108h-108z"/>
+    <path android:fillColor="#00000000" android:pathData="M9,0L9,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,0L19,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M29,0L29,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M39,0L39,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M49,0L49,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M59,0L59,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M69,0L69,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M79,0L79,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M89,0L89,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M99,0L99,108"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,9L108,9"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,19L108,19"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,29L108,29"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,39L108,39"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,49L108,49"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,59L108,59"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,69L108,69"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,79L108,79"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,89L108,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M0,99L108,99"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,29L89,29"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,39L89,39"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,49L89,49"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,59L89,59"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,69L89,69"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M19,79L89,79"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M29,19L29,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M39,19L39,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M49,19L49,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M59,19L59,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M69,19L69,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+    <path android:fillColor="#00000000" android:pathData="M79,19L79,89"
+          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
+</vector>
+```
+
+## File: app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+```
+
+## File: app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@drawable/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+```
+
+## File: build.gradle.kts
+```kotlin
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.google.gms.google.services) apply false
+}
+```
+
+## File: gradle/wrapper/gradle-wrapper.properties
+```
+#Tue Sep 23 21:00:45 WAT 2025
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=file:/C:/Users/machine/Desktop/GradleCache/.gradle/wrapper/dists/gradle-8.10.2-bin.zip
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+```
+
+## File: app/src/main/java/com/guvnoh/boma/functions/SendDummyData.kt
+```kotlin
+package com.guvnoh.boma.functions
+import com.guvnoh.boma.database.FirebaseRefs
+
+object SendDummyData {
+
+//    private fun convertProductToProducts(product: Product, store: Store){
+//        product.id?.let {
+//            productId ->
+//            FirebaseRefs.Products.child(productId).setValue(Products().copy(
+//                name = product.name?:"error",
+//                stringPrice = product.stringPrice?:"",
+//                doublePrice = product.doublePrice?:0.0,
+//                id = productId,
+//                imageName = product.imageName?:"",
+//                image = product.image?: R.drawable.bottle,
+//                type = product.type?:ProductType.BOTTLE,
+//                empties = product.empties,
+//                store = store
+//            ))
+//        }
+//    }
+//
+//    fun createNewFullsStock(wareHouse: List<Product>, headOffice: List<Product>){
+//
+//        wareHouse.forEach { product ->
+//            val store = Store()
+//            store.warehouse = product.stock
+//            headOffice.forEach {
+//                if (it == product){
+//                    store.headOffice = it.stock
+//                }
+//            }
+//            convertProductToProducts(product, store)
+//        }
+//
+//
+//
+//    }
+
+    fun cleardb(){
+        FirebaseRefs.Products.removeValue()
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/MainActivity.kt
+```kotlin
+package com.guvnoh.boma
+
+
+import android.os.Build
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import com.guvnoh.boma.ui.theme.BOMATheme
+import com.guvnoh.boma.uidesigns.Boma
+
+class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContent {
+            BOMATheme {
+                Boma()
+            }
+        }
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/models/AutoScrollingText.kt
+```kotlin
+package com.guvnoh.boma.models
+
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.text.font.FontWeight
+
+@Composable
+fun AutoScrollingText(
+    text: String,
+    modifier: Modifier,
+    speed: Int = 40,
+
+) {
+    val scrollState = rememberScrollState()
+    var direction by remember { mutableIntStateOf(1) }
+
+    val textWidth = remember { mutableIntStateOf(0) }
+    val containerWidth = remember { mutableIntStateOf(0) }
+
+    Box(
+        modifier = modifier
+            .clipToBounds()
+            .onGloballyPositioned {
+                coordinates ->
+                containerWidth.intValue = coordinates.size.width
+            }
+    ){
+        Row (
+            modifier = Modifier
+                .horizontalScroll(scrollState, enabled = false)
+                .onGloballyPositioned {
+                    coordinates ->
+                    textWidth.intValue = coordinates.size.width
+                }
+        ){
+            Text(
+                text = text,
+                softWrap = false,
+                maxLines = 1,
+                fontWeight = FontWeight.ExtraBold
+            )
+        }
+    }
+    LaunchedEffect (
+        textWidth.intValue,
+        containerWidth.intValue
+    ){
+        val textBreadth= textWidth.intValue
+        val containerBreadth = containerWidth.intValue
+        if (textBreadth <= containerBreadth) return@LaunchedEffect
+        while (true){
+            val maxScroll = (textBreadth - containerBreadth).coerceAtLeast(0)
+            val next = when(direction){
+                1 -> maxScroll
+                -1 -> 0
+                else -> 0
+            }
+            scrollState.animateScrollTo(
+                next,
+                animationSpec = tween(
+                    durationMillis = (maxScroll * speed).coerceAtLeast(500),
+                    easing = LinearEasing
+                )
+            )
+            direction *= -1
+        }
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/models/Empties.kt
+```kotlin
+package com.guvnoh.boma.models
+
+data class Empties (
+    val company: EmptyCompany? = null,
+    var emptyType: EmptyType? = null
+)
+
+enum class EmptyCompany{
+    COCA_COLA,
+    HERO,
+    NBL,
+    GUINNESS,
+}
+
+enum class EmptyType{
+    TWENTY,
+    TWELVE,
+    TWENTY_FOUR,
+    EIGHTEEN,
+    SIX
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/repositories/ProductRepository.kt
+```kotlin
+package com.guvnoh.boma.repositories
+
+import android.content.Context
+import android.util.Log
+import com.guvnoh.boma.database.FirebaseRefs
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ValueEventListener
+import com.guvnoh.boma.R
+import com.guvnoh.boma.models.EmptiesStock
+import com.guvnoh.boma.models.Products
+
+class ProductsRepository {
+
+    private val productsRepo = FirebaseRefs.Products
+
+    private var listener: ValueEventListener? = null
+
+
+     // Observe products in realtime
+    fun observeProducts(
+         repo: DatabaseReference,
+        onChange: (List<Products>) -> Unit
+    ) {
+        listener?.let { repo.removeEventListener(it) }
+
+        listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val products = snapshot.children.mapNotNull { child ->
+                    child.getValue(Products::class.java)
+                }
+                onChange(products.filter { it.id!=null })
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // log if needed
+            }
+        }
+
+        repo.addValueEventListener(listener!!)
+    }
+
+
+    fun getDBaseEmptiesStock(callback: (MutableList<EmptiesStock>) -> Unit) {
+
+        FirebaseRefs.empties.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val stockList = mutableListOf<EmptiesStock>()
+                for (product in snapshot.children) {
+                    val stock = product.getValue(EmptiesStock::class.java)
+                    if (stock!=null){
+                        stockList.add(stock)
+                    }
+                }
+                callback(stockList)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // handle error if needed
+                Log.d("DB_getDBStock_ERR", "onCancelled: $error")
+            }
+        })
+    }
+
+
+
+    fun getImage(context: Context, name: String):Int{
+        val resId = (context.resources.getIdentifier(name,"drawable",context.packageName))
+        return if(resId !=0)resId else R.drawable.bottle
+    }
+
+
+
+    // Add new product
+    fun addProduct(product: Products) {
+        val key = productsRepo.push().key.toString()
+         product.id = key
+        product.id?.let { productsRepo.child(it).setValue(product)}
+    }
+
+
+
+     // Delete product completely
+    fun deleteProduct(productId: String) {
+         productsRepo.child(productId).removeValue()
+    }
+
+
+     // Call this when ViewModel is cleared
+    fun clear() {
+        listener?.let { productsRepo.removeEventListener(it) }
+        listener = null
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/repositories/StockRepository.kt
+```kotlin
+package com.guvnoh.boma.repositories
+
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.FullsStock
+import com.google.firebase.database.*
+import com.guvnoh.boma.models.EmptiesStock
+import com.guvnoh.boma.models.Products
+
+class StockRepository() {
+
+    private val productsRef = FirebaseRefs.Products
+    private val emptiesRef = FirebaseRefs.empties
+
+    private var productsListener: ValueEventListener? = null
+    private var emptiesListener: ValueEventListener? = null
+
+
+    // OBSERVE FULLS STOCK
+    fun observeFullsStock(
+        store: String,
+        onChange: (MutableMap<String, Pair<Products, FullsStock>>) -> Unit,
+    ){
+        var listener = productsListener
+        listener?.let { FirebaseRefs.Products.removeEventListener(it) }
+
+        listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val products = snapshot.children.mapNotNull { child ->
+                    child.getValue(Products::class.java)
+                }
+                val stockMap: MutableMap<String, Pair<Products,FullsStock>> = mutableMapOf()
+                when (store){
+                    "warehouse" -> {
+                        products.forEach { product ->
+
+                            val stock = product.store?.warehouse ?: FullsStock()
+                            stockMap[product.id?:""] = Pair(product, stock)
+                        }
+                    }
+                    "headOffice" -> {
+                        products.forEach { product ->
+
+                            val stock = product.store?.headOffice ?: FullsStock()
+                            stockMap[product.id?:""] = Pair(product, stock)
+                        }
+                    }
+                }
+
+                onChange(stockMap)
+            }
+
+            override fun onCancelled(error: DatabaseError) = Unit
+        }
+
+        productsRef.addValueEventListener(listener)
+    }
+
+    fun updateStock(productId: String, store: String, newStock: Double? = null){
+        val product = FirebaseRefs.testProducts.child(productId)
+        val stock = product
+            .child("store")
+            .child(store)
+            .child("closingStock")
+
+        stock.setValue(newStock)
+    }
+
+
+
+    // OBSERVE EMPTIES
+    fun observeEmptiesStock(
+        onChange: (Map<String, EmptiesStock>) -> Unit
+    ) {
+        emptiesListener?.let { emptiesRef.removeEventListener(it) }
+
+        emptiesListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val result = mutableMapOf<String, EmptiesStock>()
+
+                snapshot.children.forEach { productSnap ->
+                    val productId = productSnap.key ?: return@forEach
+                    val empty = productSnap.getValue(EmptiesStock::class.java)
+                        ?: EmptiesStock()
+
+                    result[productId] = empty
+                }
+
+                onChange(result)
+            }
+
+            override fun onCancelled(error: DatabaseError) = Unit
+        }
+
+        emptiesRef.addValueEventListener(emptiesListener!!)
+    }
+
+
+    // SELL PRODUCT
+    fun sellProduct(
+        productId: String,
+        soldQty: Double,
+        store: String
+    ) {
+        if (soldQty <= 0) return
+
+        val stockRef = when(store){
+            "warehouse" -> FirebaseRefs.Products.child(productId).child("store").child("warehouse")
+            "headOffice" -> FirebaseRefs.Products.child(productId).child("store").child("headOffice")
+            else -> FirebaseRefs.Products.child(productId).child("store").child("warehouse")
+        }
+
+        stockRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(data: MutableData): Transaction.Result {
+                val stock = data.getValue(FullsStock::class.java)
+                    ?: FullsStock()
+
+                val opening = stock.openingStock ?: 0.0
+                val currentClosing =
+                    stock.closingStock ?: opening
+
+                if (currentClosing < soldQty) {
+                    return Transaction.abort()
+                }
+
+                stock.soldToday =
+                    (stock.soldToday ?: 0.0) + soldQty
+
+                stock.closingStock =
+                    (currentClosing - soldQty).coerceAtLeast(0.0)
+
+                data.value = stock
+                return Transaction.success(data)
+            }
+
+            override fun onComplete(
+                error: DatabaseError?,
+                committed: Boolean,
+                snapshot: DataSnapshot?
+            ) = Unit
+        })
+    }
+
+    // UPDATE EMPTIES
+    fun updateEmpties(
+        productId: String,
+        delta: Double
+    ) {
+        val emptyRef = emptiesRef.child(productId)
+
+        emptyRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(data: MutableData): Transaction.Result {
+                val empty = data.getValue(EmptiesStock::class.java)
+                    ?: EmptiesStock()
+
+                empty.quantity =
+                    ((empty.quantity ?: 0.0) + delta).coerceAtLeast(0.0)
+
+                data.value = empty
+                return Transaction.success(data)
+            }
+
+            override fun onComplete(
+                error: DatabaseError?,
+                committed: Boolean,
+                snapshot: DataSnapshot?
+            ) = Unit
+        })
+    }
+
+    // CLEANUP
+    fun clear(repo: DatabaseReference) {
+        productsListener?.let { FirebaseRefs.Products.removeEventListener(it) }
+        emptiesListener?.let { emptiesRef.removeEventListener(it) }
+
+        productsListener = null
+        emptiesListener = null
+    }
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeCard.kt
 ```kotlin
 package com.guvnoh.boma.uidesigns.screens.priceChange
@@ -2731,13 +4857,12 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.guvnoh.boma.models.Screen
 
-
 @Composable
 fun PriceChangePage(
     navController: NavController,
     paddingValues: PaddingValues,
     priceChangeViewmodel: PriceChangeViewmodel
-) {
+){
     val productList by priceChangeViewmodel.products.collectAsState()
     val priceChangeList by priceChangeViewmodel.priceChangeProducts.collectAsState()
     val context = LocalContext.current
@@ -2771,6 +4896,7 @@ fun PriceChangePage(
                                 }
                                 launchSingleTop = true
                                 restoreState = true
+
                             }
                         },
                         enabled = priceChangeList.isNotEmpty(),
@@ -2801,393 +4927,6 @@ fun PriceChangePage(
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens.priceChange
-
-import androidx.lifecycle.ViewModel
-import com.google.firebase.database.DatabaseReference
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.repositories.ProductsRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-
-class PriceChangeViewmodel: ViewModel() {
-
-    //product list
-    private val _products = MutableStateFlow<List<Products>>(emptyList())
-    val products: StateFlow<List<Products>> = _products
-
-    //price change products
-    private val _priceChangeProducts = MutableStateFlow<List<Products>>(emptyList())
-    val priceChangeProducts: StateFlow<List<Products>> = _priceChangeProducts
-
-    init {
-        observeProducts(FirebaseRefs.Products)
-    }
-
-    private fun observeProducts(repo: DatabaseReference) {
-        val repository = ProductsRepository()
-        repository.observeProducts(repo) { list ->
-            _products.value = list
-        }
-    }
-
-
-    private fun addToPriceChangeList(product: Products, newPrice: String ){
-        val current = _priceChangeProducts.value.toMutableList()
-        product.stringPrice = newPrice
-        current.add(product)
-        _priceChangeProducts.value = current
-    }
-
-//    // price change
-//    fun updatePrice(product: Products) {
-//        val repository = ProductsRepository()
-//        repository.updatePrice(product)
-//    }
-
-    // Update price
-    fun updatePrice(product: Products) {
-        val productsRepo = FirebaseRefs.Products
-        // update string and double price of product parameter
-        productsRepo.child(product.id ?: "error")
-            .child("stringPrice")
-            .setValue(product.stringPrice)
-
-        productsRepo.child(product.id?:"error")
-            .child("doublePrice")
-            .setValue(product.doublePrice)
-
-    }
-
-    fun changePrices(newPrice: String, product: Products){
-        val parsedNewPrice = newPrice.filter { ch -> ch.isDigit() || ch == '.' }
-        val parsed = parsedNewPrice.toDoubleOrNull()
-        if (parsed != null && parsed > 0.0) {
-            product.stringPrice = newPrice
-            product.doublePrice = parsed
-            addToPriceChangeList(product, newPrice)
-        }
-    }
-
-    fun errorCheck(newPrice: String): String?{
-        val double = newPrice.toDoubleOrNull()
-        val result = when{
-            newPrice.isEmpty() -> "Empty Field"
-            double == null -> "Invalid Price"
-            double >= 0 -> null
-            else -> "Invalid Price"
-        }
-
-        return  result
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/viewmodels/AppMetaViewModel.kt
-```kotlin
-//package com.guvnoh.boma.models
-//
-//import android.os.Build
-//import android.util.Log
-//import androidx.annotation.RequiresApi
-//import androidx.compose.runtime.State
-//import androidx.compose.runtime.mutableStateOf
-//import androidx.lifecycle.ViewModel
-//import androidx.lifecycle.viewModelScope
-//import com.guvnoh.boma.database.bomaStock
-//import com.guvnoh.boma.formatters.checkIfSoldToday
-//import com.guvnoh.boma.formatters.getDate
-//import com.guvnoh.boma.functions.getDBProductList
-//import com.guvnoh.boma.functions.getDBaseEmptiesStock
-//import kotlinx.coroutines.flow.MutableStateFlow
-//import kotlinx.coroutines.flow.StateFlow
-//import kotlinx.coroutines.launch
-//import kotlinx.coroutines.tasks.await
-//
-//class BomaViewModel : ViewModel() {
-//    //products
-//    private val _products = MutableStateFlow<List<Product>>(emptyList())
-//    val products: StateFlow<List<Product>> = getProductList()
-//
-//    //sold products
-//    private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
-//    val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
-//
-
-//
-
-//
-
-//
-//    //fulls stock
-//    private val _fullsStock = MutableStateFlow<List<FullsStock>>(emptyList())
-//    val fullsStock: StateFlow<List<FullsStock>> = getDBFullsStock()
-//
-
-//
-//    @RequiresApi(Build.VERSION_CODES.O)
-//    fun confirmSoldToday(productList: List<Product>){
-//        val stockDataBase = bomaStock.child("Fulls")
-//
-//        productList.forEach {
-//            val isSoldToday = checkIfSoldToday(it.stock?.lastTimeSold?:"")
-//            //Log.d("SendData", "Processing ${it.name} - soldToday=${it.stock.soldToday} - isSoldToday=$isSoldToday")
-//            if (!isSoldToday && (it.stock?.soldToday?:0.0) > 0){
-//                it.name?.let { brandName ->
-//                    stockDataBase
-//                        .child(brandName)
-//                        .child("stock")
-//                        .child("soldToday")
-//                        .setValue(0.0)
-//                }
-//            }
-//
-//        }
-//    }
-//
-//
-//    //get stock data from database
-//    private fun getDBFullsStock(): StateFlow<List<FullsStock>> {
-//        val list = mutableListOf<FullsStock>()
-//         _products.value.forEach {
-//             it.stock?.let { it1 -> list.add(it1) }
-//        }
-//        _fullsStock.value = list
-//        return _fullsStock
-//    }
-//
-//    private fun getDBEmpties(): StateFlow<List<EmptiesStock>> {
-//        getDBaseEmptiesStock {
-//            emptiesStock ->
-//            _emptiesStock.value = emptiesStock
-//        }
-//        return _emptiesStock
-//    }
-//
-//
-
-//
-
-//
-//    private fun getProductList(): StateFlow<List<Product>> {
-//        // Fetch products
-//        getDBProductList { dbList ->
-//            _products.value = dbList
-//        }
-//
-//        return _products
-//    }
-//
-//    fun updateCustomerName(name: String){
-//        _customerName.value = name
-//    }
-//
-
-//
-//    fun removeProduct(soldProduct: SoldProduct?) {
-//        val current = _soldProducts.value.toMutableList()
-//        val validSoldProduct = soldProduct ?: return
-//        current.removeAll { it.product?.name == validSoldProduct.product?.name }
-//        _soldProducts.value = current.toList()
-//    }
-//
-
-//
-//}
-//
-
-package com.guvnoh.boma.viewmodels
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.lifecycle.ViewModel
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.MutableData
-import com.google.firebase.database.Transaction
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.models.FullsStock
-import com.guvnoh.boma.repositories.AppMetaRepository
-
-class AppMetaViewModel : ViewModel() {
-
-    private val metaRepo = AppMetaRepository()
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun checkDailyReset(onReset: () -> Unit) {
-        metaRepo.checkNewDay {
-            onReset()
-        }
-    }
-    private fun resetStockData(ref: DatabaseReference){
-        ref.runTransaction(object : Transaction.Handler {
-            override fun doTransaction(data: MutableData): Transaction.Result {
-                val stock = data.getValue(FullsStock::class.java)
-                    ?: return Transaction.success(data)
-
-                val closing = stock.closingStock ?: 0.0
-
-                stock.openingStock = closing
-                stock.soldToday = 0.0
-
-                data.value = stock
-                return Transaction.success(data)
-            }
-
-            override fun onComplete(
-                error: DatabaseError?,
-                committed: Boolean,
-                currentData: DataSnapshot?
-            ) {}
-        })
-    }
-
-    fun resetSoldToday() {
-        val repo = FirebaseRefs.Products
-        repo.get().addOnSuccessListener { snapshot ->
-            snapshot.children.forEach { productSnap ->
-                val productId = productSnap.key ?: return@forEach
-
-                val warehouseStock = repo
-                    .child(productId)
-                    .child("store")
-                    .child("warehouse")
-
-                val headOfficeStock = repo
-                    .child(productId)
-                    .child("store")
-                    .child("headOffice")
-
-                resetStockData(warehouseStock)
-                resetStockData(headOfficeStock)
-
-            }
-        }
-    }
-}
-```
-
-## File: app/src/main/res/drawable/ic_launcher_background.xml
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<vector
-    android:height="108dp"
-    android:width="108dp"
-    android:viewportHeight="108"
-    android:viewportWidth="108"
-    xmlns:android="http://schemas.android.com/apk/res/android">
-    <path android:fillColor="#3DDC84"
-          android:pathData="M0,0h108v108h-108z"/>
-    <path android:fillColor="#00000000" android:pathData="M9,0L9,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,0L19,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M29,0L29,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M39,0L39,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M49,0L49,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M59,0L59,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M69,0L69,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M79,0L79,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M89,0L89,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M99,0L99,108"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,9L108,9"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,19L108,19"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,29L108,29"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,39L108,39"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,49L108,49"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,59L108,59"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,69L108,69"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,79L108,79"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,89L108,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M0,99L108,99"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,29L89,29"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,39L89,39"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,49L89,49"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,59L89,59"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,69L89,69"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M19,79L89,79"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M29,19L29,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M39,19L39,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M49,19L49,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M59,19L59,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M69,19L69,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-    <path android:fillColor="#00000000" android:pathData="M79,19L79,89"
-          android:strokeColor="#33FFFFFF" android:strokeWidth="0.8"/>
-</vector>
-```
-
-## File: app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>
-```
-
-## File: app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/ic_launcher_background"/>
-    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
-</adaptive-icon>
-```
-
-## File: build.gradle.kts
-```kotlin
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-plugins {
-    alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
-    alias(libs.plugins.kotlin.compose) apply false
-    alias(libs.plugins.google.gms.google.services) apply false
-}
-```
-
-## File: gradle/wrapper/gradle-wrapper.properties
-```
-#Tue Sep 23 21:00:45 WAT 2025
-distributionBase=GRADLE_USER_HOME
-distributionPath=wrapper/dists
-distributionUrl=file:/C:/Users/machine/Desktop/GradleCache/.gradle/wrapper/dists/gradle-8.10.2-bin.zip
-zipStoreBase=GRADLE_USER_HOME
-zipStorePath=wrapper/dists
-```
-
 ## File: app/src/main/java/com/guvnoh/boma/database/firebaseRefs.kt
 ```kotlin
 package com.guvnoh.boma.database
@@ -3200,1078 +4939,23 @@ object FirebaseRefs {
 
     private val db = FirebaseDatabase.getInstance()
 
-
-
     //database root folder
     private val root: DatabaseReference = db.reference.child("Boma")
 
-    val Products = root.child("Products")
+    val Products = root.child("testProducts")
+
+    //val Products = root.child("Products")
+
+    val testProducts = root.child("testProducts")
 
     val bomaEmpties = root.child("Empties")
 
-
-    //val displayProductsRepo = root.child("BomaStock").child("Stock_Fulls")
     val empties = root.child("BomaStock").child("Empties")
-    val records = root.child("BomaDBRecords2")
+
+    val records = root.child("BomaDBRecords3")
+
+    // stores dates and is used for new day validation
     val appMeta = root.child("appMeta")
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/functions/SendDummyData.kt
-```kotlin
-package com.guvnoh.boma.functions
-import com.guvnoh.boma.database.FirebaseRefs
-
-object SendDummyData {
-
-//    private fun convertProductToProducts(product: Product, store: Store){
-//        product.id?.let {
-//            productId ->
-//            FirebaseRefs.Products.child(productId).setValue(Products().copy(
-//                name = product.name?:"error",
-//                stringPrice = product.stringPrice?:"",
-//                doublePrice = product.doublePrice?:0.0,
-//                id = productId,
-//                imageName = product.imageName?:"",
-//                image = product.image?: R.drawable.bottle,
-//                type = product.type?:ProductType.BOTTLE,
-//                empties = product.empties,
-//                store = store
-//            ))
-//        }
-//    }
-//
-//    fun createNewFullsStock(wareHouse: List<Product>, headOffice: List<Product>){
-//
-//        wareHouse.forEach { product ->
-//            val store = Store()
-//            store.warehouse = product.stock
-//            headOffice.forEach {
-//                if (it == product){
-//                    store.headOffice = it.stock
-//                }
-//            }
-//            convertProductToProducts(product, store)
-//        }
-//
-//
-//
-//    }
-
-    fun cleardb(){
-        FirebaseRefs.Products.removeValue()
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/MainActivity.kt
-```kotlin
-package com.guvnoh.boma
-
-
-import android.os.Build
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.guvnoh.boma.ui.theme.BOMATheme
-import com.guvnoh.boma.uidesigns.Boma
-
-class MainActivity : ComponentActivity() {
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        setContent {
-            BOMATheme {
-                Boma()
-            }
-        }
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/models/AutoScrollingText.kt
-```kotlin
-package com.guvnoh.boma.models
-
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.text.font.FontWeight
-
-@Composable
-fun AutoScrollingText(
-    text: String,
-    modifier: Modifier,
-    speed: Int = 40,
-
-) {
-    val scrollState = rememberScrollState()
-    var direction by remember { mutableIntStateOf(1) }
-
-    val textWidth = remember { mutableIntStateOf(0) }
-    val containerWidth = remember { mutableIntStateOf(0) }
-
-    Box(
-        modifier = modifier
-            .clipToBounds()
-            .onGloballyPositioned {
-                coordinates ->
-                containerWidth.intValue = coordinates.size.width
-            }
-    ){
-        Row (
-            modifier = Modifier
-                .horizontalScroll(scrollState, enabled = false)
-                .onGloballyPositioned {
-                    coordinates ->
-                    textWidth.intValue = coordinates.size.width
-                }
-        ){
-            Text(
-                text = text,
-                softWrap = false,
-                maxLines = 1,
-                fontWeight = FontWeight.ExtraBold
-            )
-        }
-    }
-    LaunchedEffect (
-        textWidth.intValue,
-        containerWidth.intValue
-    ){
-        val textBreadth= textWidth.intValue
-        val containerBreadth = containerWidth.intValue
-        if (textBreadth <= containerBreadth) return@LaunchedEffect
-        while (true){
-            val maxScroll = (textBreadth - containerBreadth).coerceAtLeast(0)
-            val next = when(direction){
-                1 -> maxScroll
-                -1 -> 0
-                else -> 0
-            }
-            scrollState.animateScrollTo(
-                next,
-                animationSpec = tween(
-                    durationMillis = (maxScroll * speed).coerceAtLeast(500),
-                    easing = LinearEasing
-                )
-            )
-            direction *= -1
-        }
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/models/Empties.kt
-```kotlin
-package com.guvnoh.boma.models
-
-data class Empties (
-    val company: EmptyCompany? = null,
-    var emptyType: EmptyType? = null
-)
-
-enum class EmptyCompany{
-    COCA_COLA,
-    HERO,
-    NBL,
-    GUINNESS,
-}
-
-enum class EmptyType{
-    TWENTY,
-    TWELVE,
-    TWENTY_FOUR,
-    EIGHTEEN,
-    SIX
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/repositories/ProductRepository.kt
-```kotlin
-package com.guvnoh.boma.repositories
-
-import android.content.Context
-import android.util.Log
-import com.guvnoh.boma.database.FirebaseRefs
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ValueEventListener
-import com.guvnoh.boma.R
-import com.guvnoh.boma.models.EmptiesStock
-import com.guvnoh.boma.models.Products
-
-class ProductsRepository {
-
-    private val productsRepo = FirebaseRefs.Products
-
-    private var listener: ValueEventListener? = null
-
-
-     // Observe products in realtime
-    fun observeProducts(
-         repo: DatabaseReference,
-        onChange: (List<Products>) -> Unit
-    ) {
-        listener?.let { repo.removeEventListener(it) }
-
-        listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val products = snapshot.children.mapNotNull { child ->
-                    child.getValue(Products::class.java)
-                }
-                onChange(products.filter { it.id!=null })
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // log if needed
-            }
-        }
-
-        repo.addValueEventListener(listener!!)
-    }
-
-
-    fun getDBaseEmptiesStock(callback: (MutableList<EmptiesStock>) -> Unit) {
-
-        FirebaseRefs.empties.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val stockList = mutableListOf<EmptiesStock>()
-                for (product in snapshot.children) {
-                    val stock = product.getValue(EmptiesStock::class.java)
-                    if (stock!=null){
-                        stockList.add(stock)
-                    }
-                }
-                callback(stockList)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // handle error if needed
-                Log.d("DB_getDBStock_ERR", "onCancelled: $error")
-            }
-        })
-    }
-
-
-
-    fun getImage(context: Context, name: String):Int{
-        val resId = (context.resources.getIdentifier(name,"drawable",context.packageName))
-        return if(resId !=0)resId else R.drawable.bottle
-    }
-
-
-
-    // Add new product
-    fun addProduct(product: Products) {
-        val key = productsRepo.push().key.toString()
-         product.id = key
-        product.id?.let { productsRepo.child(it).setValue(product)}
-    }
-
-
-
-     // Delete product completely
-    fun deleteProduct(productId: String) {
-         productsRepo.child(productId).removeValue()
-    }
-
-
-     // Call this when ViewModel is cleared
-    fun clear() {
-        listener?.let { productsRepo.removeEventListener(it) }
-        listener = null
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/repositories/StockRepository.kt
-```kotlin
-//package com.guvnoh.boma.repositories
-//
-//import com.google.firebase.database.DataSnapshot
-//import com.google.firebase.database.DatabaseError
-//import com.google.firebase.database.MutableData
-//import com.google.firebase.database.Transaction
-//import com.google.firebase.database.ValueEventListener
-//import com.guvnoh.boma.database.FirebaseRefs
-//import com.guvnoh.boma.domain.DateProvider
-//import com.guvnoh.boma.models.FullsStock
-//import com.guvnoh.boma.models.Product
-//
-//
-//class StockRepository {
-//
-//    private val stockRef = FirebaseRefs.fullStock
-//
-//    private var listener: ValueEventListener? = null
-//
-//
-//
-//    /**
-//     * Observe products in realtime
-//     */
-//    fun observeProducts(
-//        onChange: (Map<String, FullsStock>) -> Unit
-//    ) {
-//        listener?.let { stockRef.removeEventListener(it) }
-//        val stockMap: MutableMap<String, FullsStock> = mutableMapOf()
-//
-//            listener = object : ValueEventListener {
-//            override fun onDataChange(snapshot: DataSnapshot) {
-//                snapshot.children.mapNotNull { child ->
-//                    val product = child.getValue(Product::class.java)
-//                    if (product?.stock != null){
-//                        val stock= product.stock
-//                        product.name?.let {
-//                            if (stock != null) {
-//                                stockMap[it] = stock
-//                            }
-//                        }
-//                    }
-//                }
-//                onChange(stockMap)
-//            }
-//
-//            override fun onCancelled(error: DatabaseError) {
-//                // log if needed
-//            }
-//        }
-//        stockRef.addValueEventListener(listener!!)
-//    }
-//
-//    fun updateStockTransaction(
-//        productId: String,
-//        soldQty: Double
-//    ) {
-//        val stockRef = FirebaseRefs.fullStock
-//            .child(productId)
-//            .child("stock")
-//
-//        stockRef.runTransaction(object : Transaction.Handler {
-//
-//            override fun doTransaction(data: MutableData): Transaction.Result {
-//                val stock = data.getValue(FullsStock::class.java)
-//                    ?: return Transaction.success(data)
-//
-//                val currentClosing = stock.closingStock ?: stock.openingStock ?: 0.0
-//
-//                val closing = (currentClosing - soldQty).coerceAtLeast(0.0)
-//
-//
-//
-//                stock.closingStock = closing
-//                stock.soldToday = (stock.soldToday ?: 0.0) + soldQty
-//                stock.soldLast = soldQty
-//                stock.lastTimeSold = DateProvider.todayString()
-//
-//                data.value = stock
-//                return Transaction.success(data)
-//            }
-//
-//            override fun onComplete(
-//                error: DatabaseError?,
-//                committed: Boolean,
-//                snapshot: DataSnapshot?
-//            ) = Unit
-//        })
-//    }
-//
-//    fun resetSoldToday() {
-//        FirebaseRefs.fullStock.get().addOnSuccessListener { snapshot ->
-//            snapshot.children.forEach { productSnap ->
-//                val stockRef = productSnap.child("stock").ref
-//
-//                stockRef.runTransaction(object : Transaction.Handler {
-//                    override fun doTransaction(data: MutableData): Transaction.Result {
-//                        val stock = data.getValue(FullsStock::class.java)
-//                            ?: return Transaction.success(data)
-//
-//                        stock.openingStock = stock.closingStock ?: 0.0
-//                        stock.soldToday = 0.0
-//
-//                        data.value = stock
-//                        return Transaction.success(data)
-//                    }
-//
-//                    override fun onComplete(
-//                        error: DatabaseError?,
-//                        committed: Boolean,
-//                        snapshot: DataSnapshot?
-//                    ) = Unit
-//                })
-//            }
-//        }
-//    }
-//}
-
-
-package com.guvnoh.boma.repositories
-
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.models.FullsStock
-import com.google.firebase.database.*
-import com.guvnoh.boma.models.EmptiesStock
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.Store
-
-class StockRepository() {
-
-    private val products = FirebaseRefs.Products
-    private val emptiesRef = FirebaseRefs.empties
-
-    private var productsListener: ValueEventListener? = null
-    private var emptiesListener: ValueEventListener? = null
-
-    // ------------------------------------------------
-    // FULLS STOCK (OBSERVE)
-    // ------------------------------------------------
-
-
-    fun observeFullsStock(
-        store: String,
-        onChange: (MutableMap<String, Pair<Products, FullsStock>>) -> Unit,
-    ){
-        var listener = productsListener
-        listener?.let { FirebaseRefs.Products.removeEventListener(it) }
-
-        listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val products = snapshot.children.mapNotNull { child ->
-                    child.getValue(Products::class.java)
-                }
-                val stockMap: MutableMap<String, Pair<Products,FullsStock>> = mutableMapOf()
-                when (store){
-                    "warehouse" -> {
-                        products.forEach { product ->
-
-                            val stock = product.store?.warehouse ?: FullsStock()
-                            stockMap[product.id?:""] = Pair(product, stock)
-                        }
-                    }
-                    "headOffice" -> {
-                        products.forEach { product ->
-
-                            val stock = product.store?.headOffice ?: FullsStock()
-                            stockMap[product.id?:""] = Pair(product, stock)
-                        }
-                    }
-                }
-
-                onChange(stockMap)
-            }
-
-            override fun onCancelled(error: DatabaseError) = Unit
-        }
-
-        products.addValueEventListener(listener)
-    }
-
-    // ------------------------------------------------
-    // EMPTIES (OBSERVE)
-    // ------------------------------------------------
-
-    fun observeEmptiesStock(
-        onChange: (Map<String, EmptiesStock>) -> Unit
-    ) {
-        emptiesListener?.let { emptiesRef.removeEventListener(it) }
-
-        emptiesListener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val result = mutableMapOf<String, EmptiesStock>()
-
-                snapshot.children.forEach { productSnap ->
-                    val productId = productSnap.key ?: return@forEach
-                    val empty = productSnap.getValue(EmptiesStock::class.java)
-                        ?: EmptiesStock()
-
-                    result[productId] = empty
-                }
-
-                onChange(result)
-            }
-
-            override fun onCancelled(error: DatabaseError) = Unit
-        }
-
-        emptiesRef.addValueEventListener(emptiesListener!!)
-    }
-
-    // ------------------------------------------------
-    // SELL PRODUCT (ATOMIC & CORRECT)
-    // ------------------------------------------------
-
-    fun sellProduct(
-        productId: String,
-        soldQty: Double,
-        store: String
-    ) {
-        if (soldQty <= 0) return
-
-        val stockRef = when(store){
-            "warehouse" -> FirebaseRefs.Products.child(productId).child("store").child("warehouse")
-            "headOffice" -> FirebaseRefs.Products.child(productId).child("store").child("headOffice")
-            else -> FirebaseRefs.Products.child(productId).child("store").child("warehouse")
-        }
-
-        stockRef.runTransaction(object : Transaction.Handler {
-            override fun doTransaction(data: MutableData): Transaction.Result {
-                val stock = data.getValue(FullsStock::class.java)
-                    ?: FullsStock()
-
-                val opening = stock.openingStock ?: 0.0
-                val currentClosing =
-                    stock.closingStock ?: opening
-
-                if (currentClosing < soldQty) {
-                    return Transaction.abort()
-                }
-
-                stock.soldToday =
-                    (stock.soldToday ?: 0.0) + soldQty
-
-                stock.closingStock =
-                    (currentClosing - soldQty).coerceAtLeast(0.0)
-
-                data.value = stock
-                return Transaction.success(data)
-            }
-
-            override fun onComplete(
-                error: DatabaseError?,
-                committed: Boolean,
-                snapshot: DataSnapshot?
-            ) = Unit
-        })
-    }
-
-    // ------------------------------------------------
-    // UPDATE EMPTIES
-    // ------------------------------------------------
-
-    fun updateEmpties(
-        productId: String,
-        delta: Double
-    ) {
-        val emptyRef = emptiesRef.child(productId)
-
-        emptyRef.runTransaction(object : Transaction.Handler {
-            override fun doTransaction(data: MutableData): Transaction.Result {
-                val empty = data.getValue(EmptiesStock::class.java)
-                    ?: EmptiesStock()
-
-                empty.quantity =
-                    ((empty.quantity ?: 0.0) + delta).coerceAtLeast(0.0)
-
-                data.value = empty
-                return Transaction.success(data)
-            }
-
-            override fun onComplete(
-                error: DatabaseError?,
-                committed: Boolean,
-                snapshot: DataSnapshot?
-            ) = Unit
-        })
-    }
-
-    // ------------------------------------------------
-    // DAILY RESET (CALLED BY AppMetaViewModel)
-    // ------------------------------------------------
-
-
-    // ------------------------------------------------
-    // CLEANUP
-    // ------------------------------------------------
-
-    fun clear(repo: DatabaseReference) {
-        productsListener?.let { FirebaseRefs.Products.removeEventListener(it) }
-        emptiesListener?.let { emptiesRef.removeEventListener(it) }
-
-        productsListener = null
-        emptiesListener = null
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/cards/RecordCard.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.cards
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.formatters.getDate
-import com.guvnoh.boma.models.Receipt
-import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.models.brandData
-import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.viewmodels.RecordViewModel
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun RecordCard(
-    record: Receipt,
-    navController: NavHostController,
-    vm: RecordViewModel
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp) ,
-        onClick = {
-                vm.setCurrentRecord(record)
-                navController.navigate(Screen.RecordDetails.route) {
-                    launchSingleTop = true
-                }
-                  },
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                // Customer name
-                Text(
-                    text = record.customerName?:"noName",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                // Date (smaller and lighter)
-                Text(
-                    text = record.date?:"noDATE",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
-            }
-
-            // Optional amount or indicator (if available in Receipt)
-            Column(
-                horizontalAlignment = Alignment.End,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = "₦${"%,.2f".format(record.grandTotal?.toDoubleOrNull())}",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "View Details",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-private fun RecordsCardDemo(){
-    RecordCard(
-        Receipt(
-            customerName = "Chukwuka",
-            date = getDate(),
-            soldProducts = listOf(
-                SoldProduct(
-                    product = brandData[0],
-                    stringQuantity = "1",
-                    doubleQuantity = 1.0,
-
-                    )
-            ),
-        ), rememberNavController(), viewModel()
-    )
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/viewmodels/productViewModel.kt
-```kotlin
-package com.guvnoh.boma.viewmodels
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
-import com.google.firebase.database.DatabaseReference
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.formatters.getDate
-import com.guvnoh.boma.formatters.halfAndQuarter
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.Receipt
-import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.repositories.ProductsRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
-
-
-class ProductsViewModel(
-    private val repository: ProductsRepository = ProductsRepository()
-) : ViewModel() {
-
-    private val _products = MutableStateFlow<List<Products>>(emptyList())
-    val products: StateFlow<List<Products>> = _products
-
-    //customer
-    private val _customerName = mutableStateOf("")
-    var customerName: State<String> = _customerName
-
-    //sold products
-    private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
-    val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
-
-
-    init {
-        observeProducts(FirebaseRefs.Products)
-    }
-
-    //get products from database
-
-    private fun observeProducts(repo: DatabaseReference) {
-        repository.observeProducts(repo) { list ->
-            _products.value = list
-        }
-    }
-
-    // customer name
-
-    fun setCustomerName(name: String) {
-        _customerName.value = name
-    }
-
-    //sold products management
-
-    fun updateSoldProduct(
-        product: Products,
-        stringQuantity: String,
-        doubleQuantity: Double
-    ) {
-        _soldProducts.update { list ->
-            val updated = list.toMutableList()
-            val index = updated.indexOfFirst { it.product?.name == product.name }
-
-            val total = ((product.stringPrice?.toDoubleOrNull() ?: 0.0) * doubleQuantity).toInt()
-
-            val soldProduct = SoldProduct(
-                product = product,
-                stringQuantity = stringQuantity,
-                doubleQuantity = doubleQuantity,
-                intTotal = total,
-                receiptQuantity = halfAndQuarter(doubleQuantity)
-            )
-
-            if (index >= 0) {
-                updated[index] = soldProduct
-            } else {
-                updated.add(soldProduct)
-            }
-
-            updated
-        }
-    }
-
-    //generate receipt
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun generateReceipt(): Receipt {
-        val validSoldProducts = soldProducts.value.filter { (it.intTotal ?: 0) > 0 }.toList()
-        //val productList by vm.products.collectAsState()
-        val grandTotal = validSoldProducts.sumOf { it.intTotal ?: 0 }
-        val date = getDate()
-        val receipt = Receipt(
-            id = FirebaseRefs.records.push().key.toString().replace("-", ""),
-            soldProducts = validSoldProducts,
-            customerName = customerName.value,
-            date = date,
-            grandTotal = grandTotal.toString()
-        )
-        return receipt
-    }
-
-
-    fun addProduct(product: Products) {
-        repository.addProduct(product)
-    }
-
-    fun deleteProduct(productId: String) {
-        repository.deleteProduct(productId)
-    }
-
-    fun clearTotals() {
-        _soldProducts.value = emptyList()
-    }
-
-    fun clearName() {
-        _customerName.value = ""
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/viewmodels/ReceiptViewmodel.kt
-```kotlin
-package com.guvnoh.boma.viewmodels
-
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.os.Build
-import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.lifecycle.ViewModel
-import com.google.firebase.database.DatabaseReference
-import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.models.Receipt
-import com.guvnoh.boma.models.SoldProduct
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-
-class ReceiptViewmodel : ViewModel(){
-
-    private val _receipt = MutableStateFlow<Receipt?>(null)
-    val receipt: StateFlow<Receipt?> = _receipt
-
-
-
-    fun setCurrentReceipt(receipt: Receipt){
-        _receipt.value = receipt
-    }
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun saveSale(list: List<SoldProduct>, stockViewModel: StockViewModel, store: String){
-        list.forEach { soldProduct ->
-            soldProduct.doubleQuantity?.let {
-                qty -> soldProduct.product?.name?.let {
-                    name -> stockViewModel.sellProduct(name, qty, store)
-                }
-            }
-
-        }
-    }
-
-    fun getGrandTotal(): Int{
-        val total = receipt.value?.soldProducts?.sumOf {
-            it.intTotal?:0
-        }
-        return total?:0
-    }
-
-    fun copy(receipt: Receipt, context: Context){
-        val textToCopy = copyToClipboard(receipt)
-        val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("label", textToCopy)
-        clipBoard.setPrimaryClip(clip)
-        Toast.makeText(context, "Text copied!", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun copyToClipboard(receipt: Receipt): String {
-        //The variable finalText holds the complete text to be sent to the clipboard
-        val finalText = StringBuilder()
-        val soldProductsRaw = receipt.soldProducts?: emptyList()
-        val soldProducts = soldProductsRaw.filter { it.intTotal!! >0 }.toList()
-        val grandTotal = soldProducts.sumOf { it.intTotal?:0 }
-        soldProducts.forEach {
-            val copiedQuantity: String = it.receiptQuantity?:"0"
-            val textToCopy = "$copiedQuantity ${it.product?.name} ${nairaFormat(it.intTotal?:0)}\n"
-
-            finalText.append(textToCopy)
-        }
-        if (soldProducts.size > 1) {
-            finalText.append("Total: $grandTotal")
-        }
-        return finalText.toString()
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/viewmodels/StockViewmodel.kt
-```kotlin
-package com.guvnoh.boma.viewmodels
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.lifecycle.ViewModel
-import com.google.firebase.database.DatabaseReference
-import com.guvnoh.boma.models.EmptiesStock
-import com.guvnoh.boma.models.FullsStock
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.repositories.StockRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-
-@RequiresApi(Build.VERSION_CODES.O)
-class StockViewModel(
-) : ViewModel() {
-
-    private val _wareHouseFulls = MutableStateFlow<Map<Products, FullsStock>>(emptyMap())
-    val wareHouseStock: StateFlow<Map<Products, FullsStock>> = _wareHouseFulls
-
-    private val _headOfficeFulls = MutableStateFlow<Map<Products, FullsStock>>(emptyMap())
-    val headOfficeStock: StateFlow<Map<Products, FullsStock>> = _headOfficeFulls
-
-        //empties stock
-    private val _emptiesStock = MutableStateFlow<Map<String, EmptiesStock>>(emptyMap())
-    val emptiesStock: StateFlow<Map<String, EmptiesStock>> = _emptiesStock
-
-
-
-    private val stockRepository: StockRepository = StockRepository()
-
-    init {
-        observeFullsStock("warehouse")
-        observeFullsStock("headOffice")
-        observeEmptiesStock()
-        AppMetaViewModel().checkDailyReset {
-            AppMetaViewModel().resetSoldToday()
-        }
-    }
-
-//    private fun convertListToMap(list: List<Products>): Map<Products, FullsStock>{
-//        val map: MutableMap<Products, FullsStock> = mutableMapOf()
-//
-//        list.forEach {
-//            val stock = it.stock?:FullsStock()
-//            map[it] = stock
-//        }
-//        return map
-//    }
-
-    private fun observeFullsStock(store: String) {
-        stockRepository.observeFullsStock(store){ stock ->
-            when(store){
-                "warehouse" -> {_wareHouseFulls.value = stock.values.toMap()}
-                "headOffice" -> {_headOfficeFulls.value = stock.values.toMap()}
-            }
-        }
-
-    }
-
-    private fun observeEmptiesStock() {
-        stockRepository.observeEmptiesStock { map ->
-            _emptiesStock.value = map
-        }
-    }
-
-    fun sellProduct(productId: String, quantity: Double, store: String) {
-        stockRepository.sellProduct(
-            productId = productId,
-            soldQty = quantity,
-            store = store
-        )
-    }
-
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/functions/FetchRecords.kt
-```kotlin
-package com.guvnoh.boma.functions
-
-import android.util.Log
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.models.Receipt
-
-fun getDatabaseRecords(callback: (MutableList<Receipt>) -> Unit) {
-
-    FirebaseRefs.records.orderByChild("timeStamp")
-        .addValueEventListener(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            val records = snapshot.children.mapNotNull {
-                it.getValue(Receipt::class.java)
-            }.sortedByDescending { it.timeStamp }
-
-            callback(records.toMutableList())
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            Log.d("get records error: ", "$error")
-        }
-    })
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/functions/PushRecord.kt
-```kotlin
-package com.guvnoh.boma.functions
-
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.models.Receipt
-
-fun sendRecord(record: Receipt){
-    val newRef = FirebaseRefs.records.push()
-    val recordMap = mapOf(
-        "timeStamp" to record.timeStamp,
-        "id" to record.id,
-        "soldProducts" to record.soldProducts,
-        "customerName" to record.customerName,
-        "date" to record.date,
-        "grandTotal" to record.grandTotal
-    )
-    newRef.setValue(recordMap)
 }
 ```
 
@@ -4406,163 +5090,6 @@ fun EmptiesStockCard(emptiesStock: EmptiesStock) {
 @Composable
 private fun ShowStockCard(){
     //StockCard(Product())
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/cards/StockCard.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.cards
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.guvnoh.boma.formatters.checkIfSoldToday
-import com.guvnoh.boma.formatters.halfAndQuarter
-import com.guvnoh.boma.models.FullsStock
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.brandData
-import kotlinx.coroutines.launch
-
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun StockCard(name: String, stock: FullsStock) {
-    val scope = rememberCoroutineScope()
-    val soldToday = stock.soldToday
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        onClick = { scope.launch { /* handle click */ } },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // --- Header Row ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                // Optional visual indicator for low stock
-                val isLowStock = (stock.closingStock ?: 0.0) < 5.0
-                val indicatorColor = if (isLowStock)
-                    MaterialTheme.colorScheme.error
-                else
-                    MaterialTheme.colorScheme.primary
-
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .background(indicatorColor, CircleShape)
-                )
-            }
-
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                thickness = 1.dp
-            )
-
-            // --- Sold Today ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Sold Today",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = halfAndQuarter(soldToday?:0.0),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.Medium
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            // --- Current Stock ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Current Stock",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = halfAndQuarter(stock.closingStock ?: 0.0),
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    color = if ((stock.closingStock ?: 0.0) < 5.0)
-                        MaterialTheme.colorScheme.error
-                    else
-                        MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            // --- Optional Footer Highlight ---
-            if ((stock.closingStock ?: 0.0) < 5.0) {
-                Text(
-                    text = "⚠️ Low stock — restock soon",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.error
-                    ),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-        }
-    }
-}
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview
-@Composable
-private fun ShowStockCard(){
-    StockCard("P",FullsStock())
 }
 ```
 
@@ -4738,92 +5265,127 @@ private fun ShowDemo(){
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/RecordsScreen.kt
+## File: app/src/main/java/com/guvnoh/boma/viewmodels/productViewModel.kt
 ```kotlin
-package com.guvnoh.boma.uidesigns.screens
+package com.guvnoh.boma.viewmodels
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
-import com.guvnoh.boma.uidesigns.cards.RecordCard
-import com.guvnoh.boma.viewmodels.RecordViewModel
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun RecordsScreen(
-    vm: RecordViewModel,
-    navController: NavHostController,
-    paddingValues: PaddingValues
-    ){
-    val records by vm.records.collectAsState()
-
-    var date by remember { mutableStateOf("") }
+import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.formatters.getDate
+import com.guvnoh.boma.formatters.halfAndQuarter
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
+import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.repositories.ProductsRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 
 
-    Scaffold (modifier = Modifier.padding(paddingValues)){
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(it),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            if (records.isEmpty()){
-                Column (
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ){
-                    Text("No Records Yet!")
-                }
-            }else{
+class ProductsViewModel(
+    private val repository: ProductsRepository = ProductsRepository()
+) : ViewModel() {
 
-                LazyColumn {
-                    stickyHeader {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-                            Text(
-                                text = date,
-                                style = MaterialTheme.typography.titleLarge,
-                            )
-                        }
+    private val _products = MutableStateFlow<List<Products>>(emptyList())
+    val products: StateFlow<List<Products>> = _products
 
-                    }
-                    items(records){
-                            record ->
-                        date = record.date.toString()
+    //customer
+    private val _customerName = mutableStateOf("")
+    var customerName: State<String> = _customerName
 
-                        RecordCard(
-                            record = record,
-                            navController = navController,
-                            vm = vm
-                        )
-                    }
-                }
-            }
+    //sold products
+    private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
+    val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
+
+
+    init {
+        observeProducts(FirebaseRefs.Products)
+    }
+
+    //get products from database
+
+    private fun observeProducts(repo: DatabaseReference) {
+        repository.observeProducts(repo) { list ->
+            _products.value = list
         }
     }
 
+    // customer name
+
+    fun setCustomerName(name: String) {
+        _customerName.value = name
+    }
+
+    //sold products management
+
+    fun updateSoldProduct(
+        product: Products,
+        stringQuantity: String,
+        doubleQuantity: Double
+    ) {
+        _soldProducts.update { list ->
+            val updated = list.toMutableList()
+            val index = updated.indexOfFirst { it.product?.name == product.name }
+
+            val total = ((product.stringPrice?.toDoubleOrNull() ?: 0.0) * doubleQuantity).toInt()
+
+            val soldProduct = SoldProduct(
+                product = product,
+                stringQuantity = stringQuantity,
+                doubleQuantity = doubleQuantity,
+                intTotal = total,
+                receiptQuantity = halfAndQuarter(doubleQuantity)
+            )
+
+            if (index >= 0) {
+                updated[index] = soldProduct
+            } else {
+                updated.add(soldProduct)
+            }
+
+            updated
+        }
+    }
+
+    //generate receipt
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun generateReceipt(): Receipt {
+        val validSoldProducts = soldProducts.value.filter { (it.intTotal ?: 0) > 0 }.toList()
+
+        val grandTotal = validSoldProducts.sumOf { it.intTotal ?: 0 }
+        val date = getDate()
+        val receipt = Receipt(
+            id = FirebaseRefs.records.push().key.toString().replace("-", ""),
+            soldProducts = validSoldProducts,
+            customerName = customerName.value,
+            date = date,
+            grandTotal = grandTotal.toString(),
+        )
+
+        return receipt
+    }
+
+
+    fun addProduct(product: Products) {
+        repository.addProduct(product)
+    }
+
+    fun deleteProduct(productId: String) {
+        repository.deleteProduct(productId)
+    }
+
+    fun clearTotals() {
+        _soldProducts.value = emptyList()
+    }
+
+    fun clearName() {
+        _customerName.value = ""
+    }
 }
 ```
 
@@ -5020,46 +5582,6 @@ fun ProductSplashScreen(
             Spacer(modifier = Modifier.padding(vertical = 8.dp))
             CircularProgressIndicator()
         }
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/navigation/StockPageNavigation.kt
-```kotlin
-package com.guvnoh.boma.navigation
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.uidesigns.screens.stock.BottomBarItem
-import com.guvnoh.boma.uidesigns.screens.stock.StockEmptiesScreen
-import com.guvnoh.boma.uidesigns.screens.stock.StockFullsScreen
-import com.guvnoh.boma.viewmodels.StockViewModel
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun StockPageNav(
-    vm: StockViewModel,
-    paddingValues: PaddingValues
-){
-    val navController = rememberNavController()
-
-    NavHost(
-        startDestination = BottomBarItem.Fulls.route,
-        navController = navController
-    ){
-        composable(BottomBarItem.Empties.route){ StockEmptiesScreen(paddingValues, vm, navController) }
-        composable(BottomBarItem.Fulls.route){
-            StockFullsScreen(
-                paddingValues = paddingValues,
-                stockViewModel = vm,
-                navController = navController
-            ) }
     }
 }
 ```
@@ -5449,7 +5971,7 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/navigation/MainNavigation.kt
+## File: app/src/main/java/com/guvnoh/boma/navigation/StockPageNavigation.kt
 ```kotlin
 package com.guvnoh.boma.navigation
 
@@ -5457,76 +5979,34 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.functions.SendDummyData
-import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.uidesigns.screens.AddProduct
-import com.guvnoh.boma.uidesigns.screens.DeleteProduct
-import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangePage
-import com.guvnoh.boma.uidesigns.screens.ProductsPage
-import com.guvnoh.boma.uidesigns.screens.ReceiptPage
-import com.guvnoh.boma.uidesigns.screens.RecordDetails
-import com.guvnoh.boma.uidesigns.screens.RecordsScreen
-import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangeViewmodel
-import com.guvnoh.boma.viewmodels.AppMetaViewModel
-import com.guvnoh.boma.viewmodels.ProductsViewModel
-import com.guvnoh.boma.viewmodels.ReceiptViewmodel
-import com.guvnoh.boma.viewmodels.RecordViewModel
-import com.guvnoh.boma.viewmodels.StockViewModel
-
+import androidx.navigation.compose.rememberNavController
+import com.guvnoh.boma.uidesigns.screens.stock.BottomBarItem
+import com.guvnoh.boma.uidesigns.screens.stock.StockEmptiesScreen
+import com.guvnoh.boma.uidesigns.screens.stock.StockFullsScreen
+import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Navigation(
-    paddingValues: PaddingValues,
-    navController: NavHostController,
-    ){
-
-    val records: RecordViewModel  = viewModel()
-    val record by records.record.collectAsState()
-    val productsViewModel: ProductsViewModel = viewModel()
-    val bomaViewModel: AppMetaViewModel = viewModel()
-    val stockViewModel: StockViewModel = viewModel()
-    val receiptViewmodel: ReceiptViewmodel = viewModel()
-    val priceChangeViewmodel: PriceChangeViewmodel = viewModel()
-
-
-
-
-
-    LaunchedEffect(Unit) {
-        bomaViewModel.checkDailyReset{
-            AppMetaViewModel().resetSoldToday()
-        }
-    }
-
-
+fun StockPageNav(
+    vm: StockViewModel,
+    paddingValues: PaddingValues
+){
+    val navController = rememberNavController()
 
     NavHost(
-        startDestination = Screen.Products.route,
+        startDestination = BottomBarItem.Fulls.route,
         navController = navController
-
     ){
-        composable(Screen.Products.route){ ProductsPage(navController, paddingValues, productsViewModel, receiptViewmodel) }
-        composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, priceChangeViewmodel) }
-        composable(Screen.Receipt.route){ ReceiptPage(stockViewModel, receiptViewmodel) }
-        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController, productsViewModel) }
-        composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, productsViewModel) }
-        composable(Screen.Stock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
-        composable(Screen.WarehouseStock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
-        composable(Screen.Records.route){ RecordsScreen(records, navController, paddingValues) }
-        composable(Screen.RecordDetails.route){
-            record?.let { selectedRecord -> RecordDetails(selectedRecord) }
-        }
+        composable(BottomBarItem.Empties.route){ StockEmptiesScreen(paddingValues, vm, navController) }
+        composable(BottomBarItem.Fulls.route){
+            StockFullsScreen(
+                paddingValues = paddingValues,
+                stockViewModel = vm,
+                navController = navController
+            ) }
     }
-
 }
 ```
 
@@ -5697,201 +6177,6 @@ fun ProductCard(
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/RecordDetailsScreen.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens
-
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.os.Build
-import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.functions.captureScreen
-import com.guvnoh.boma.functions.saveBitmapToGallery
-import com.guvnoh.boma.functions.vibratePhone
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.Receipt
-import com.guvnoh.boma.models.SoldProduct
-
-@RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun RecordDetails(receipt: Receipt) {
-    val context = LocalContext.current
-    val view = LocalView.current
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Record", style = MaterialTheme.typography.titleLarge) }
-            )
-        },
-        bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Button(onClick = {receipt.soldProducts?.let{ copy(it, context) }}) {
-                    Icon(Icons.Filled.Menu, contentDescription = "Copy")
-                    Spacer(Modifier.width(6.dp))
-                    Text("Copy")
-                }
-                Button(onClick = {
-                    vibratePhone(context, 100L)
-                    saveBitmapToGallery(context, captureScreen(view))
-                } ){
-                    Icon(Icons.Filled.Share, contentDescription = "Screenshot")
-                    Spacer(Modifier.width(6.dp))
-                    Text("Screenshot")
-                }
-            }
-        },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            // Header Info
-            Text("Receipt #${receipt.id}", style = MaterialTheme.typography.titleMedium)
-            Text("Customer: ${receipt.customerName}", style = MaterialTheme.typography.bodyLarge)
-            Text("Date: ${(receipt.date?:"error")}", style = MaterialTheme.typography.bodyMedium)
-
-            Spacer(Modifier.height(16.dp))
-
-            // Products List (scrollable)
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            ) {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    receipt.soldProducts?.let {
-                        items(it) { product ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    product.receiptQuantity?:"0",
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                Text(
-                                    product.product?.name?:"unknown",
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-                                Text(nairaFormat(product.intTotal?:0), fontWeight = FontWeight.Bold)
-                            }
-                            HorizontalDivider()
-                        }
-                    }
-                }
-            }
-
-            // Total Section
-            Spacer(Modifier.height(8.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFF5F5F5))
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Grand Total", style = MaterialTheme.typography.titleMedium)
-                val grandTotal = receipt.soldProducts?.let {
-                    soldProducts ->
-                    nairaFormat(soldProducts.sumOf { it.intTotal?:0 })
-                }
-                Text(
-                    text = grandTotal?:"0.00",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun RecordCardDetailsDemo() {
-
-    val sampleProducts = listOf(
-        SoldProduct().apply {
-            receiptQuantity = "2"
-            intTotal = 1200
-            product = Products()
-            product?.name = "Toothpaste"
-        },
-        SoldProduct().apply {
-            receiptQuantity = "1"
-            intTotal = 800
-            product = Products()
-            product?.name = "Soap"
-        }
-    )
-
-    RecordDetails(
-        receipt = Receipt(
-            id = "001",
-            customerName = "John Doe",
-            date = "Thu, Oct 30 2025",
-            soldProducts = sampleProducts
-        )
-    )
-}
-
-// --- Clipboard copy helpers ---
-
-private fun copy(list: List<SoldProduct>, context: Context) {
-    val textToCopy = copyToClipboard(list)
-    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    val clip = ClipData.newPlainText("Receipt", textToCopy)
-    clipboard.setPrimaryClip(clip)
-    Toast.makeText(context, "Receipt copied!", Toast.LENGTH_SHORT).show()
-}
-
-fun copyToClipboard(list: List<SoldProduct>): String {
-    val builder = StringBuilder()
-    val grandTotal = nairaFormat(list.sumOf { it.intTotal?:0 })
-
-    list.forEach {
-        builder.append("${it.receiptQuantity} ${it.product?.name} ${nairaFormat(it.intTotal?:0)}\n")
-    }
-
-    if (list.isNotEmpty()) builder.append("Total: $grandTotal")
-    return builder.toString()
-}
-```
-
 ## File: app/build.gradle.kts
 ```kotlin
 plugins {
@@ -5961,6 +6246,93 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/navigation/MainNavigation.kt
+```kotlin
+package com.guvnoh.boma.navigation
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.uidesigns.screens.AddProduct
+import com.guvnoh.boma.uidesigns.screens.DeleteProduct
+import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangePage
+import com.guvnoh.boma.uidesigns.screens.ProductsPage
+import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptPage
+import com.guvnoh.boma.uidesigns.screens.records.RecordDetails
+import com.guvnoh.boma.uidesigns.screens.records.RecordsScreen
+import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangeViewmodel
+import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptViewmodel
+import com.guvnoh.boma.uidesigns.screens.records.RecordViewModel
+import com.guvnoh.boma.viewmodels.AppMetaViewModel
+import com.guvnoh.boma.viewmodels.ProductsViewModel
+import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
+import kotlinx.coroutines.flow.forEach
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun Navigation(
+    paddingValues: PaddingValues,
+    navController: NavHostController,
+    ){
+
+    val records: RecordViewModel = viewModel()
+    val record by records.record.collectAsState()
+    val productsViewModel: ProductsViewModel = viewModel()
+    val bomaViewModel: AppMetaViewModel = viewModel()
+    val stockViewModel: StockViewModel = viewModel()
+    val receiptViewmodel: ReceiptViewmodel = viewModel()
+    val priceChangeViewmodel: PriceChangeViewmodel = viewModel()
+
+
+
+    LaunchedEffect(Unit) {
+        bomaViewModel.checkDailyReset{
+            AppMetaViewModel().resetSoldToday()
+        }
+    }
+//    val products by productsViewModel.products.collectAsState()
+//    LaunchedEffect (products){
+//        val test =  FirebaseRefs.root.child("testProducts")
+//        products.forEach {
+//            test.child(it.id.toString()).setValue(it)
+//        }
+//    }
+
+
+
+    NavHost(
+        startDestination = Screen.Products.route,
+        navController = navController
+
+    ){
+        composable(Screen.Products.route){ ProductsPage(navController, paddingValues, productsViewModel, receiptViewmodel) }
+        composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, priceChangeViewmodel) }
+        composable(Screen.Receipt.route){ ReceiptPage(stockViewModel, receiptViewmodel) }
+        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController, productsViewModel) }
+        composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, productsViewModel) }
+        composable(Screen.Stock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
+        composable(Screen.WarehouseStock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
+        composable(Screen.Records.route){ RecordsScreen(records, navController, paddingValues) }
+        composable(Screen.RecordDetails.route){
+            record?.let { selectedRecord -> RecordDetails(selectedRecord) }
+        }
+    }
+
 }
 ```
 
@@ -6268,28 +6640,15 @@ package com.guvnoh.boma.models
 
 import com.guvnoh.boma.R
 
-//data class Product (
-//    var name: String? = null,
-//    var stringPrice: String? = null,
-//    var imageName: String? = null,
-//    var image: Int = R.drawable.bottle,
-//    var id: String? = null,
-//    var doublePrice: Double? = null,
-//    var stock: FullsStock? = null,
-//    var type: ProductType? = null,
-//    var empties: Empties? = null
-//
-//)
-
 data class Products (
     var name: String? = null,
     var stringPrice: String? = null,
     var imageName: String? = null,
     var image: Int = R.drawable.bottle,
-    var id: String? = null,
+    var id: String? = null,//the id is the same as the database key
     var doublePrice: Double? = null,
-    var store: Store? = null,
-    var type: ProductType? = null,
+    var store: Store? = null, //warehouse or head office
+    var type: ProductType? = null, //bottle, can or pet
     var empties: Empties? = null
 
 )
@@ -6308,14 +6667,6 @@ data class SoldProduct(
     var intTotal: Int? = null,
 )
 
-data class Receipt(
-    val timeStamp: Long? = null,
-    var id: String? = null,
-    var soldProducts: List<SoldProduct>? = null,
-    var customerName: String? = null,
-    var date: String? = null,
-    var grandTotal: String? = null
-)
 
 val brandData = mutableListOf(
     //coca cola
@@ -6410,8 +6761,8 @@ import com.guvnoh.boma.models.ProductType
 import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.cards.ProductCard
+import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptViewmodel
 import com.guvnoh.boma.viewmodels.ProductsViewModel
-import com.guvnoh.boma.viewmodels.ReceiptViewmodel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -6785,293 +7136,5 @@ fun getDisplayGroup(list: List<Products>, emptyCompany: EmptyCompany): List<Prod
 @Composable
 fun ShowProducts() {
    // ProductsPage(rememberNavController(), PaddingValues(), viewModel())
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/Receipt.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens
-
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.os.Build
-import android.widget.Toast
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.firebase.database.DatabaseReference
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.formatters.getTime
-import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.functions.captureScreen
-import com.guvnoh.boma.functions.saveBitmapToGallery
-import com.guvnoh.boma.functions.sendRecord
-import com.guvnoh.boma.functions.vibratePhone
-import com.guvnoh.boma.models.Receipt
-import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.repositories.ProductsRepository
-import com.guvnoh.boma.repositories.StockRepository
-import com.guvnoh.boma.viewmodels.ProductsViewModel
-import com.guvnoh.boma.viewmodels.ReceiptViewmodel
-import com.guvnoh.boma.viewmodels.StockViewModel
-
-@RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ReceiptPage( stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmodel) {
-    val context = LocalContext.current
-    val receipt by receiptViewmodel.receipt.collectAsState()
-
-    var activeRepo = "warehouse"
-
-
-
-//    val grandTotal = receipt?.let {
-//        it.soldProducts?.sumOf {
-//            product -> product.intTotal?:0
-//        }?.let {
-//            productIntTotal -> nairaFormat(productIntTotal)
-//        }
-//    }
-    val view = LocalView.current
-    val setRepo = remember { mutableStateOf(false) }
-
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Receipt", style = MaterialTheme.typography.titleLarge) }
-            )
-        },
-        bottomBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                //copy button
-                Button(onClick = {
-                    val nonNullReceipt = receipt?:Receipt()
-                    receiptViewmodel.copy(nonNullReceipt, context)
-                }) {
-                    Icon(Icons.Filled.Menu, contentDescription = "Copy")
-                    Spacer(Modifier.width(6.dp))
-                    Text("Copy")
-                }
-                //screenshot button
-                Button(onClick = {
-                    vibratePhone(context, 100L)
-                    saveBitmapToGallery(context, captureScreen(view))
-                }) {
-                    Icon(Icons.Filled.Share, contentDescription = "Screenshot")
-                    Spacer(Modifier.width(6.dp))
-                    Text("Screenshot")
-                }
-                //save button
-                Button(
-                    onClick = {
-                        //trigger set repo alert dialog
-                        setRepo.value = true
-                        //productsViewModel.(soldProducts)
-                        receiptViewmodel.saveSale(
-                            receipt?.soldProducts!!,
-                            stockViewModel,
-                            activeRepo)
-                        receipt?.let { sendRecord(it) }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                ) {
-                    Icon(Icons.Filled.CheckCircle, contentDescription = "Save")
-                    Spacer(Modifier.width(6.dp))
-                    Text("Save")
-                }
-            }
-        }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            // Header Info
-
-            Text("${receipt?.customerName}", style = MaterialTheme.typography.titleMedium)
-            Text("Receipt No. ${receipt?.id}", style = MaterialTheme.typography.bodyMedium)
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()) {
-                Text("Date: ${receipt?.date}", style = MaterialTheme.typography.bodyMedium)
-                Text("Time: ${getTime()}", style = MaterialTheme.typography.bodyMedium)
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            // Products List
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-            ) {
-                receipt?.let {
-                    items(it.soldProducts?: emptyList()) { soldProduct ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            //qty of item sold (display)
-                            Text(
-                                soldProduct.receiptQuantity?:"0",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            //name of item sold (display)
-                            Text(
-                                soldProduct.product?.name?:"unknown",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(nairaFormat(soldProduct.intTotal?:0), fontWeight = FontWeight.Bold)
-                        }
-                        HorizontalDivider()
-                    }
-                }
-            }
-
-            // Total Section
-            Spacer(Modifier.height(8.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFF5F5F5))
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text("Grand Total", style = MaterialTheme.typography.titleMedium)
-                Text(
-                    nairaFormat(receiptViewmodel.getGrandTotal()),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-            }
-        }
-        if (setRepo.value){
-            RepoAlertDialog(
-                alert = setRepo,
-                soldProducts = receipt?.soldProducts?: emptyList(),
-                onSave = {activeRepo = it},
-                context = context,
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun RepoAlertDialog(
-    context: Context,
-    alert: MutableState<Boolean>,
-    soldProducts: List<SoldProduct>,
-    onSave: (store: String)-> Unit,
-){
-    BasicAlertDialog(
-        onDismissRequest = {alert.value = false},
-        properties = DialogProperties(dismissOnClickOutside = true, dismissOnBackPress = true)
-    ) {
-        Surface(
-            shape = MaterialTheme.shapes.large,
-            tonalElevation = AlertDialogDefaults.TonalElevation,
-        ){
-            Column (
-                modifier = Modifier.padding(24.dp)
-            ){
-                Text(
-                    text = "Save sale?",
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Text(
-                    text = "Choose stock to sell from",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row (
-                    horizontalArrangement = Arrangement.End,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    TextButton(onClick = {
-                        onSave("headOffice")
-                        soldProducts.forEach { soldProduct ->
-
-                            StockRepository().sellProduct(
-                                productId = soldProduct.product?.id ?: "no id found for sold product",
-                                soldQty = soldProduct.doubleQuantity ?: 0.0,
-                                store = "headOffice"
-                            )
-                        }
-                        alert.value = false
-                        Toast.makeText(context, "Head Office Sale recorded!", Toast.LENGTH_SHORT).show()
-                    }) {
-                        Text(text = "HeadOffice")
-                    }
-
-                    TextButton(onClick = {
-                        onSave("warehouse")
-                        soldProducts.forEach { soldProduct ->
-
-                            StockRepository().sellProduct(
-                                soldProduct.product?.id?:"no id found for sold product",
-                                soldProduct.doubleQuantity?:0.0,
-                                store = "warehouse"
-                            )
-                        }
-                        alert.value = false
-                        Toast.makeText(context, "Warehouse Sale recorded!", Toast.LENGTH_SHORT).show()
-                    }){
-                        Text(text = "Warehouse")
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun ReceiptPagePreview() {
-    val stockvm : StockViewModel = viewModel()
-    val rvm : ReceiptViewmodel = viewModel()
-    ReceiptPage(
-        stockvm,
-        rvm
-    )
 }
 ```

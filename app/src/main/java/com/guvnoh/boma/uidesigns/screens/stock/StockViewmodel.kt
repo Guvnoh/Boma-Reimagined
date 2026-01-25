@@ -30,8 +30,8 @@ class StockViewModel(
     private val stockRepository: StockRepository = StockRepository()
 
     init {
-        observeFullsStock("warehouse")
-        observeFullsStock("headOffice")
+        observeFullsStock(Store.WAREHOUSE)
+        observeFullsStock(Store.HEAD_OFFICE)
         observeEmptiesStock()
         AppMetaViewModel().checkDailyReset {
             AppMetaViewModel().resetSoldToday()
@@ -48,11 +48,11 @@ class StockViewModel(
 //        return map
 //    }
 
-    private fun observeFullsStock(store: String) {
+    private fun observeFullsStock(store: Store) {
         stockRepository.observeFullsStock(store){ stock ->
             when(store){
-                "warehouse" -> {_wareHouseFulls.value = stock.values.toMap()}
-                "headOffice" -> {_headOfficeFulls.value = stock.values.toMap()}
+                Store.WAREHOUSE -> {_wareHouseFulls.value = stock.values.toMap()}
+                Store.HEAD_OFFICE -> {_headOfficeFulls.value = stock.values.toMap()}
             }
         }
 
@@ -72,4 +72,33 @@ class StockViewModel(
         )
     }
 
+    fun updateStock(productId: String, store: Store, newStock: Double? = null){
+        StockRepository().updateStock(productId,store,newStock)
+        observeFullsStock(store)
+    }
+
+    fun errorCheck(newPrice: String): String?{
+        val double = newPrice.toDoubleOrNull()
+        val result = when{
+            newPrice.isEmpty() -> "Empty Field"
+            double == null -> "Invalid Price"
+            double >= 0 -> null
+            else -> "Invalid Price"
+        }
+
+        return  result
+    }
+    fun stockOVC(input: String, store: Store, productId: String): String{
+        val filtered = input.filter { it.isDigit() || it == '.' }
+        if (filtered.count { it == '.' } <= 1) {
+            if (filtered.isNotEmpty()) {
+                updateStock(
+                    productId = productId,
+                    store = store,
+                    newStock = filtered.toDoubleOrNull()
+                )
+            }
+        }
+        return filtered
+    }
 }

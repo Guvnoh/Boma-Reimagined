@@ -2,7 +2,6 @@ package com.guvnoh.boma.uidesigns.screens.records
 
 import androidx.lifecycle.ViewModel
 import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
-import com.guvnoh.boma.uidesigns.screens.receipt.RecordsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

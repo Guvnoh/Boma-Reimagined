@@ -1,4 +1,4 @@
-package com.guvnoh.boma.uidesigns.screens.receipt
+package com.guvnoh.boma.uidesigns.screens.records
 
 import android.os.Build
 import android.util.Log
@@ -7,6 +7,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
 
 class RecordsRepository() {
 

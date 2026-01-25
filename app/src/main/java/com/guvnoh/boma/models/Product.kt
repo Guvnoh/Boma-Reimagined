@@ -2,28 +2,15 @@ package com.guvnoh.boma.models
 
 import com.guvnoh.boma.R
 
-//data class Product (
-//    var name: String? = null,
-//    var stringPrice: String? = null,
-//    var imageName: String? = null,
-//    var image: Int = R.drawable.bottle,
-//    var id: String? = null,
-//    var doublePrice: Double? = null,
-//    var stock: FullsStock? = null,
-//    var type: ProductType? = null,
-//    var empties: Empties? = null
-//
-//)
-
 data class Products (
     var name: String? = null,
     var stringPrice: String? = null,
     var imageName: String? = null,
     var image: Int = R.drawable.bottle,
-    var id: String? = null,
+    var id: String? = null,//the id is the same as the database key
     var doublePrice: Double? = null,
-    var store: Store? = null,
-    var type: ProductType? = null,
+    var store: Store? = null, //warehouse or head office
+    var type: ProductType? = null, //bottle, can or pet
     var empties: Empties? = null
 
 )
@@ -42,14 +29,6 @@ data class SoldProduct(
     var intTotal: Int? = null,
 )
 
-//data class Receipt(
-//
-//
-//    var soldProducts: List<SoldProduct>? = null,
-//    var customerName: String? = null,
-//    var date: String? = null,
-//    var grandTotal: String? = null
-//)
 
 val brandData = mutableListOf(
     //coca cola

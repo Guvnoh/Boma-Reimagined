@@ -1,122 +1,3 @@
-//package com.guvnoh.boma.repositories
-//
-//import com.google.firebase.database.DataSnapshot
-//import com.google.firebase.database.DatabaseError
-//import com.google.firebase.database.MutableData
-//import com.google.firebase.database.Transaction
-//import com.google.firebase.database.ValueEventListener
-//import com.guvnoh.boma.database.FirebaseRefs
-//import com.guvnoh.boma.domain.DateProvider
-//import com.guvnoh.boma.models.FullsStock
-//import com.guvnoh.boma.models.Product
-//
-//
-//class StockRepository {
-//
-//    private val stockRef = FirebaseRefs.fullStock
-//
-//    private var listener: ValueEventListener? = null
-//
-//
-//
-//    /**
-//     * Observe products in realtime
-//     */
-//    fun observeProducts(
-//        onChange: (Map<String, FullsStock>) -> Unit
-//    ) {
-//        listener?.let { stockRef.removeEventListener(it) }
-//        val stockMap: MutableMap<String, FullsStock> = mutableMapOf()
-//
-//            listener = object : ValueEventListener {
-//            override fun onDataChange(snapshot: DataSnapshot) {
-//                snapshot.children.mapNotNull { child ->
-//                    val product = child.getValue(Product::class.java)
-//                    if (product?.stock != null){
-//                        val stock= product.stock
-//                        product.name?.let {
-//                            if (stock != null) {
-//                                stockMap[it] = stock
-//                            }
-//                        }
-//                    }
-//                }
-//                onChange(stockMap)
-//            }
-//
-//            override fun onCancelled(error: DatabaseError) {
-//                // log if needed
-//            }
-//        }
-//        stockRef.addValueEventListener(listener!!)
-//    }
-//
-//    fun updateStockTransaction(
-//        productId: String,
-//        soldQty: Double
-//    ) {
-//        val stockRef = FirebaseRefs.fullStock
-//            .child(productId)
-//            .child("stock")
-//
-//        stockRef.runTransaction(object : Transaction.Handler {
-//
-//            override fun doTransaction(data: MutableData): Transaction.Result {
-//                val stock = data.getValue(FullsStock::class.java)
-//                    ?: return Transaction.success(data)
-//
-//                val currentClosing = stock.closingStock ?: stock.openingStock ?: 0.0
-//
-//                val closing = (currentClosing - soldQty).coerceAtLeast(0.0)
-//
-//
-//
-//                stock.closingStock = closing
-//                stock.soldToday = (stock.soldToday ?: 0.0) + soldQty
-//                stock.soldLast = soldQty
-//                stock.lastTimeSold = DateProvider.todayString()
-//
-//                data.value = stock
-//                return Transaction.success(data)
-//            }
-//
-//            override fun onComplete(
-//                error: DatabaseError?,
-//                committed: Boolean,
-//                snapshot: DataSnapshot?
-//            ) = Unit
-//        })
-//    }
-//
-//    fun resetSoldToday() {
-//        FirebaseRefs.fullStock.get().addOnSuccessListener { snapshot ->
-//            snapshot.children.forEach { productSnap ->
-//                val stockRef = productSnap.child("stock").ref
-//
-//                stockRef.runTransaction(object : Transaction.Handler {
-//                    override fun doTransaction(data: MutableData): Transaction.Result {
-//                        val stock = data.getValue(FullsStock::class.java)
-//                            ?: return Transaction.success(data)
-//
-//                        stock.openingStock = stock.closingStock ?: 0.0
-//                        stock.soldToday = 0.0
-//
-//                        data.value = stock
-//                        return Transaction.success(data)
-//                    }
-//
-//                    override fun onComplete(
-//                        error: DatabaseError?,
-//                        committed: Boolean,
-//                        snapshot: DataSnapshot?
-//                    ) = Unit
-//                })
-//            }
-//        }
-//    }
-//}
-
-
 package com.guvnoh.boma.repositories
 
 import com.guvnoh.boma.database.FirebaseRefs
@@ -124,23 +5,20 @@ import com.guvnoh.boma.models.FullsStock
 import com.google.firebase.database.*
 import com.guvnoh.boma.models.EmptiesStock
 import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.Store
+import com.guvnoh.boma.uidesigns.screens.stock.Store
 
 class StockRepository() {
 
-    private val products = FirebaseRefs.Products
+    private val productsRef = FirebaseRefs.Products
     private val emptiesRef = FirebaseRefs.empties
 
     private var productsListener: ValueEventListener? = null
     private var emptiesListener: ValueEventListener? = null
 
-    // ------------------------------------------------
-    // FULLS STOCK (OBSERVE)
-    // ------------------------------------------------
 
-
+    // OBSERVE FULLS STOCK
     fun observeFullsStock(
-        store: String,
+        store: Store,
         onChange: (MutableMap<String, Pair<Products, FullsStock>>) -> Unit,
     ){
         var listener = productsListener
@@ -153,14 +31,14 @@ class StockRepository() {
                 }
                 val stockMap: MutableMap<String, Pair<Products,FullsStock>> = mutableMapOf()
                 when (store){
-                    "warehouse" -> {
+                    Store.WAREHOUSE -> {
                         products.forEach { product ->
 
                             val stock = product.store?.warehouse ?: FullsStock()
                             stockMap[product.id?:""] = Pair(product, stock)
                         }
                     }
-                    "headOffice" -> {
+                    Store.HEAD_OFFICE -> {
                         products.forEach { product ->
 
                             val stock = product.store?.headOffice ?: FullsStock()
@@ -175,13 +53,26 @@ class StockRepository() {
             override fun onCancelled(error: DatabaseError) = Unit
         }
 
-        products.addValueEventListener(listener)
+        productsRef.addValueEventListener(listener)
     }
 
-    // ------------------------------------------------
-    // EMPTIES (OBSERVE)
-    // ------------------------------------------------
+    fun updateStock(productId: String, store: Store, newStock: Double? = null){
+        val dbStore = when(store){
+            Store.WAREHOUSE -> "warehouse"
+            else -> "headOffice"
+        }
+        val product = FirebaseRefs.testProducts.child(productId)
+        val stock = product
+            .child("store")
+            .child(dbStore)
+            .child("closingStock")
 
+        stock.setValue(newStock)
+    }
+
+
+
+    // OBSERVE EMPTIES
     fun observeEmptiesStock(
         onChange: (Map<String, EmptiesStock>) -> Unit
     ) {
@@ -208,10 +99,8 @@ class StockRepository() {
         emptiesRef.addValueEventListener(emptiesListener!!)
     }
 
-    // ------------------------------------------------
-    // SELL PRODUCT (ATOMIC & CORRECT)
-    // ------------------------------------------------
 
+    // SELL PRODUCT
     fun sellProduct(
         productId: String,
         soldQty: Double,
@@ -256,10 +145,7 @@ class StockRepository() {
         })
     }
 
-    // ------------------------------------------------
     // UPDATE EMPTIES
-    // ------------------------------------------------
-
     fun updateEmpties(
         productId: String,
         delta: Double
@@ -286,15 +172,7 @@ class StockRepository() {
         })
     }
 
-    // ------------------------------------------------
-    // DAILY RESET (CALLED BY AppMetaViewModel)
-    // ------------------------------------------------
-
-
-    // ------------------------------------------------
     // CLEANUP
-    // ------------------------------------------------
-
     fun clear(repo: DatabaseReference) {
         productsListener?.let { FirebaseRefs.Products.removeEventListener(it) }
         emptiesListener?.let { emptiesRef.removeEventListener(it) }
