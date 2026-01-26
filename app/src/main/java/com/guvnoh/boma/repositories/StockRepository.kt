@@ -61,7 +61,7 @@ class StockRepository() {
             Store.WAREHOUSE -> "warehouse"
             else -> "headOffice"
         }
-        val product = FirebaseRefs.testProducts.child(productId)
+        val product = FirebaseRefs.Products.child(productId)
         val stock = product
             .child("store")
             .child(dbStore)

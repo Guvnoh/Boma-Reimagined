@@ -181,7 +181,7 @@ fun DeleteProductCard(
 
     val context = LocalContext.current
     val resId =
-        ProductsRepository().getImage(context,product.imageName?:"bottle.jpg")
+        ProductsRepository().getImage(context,product.imageName?:"bottle.jpg", product.type!!)
 
     Card(
         modifier = Modifier

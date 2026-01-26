@@ -47,7 +47,7 @@ fun PriceChangeCard(
 
     val context = LocalContext.current
     val imageRes = ProductsRepository()
-        .getImage(context, product.imageName ?: "bottle.jpg")
+        .getImage(context, product.imageName ?: "bottle.jpg", product.type!!)
         .takeIf { it != 0 } ?: R.drawable.bottle
 
     val currentPrice by remember { mutableDoubleStateOf(

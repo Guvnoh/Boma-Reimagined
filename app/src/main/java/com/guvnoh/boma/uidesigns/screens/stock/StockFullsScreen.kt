@@ -95,7 +95,7 @@ fun StockFullsScreen(
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = Color.Black//MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 HorizontalDivider(
                     modifier = Modifier
@@ -160,6 +160,7 @@ fun StockFullsScreen(
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
 
+                //fulls and empties bottom bar options setup
                 bottomBarItems.forEach { item ->
                     val selected = currentRoute == item.route
 
@@ -178,7 +179,7 @@ fun StockFullsScreen(
             }
         }
     ) { innerPadding ->
-        // --- Screen Content ---
+        //Screen Content
         Box(
             modifier = Modifier
                 .padding(innerPadding)
@@ -195,9 +196,10 @@ fun StockFullsScreen(
                     modifier = Modifier
                         .padding(horizontal = 12.dp)
                 ) {
-                    items(stockChoice.keys.toMutableList()) {
+                    //sorted by name (descending order) alphabetically a-z
+                    items(stockChoice.keys.sortedBy { it.name }) {
                         brand ->
-                        val name = brand.name?:"error"
+                        //val name = brand.name?:"error"
                         val brandStock = stockChoice[brand] ?: FullsStock()
                         StockCard(
                             product = brand,
