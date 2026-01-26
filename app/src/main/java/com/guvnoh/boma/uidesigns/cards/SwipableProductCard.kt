@@ -32,11 +32,10 @@ import androidx.wear.compose.material.ExperimentalWearMaterialApi
 import androidx.wear.compose.material.FractionalThreshold
 import androidx.wear.compose.material.rememberSwipeableState
 import androidx.wear.compose.material.swipeable
-import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.vibratePhone
 import com.guvnoh.boma.repositories.ProductsRepository
-import com.guvnoh.boma.viewmodels.ProductsViewModel
+import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
 import kotlin.math.roundToInt
 
 @RequiresApi(Build.VERSION_CODES.O)

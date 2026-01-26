@@ -15,7 +15,7 @@ import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.screens.addProduct.AddProduct
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
 import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangePage
-import com.guvnoh.boma.uidesigns.screens.ProductsPage
+import com.guvnoh.boma.uidesigns.screens.products.ProductsPage
 import com.guvnoh.boma.uidesigns.screens.addProduct.AddProductViewModel
 import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptPage
 import com.guvnoh.boma.uidesigns.screens.records.RecordDetails
@@ -24,7 +24,7 @@ import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangeViewmodel
 import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptViewmodel
 import com.guvnoh.boma.uidesigns.screens.records.RecordViewModel
 import com.guvnoh.boma.viewmodels.AppMetaViewModel
-import com.guvnoh.boma.viewmodels.ProductsViewModel
+import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
 import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
 
 

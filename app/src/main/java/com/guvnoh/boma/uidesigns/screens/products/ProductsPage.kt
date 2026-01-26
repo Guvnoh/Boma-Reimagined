@@ -1,5 +1,5 @@
 
-package com.guvnoh.boma.uidesigns.screens
+package com.guvnoh.boma.uidesigns.screens.products
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -32,7 +32,6 @@ import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.cards.ProductCard
 import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptViewmodel
-import com.guvnoh.boma.viewmodels.ProductsViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +50,7 @@ fun ProductsPage(
     val productList by vm.products.collectAsState()
     val grandTotal = soldProducts.sumOf { it.intTotal?:0 }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    //val selectedStore by vm.
 
     //vm.confirmSoldToday(productList)
     //sendFullsDataToDB()
@@ -64,8 +64,8 @@ fun ProductsPage(
             TopAppBar(
                 scrollBehavior = scrollBehavior,
                 title = {
-                    Text(
-                        "New Order",
+                    Text(""
+                        ,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         ),

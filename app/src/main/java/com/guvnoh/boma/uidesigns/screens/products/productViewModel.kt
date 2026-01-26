@@ -1,4 +1,4 @@
-package com.guvnoh.boma.viewmodels
+package com.guvnoh.boma.uidesigns.screens.products
 
 import android.os.Build
 import androidx.annotation.RequiresApi

@@ -28,7 +28,7 @@ import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.AutoScrollingText
 import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.repositories.ProductsRepository
-import com.guvnoh.boma.viewmodels.ProductsViewModel
+import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
 
 @Composable
 fun ProductCard(
