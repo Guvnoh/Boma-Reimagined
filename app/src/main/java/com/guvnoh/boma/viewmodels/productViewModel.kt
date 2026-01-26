@@ -102,9 +102,7 @@ class ProductsViewModel(
     }
 
 
-    fun addProduct(product: Products) {
-        repository.addProduct(product)
-    }
+
 
     fun deleteProduct(productId: String) {
         repository.deleteProduct(productId)

@@ -38,16 +38,6 @@ class StockViewModel(
         }
     }
 
-//    private fun convertListToMap(list: List<Products>): Map<Products, FullsStock>{
-//        val map: MutableMap<Products, FullsStock> = mutableMapOf()
-//
-//        list.forEach {
-//            val stock = it.stock?:FullsStock()
-//            map[it] = stock
-//        }
-//        return map
-//    }
-
     private fun observeFullsStock(store: Store) {
         stockRepository.observeFullsStock(store){ stock ->
             when(store){
@@ -81,9 +71,9 @@ class StockViewModel(
         val double = newPrice.toDoubleOrNull()
         val result = when{
             newPrice.isEmpty() -> "Empty Field"
-            double == null -> "Invalid Price"
+            double == null -> "Invalid Entry"
             double >= 0 -> null
-            else -> "Invalid Price"
+            else -> "Invalid Entry"
         }
 
         return  result

@@ -7,17 +7,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.uidesigns.screens.AddProduct
+import com.guvnoh.boma.uidesigns.screens.addProduct.AddProduct
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
 import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangePage
 import com.guvnoh.boma.uidesigns.screens.ProductsPage
+import com.guvnoh.boma.uidesigns.screens.addProduct.AddProductViewModel
 import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptPage
 import com.guvnoh.boma.uidesigns.screens.records.RecordDetails
 import com.guvnoh.boma.uidesigns.screens.records.RecordsScreen
@@ -27,7 +26,6 @@ import com.guvnoh.boma.uidesigns.screens.records.RecordViewModel
 import com.guvnoh.boma.viewmodels.AppMetaViewModel
 import com.guvnoh.boma.viewmodels.ProductsViewModel
 import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
-import kotlinx.coroutines.flow.forEach
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -42,6 +40,7 @@ fun Navigation(
     val productsViewModel: ProductsViewModel = viewModel()
     val bomaViewModel: AppMetaViewModel = viewModel()
     val stockViewModel: StockViewModel = viewModel()
+    val addProductViewModel: AddProductViewModel = viewModel()
     val receiptViewmodel: ReceiptViewmodel = viewModel()
     val priceChangeViewmodel: PriceChangeViewmodel = viewModel()
 
@@ -70,7 +69,7 @@ fun Navigation(
         composable(Screen.Products.route){ ProductsPage(navController, paddingValues, productsViewModel, receiptViewmodel) }
         composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, priceChangeViewmodel) }
         composable(Screen.Receipt.route){ ReceiptPage(stockViewModel, receiptViewmodel) }
-        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController, productsViewModel) }
+        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController, addProductViewModel) }
         composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, productsViewModel) }
         composable(Screen.Stock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
         composable(Screen.WarehouseStock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
