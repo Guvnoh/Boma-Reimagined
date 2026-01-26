@@ -18,15 +18,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.R
-import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.EmptyCompany
-import com.guvnoh.boma.models.EmptyType
 import com.guvnoh.boma.models.ProductType
-import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.viewmodels.ProductsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

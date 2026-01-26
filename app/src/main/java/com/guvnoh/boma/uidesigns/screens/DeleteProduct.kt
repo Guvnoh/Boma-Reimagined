@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.wear.compose.material.Icon
 import com.guvnoh.boma.uidesigns.cards.SwipeableProductCard
-import com.guvnoh.boma.viewmodels.ProductsViewModel
+import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
