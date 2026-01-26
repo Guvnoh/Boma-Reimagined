@@ -2,6 +2,7 @@ package com.guvnoh.boma.uidesigns.screens.products
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -13,6 +14,7 @@ import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
 import com.guvnoh.boma.models.SoldProduct
 import com.guvnoh.boma.repositories.ProductsRepository
+import com.guvnoh.boma.uidesigns.screens.stock.Store
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -24,6 +26,9 @@ class ProductsViewModel(
 
     private val _products = MutableStateFlow<List<Products>>(emptyList())
     val products: StateFlow<List<Products>> = _products
+
+    private val _selectedStore = mutableStateOf(Store.WAREHOUSE)
+    val selectedStore = _selectedStore
 
     //customer
     private val _customerName = mutableStateOf("")
@@ -40,10 +45,15 @@ class ProductsViewModel(
 
     //get products from database
 
-    private fun observeProducts(repo: DatabaseReference) {
+    fun observeProducts(repo: DatabaseReference) {
         repository.observeProducts(repo) { list ->
             _products.value = list
         }
+    }
+
+    //set selected store
+    fun setSelectedStore(store: Store){
+        _selectedStore.value = store
     }
 
     // customer name
