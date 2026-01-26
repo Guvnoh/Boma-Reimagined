@@ -23,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.guvnoh.boma.R
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.EmptyCompany
 import com.guvnoh.boma.models.ProductSplashScreen
@@ -356,7 +357,9 @@ fun ProductsPage(
                             }
                         }
                         items(cansDisplay.sortedBy { it.name }) { product ->
-
+                            val bottleImage = R.drawable.bottle
+                            val canImage = R.drawable.can_image
+                            if (product.image == bottleImage)product.image = canImage
                             ProductCard(
                                 product = product,
                                 viewModel = vm,

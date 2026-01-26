@@ -198,7 +198,7 @@ fun StockCard(
                                 )
                             }
                         },
-                        label = { Text("Enter New Price") },
+                        label = { Text("Enter Stock Qty") },
                         leadingIcon = {
                             Text(
                                 "₦",

@@ -1,4 +1,4 @@
-package com.guvnoh.boma.uidesigns.screens
+package com.guvnoh.boma.uidesigns.screens.addProduct
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
@@ -20,8 +20,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.rememberNavController
+import com.guvnoh.boma.R
 import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.Empties
 import com.guvnoh.boma.models.EmptyCompany
 import com.guvnoh.boma.models.EmptyType
 import com.guvnoh.boma.models.ProductType
@@ -30,27 +30,27 @@ import com.guvnoh.boma.viewmodels.ProductsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddProduct(padding: PaddingValues,
-               navController: NavController,
-               productsViewModel: ProductsViewModel) {
+fun AddProduct(
+    padding: PaddingValues,
+    navController: NavController,
+    viewModel: AddProductViewModel
+) {
 
     var productName by remember { mutableStateOf("") }
     var productPrice by remember { mutableStateOf("") }
-    val noOfBottles by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
-    var expanded by remember { mutableStateOf(false) }
-    var isBottleProduct by remember { mutableStateOf(false) }
+    var emptiesType by remember { mutableStateOf<EmptyType?>(null) }
+    var emptiesCompany by remember { mutableStateOf<EmptyCompany?>(EmptyCompany.HERO) }
+    var productType by remember { mutableStateOf(ProductType.BOTTLE) }
+    var categoryExpanded by remember { mutableStateOf(false) }
+    var emptiesExpanded by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
 
     var nameError by remember { mutableStateOf<String?>(null) }
     var priceError by remember { mutableStateOf<String?>(null) }
-    var categoryError by remember { mutableStateOf<String?>(null) }
 
-    val sortCategories = listOf(
-        "COCACOLA", "HERO", "NBL", "GUINNESS", "PETS", "CANS", "OTHER"
-    )
+
 
     val newProduct = Products()
 
@@ -98,7 +98,7 @@ fun AddProduct(padding: PaddingValues,
                         onValueChange = { name ->
                             productName = name
                             newProduct.name = name
-                            nameError = if (name.isBlank()) "Name is required" else null
+                            nameError = viewModel.validateEntries("Name",productName)
                         },
                         label = { Text("Product Name") },
                         modifier = Modifier.fillMaxWidth(),
@@ -116,10 +116,11 @@ fun AddProduct(padding: PaddingValues,
                     OutlinedTextField(
                         value = productPrice,
                         onValueChange = { input ->
+
                             productPrice = input.filter { it.isDigit() || it == '.' }
                             newProduct.stringPrice = productPrice
                             newProduct.doublePrice = productPrice.toDoubleOrNull() ?: 0.0
-                            priceError = if (productPrice.isBlank()) "Price is required" else null
+                            priceError = viewModel.validateEntries("Price",productPrice)
                         },
                         label = { Text("Product Price (₦)") },
                         modifier = Modifier.fillMaxWidth(),
@@ -136,22 +137,20 @@ fun AddProduct(padding: PaddingValues,
 
                     // Category Dropdown
                     ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded }
+                        expanded = categoryExpanded,
+                        onExpandedChange = { categoryExpanded = !categoryExpanded }
                     ) {
+                        //add category e.g can, pet or bottle
                         OutlinedTextField(
-                            value = category,
-                            onValueChange = {},
+                            value = productType.name,
+                            onValueChange = { categoryString ->
+                                productType = ProductType.entries.first{it.name.equals(categoryString, ignoreCase = true)}
+                                newProduct.type = productType
+                            },
                             readOnly = true,
                             label = { Text("Category") },
                             trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                            },
-                            isError = categoryError != null,
-                            supportingText = {
-                                if (categoryError != null) {
-                                    Text(categoryError!!, color = MaterialTheme.colorScheme.error)
-                                }
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded)
                             },
                             modifier = Modifier
                                 .menuAnchor()
@@ -159,35 +158,21 @@ fun AddProduct(padding: PaddingValues,
                             shape = RoundedCornerShape(16.dp)
                         )
                         ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
+                            expanded = categoryExpanded,
+                            onDismissRequest = { categoryExpanded = false }
                         ) {
-                            sortCategories.forEach { option ->
+                            //setup product type/category e.g can, pet or bottle
+                            ProductType.entries.forEach { option ->
                                 DropdownMenuItem(
-                                    text = { Text(option) },
+                                    text = { Text(option.name) },
                                     onClick = {
-                                        category = option
-                                        expanded = false
-                                        when (option) {
-                                            "COCACOLA" -> {
-                                                newProduct.empties = Empties(EmptyCompany.COCA_COLA)
-                                                isBottleProduct = true
-                                            }
-                                            "HERO" -> {
-                                                newProduct.empties = Empties(EmptyCompany.HERO)
-                                                isBottleProduct = true
-                                            }
-                                            "NBL" -> {
-                                                newProduct.empties = Empties(EmptyCompany.NBL)
-                                                isBottleProduct = true
-                                            }
-                                            "GUINNESS" -> {
-                                                newProduct.empties = Empties(EmptyCompany.GUINNESS)
-                                                isBottleProduct = true
-                                            }
-                                            else -> {isBottleProduct = false}
-                                        }
-                                        categoryError = null
+                                        productType = option
+                                        categoryExpanded = false
+                                        newProduct.type = productType
+                                        //setup default images for new products of different kinds
+                                        val canImage = R.drawable.can_image
+                                        if (productType == ProductType.CAN) newProduct.image = canImage
+
                                     }
                                 )
                             }
@@ -195,24 +180,22 @@ fun AddProduct(padding: PaddingValues,
                     }
 
 
-                    if (isBottleProduct){
+                    if (productType == ProductType.BOTTLE){
+                        // add empties company and type (e.g nb12)
                         ExposedDropdownMenuBox(
-                            expanded = expanded,
-                            onExpandedChange = { expanded = !expanded }
+                            expanded = emptiesExpanded,
+                            onExpandedChange = { emptiesExpanded = !emptiesExpanded }
                         ) {
                             OutlinedTextField(
-                                value = category,
-                                onValueChange = {},
+                                //add empties type
+                                value = emptiesCompany?.name?:"error",
+                                onValueChange = {
+                                    newProduct.empties?.company = emptiesCompany
+                                },
                                 readOnly = true,
                                 label = { Text("Empty Type") },
                                 trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                                },
-                                isError = categoryError != null,
-                                supportingText = {
-                                    if (categoryError != null) {
-                                        Text(categoryError!!, color = MaterialTheme.colorScheme.error)
-                                    }
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = emptiesExpanded)
                                 },
                                 modifier = Modifier
                                     .menuAnchor()
@@ -220,26 +203,35 @@ fun AddProduct(padding: PaddingValues,
                                 shape = RoundedCornerShape(16.dp)
                             )
                             ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
+                                expanded = emptiesExpanded,
+                                onDismissRequest = { emptiesExpanded = false }
                             ) {
-                                noOfBottles.forEach { option ->
+                                EmptyCompany.entries.forEach { selected ->
                                     DropdownMenuItem(
-                                        text = { Text(option.toString()) },
+                                        text = { Text(selected.name) },
                                         onClick = {
-                                            expanded = false
+                                            //set new products empties company (for bottle products)
+                                            emptiesCompany = selected //selected from dropdown
+                                            emptiesExpanded = false
+                                            //setup empties company via dropdown e.g nbl, cocacola
+                                            newProduct.empties?.company = selected
 
-                                            //no of bottles
-                                            newProduct.empties?.emptyType = when(option.toString()){
-                                                "12" -> EmptyType.TWELVE
-                                                "18" -> EmptyType.EIGHTEEN
-                                                "20" -> EmptyType.TWENTY
-                                                "24" -> EmptyType.TWENTY_FOUR
-                                                else -> EmptyType.TWELVE
-
+                                            //setup empty type
+                                            when (selected) {
+                                                EmptyCompany.COCA_COLA -> {
+                                                    newProduct.empties?.company = EmptyCompany.COCA_COLA
+                                                }
+                                                EmptyCompany.HERO -> {
+                                                    newProduct.empties?.company = EmptyCompany.HERO
+                                                }
+                                                EmptyCompany.NBL -> {
+                                                    newProduct.empties?.company = EmptyCompany.NBL
+                                                }
+                                                EmptyCompany.GUINNESS -> {
+                                                    newProduct.empties?.company = EmptyCompany.GUINNESS
+                                                }
                                             }
 
-                                            categoryError = null
                                         }
                                     )
                                 }
@@ -251,24 +243,11 @@ fun AddProduct(padding: PaddingValues,
                     // Done Button
                     Button(
                         onClick = {
-                            if (productName.isNotBlank()
-                                && productPrice.isNotBlank()
-                                && category.isNotBlank()
-                                && isBottleProduct) {
-                                newProduct.type = ProductType.BOTTLE
-                                productsViewModel.addProduct(newProduct)
-                                navController.navigate(Screen.Products.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        inclusive = true
-                                    }
-                                    launchSingleTop = true
-                                }
-                            } else {
-                                if (productName.isBlank()) nameError = "Name is required"
-                                if (productPrice.isBlank()) priceError = "Price is required"
-                                if (category.isBlank()) categoryError = "Category is required"
-                                Toast.makeText(context, "Incomplete product details!", Toast.LENGTH_SHORT).show()
-                            }
+                            viewModel.createNewProduct(
+                                newProduct = newProduct,
+                                type = productType,
+                                navController = navController
+                            )
                         },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -289,6 +268,6 @@ fun AddProduct(padding: PaddingValues,
 @Preview
 @Composable
 fun ShowAddScreen(){
-    val pvm: ProductsViewModel = viewModel()
-    AddProduct(PaddingValues(5.dp), rememberNavController(), pvm)
+    val avm: AddProductViewModel = viewModel()
+    AddProduct(PaddingValues(5.dp), rememberNavController(),avm)
 }

@@ -1,7 +1,7 @@
 package com.guvnoh.boma.models
 
 data class Empties (
-    val company: EmptyCompany? = null,
+    var company: EmptyCompany? = null,
     var emptyType: EmptyType? = null
 )
 
