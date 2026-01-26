@@ -36,11 +36,13 @@ fun AddProduct(
     viewModel: AddProductViewModel
 ) {
 
-    var productName by remember { mutableStateOf("") }
-    var productPrice by remember { mutableStateOf("") }
-    var emptiesType by remember { mutableStateOf<EmptyType?>(null) }
-    var emptiesCompany by remember { mutableStateOf<EmptyCompany?>(EmptyCompany.HERO) }
-    var productType by remember { mutableStateOf(ProductType.BOTTLE) }
+    val newProduct by viewModel.newProduct
+
+    var productName by remember { mutableStateOf(newProduct.name?:"") }
+    var productPrice by remember { mutableStateOf(newProduct.stringPrice?:"") }
+    //var emptiesType by remember { mutableStateOf<EmptyType?>(null) }
+    var emptiesCompany by remember { mutableStateOf<EmptyCompany?>(newProduct.empties?.company?:EmptyCompany.HERO) }
+    var productType by remember { mutableStateOf(newProduct.type?:ProductType.BOTTLE) }
     var categoryExpanded by remember { mutableStateOf(false) }
     var emptiesExpanded by remember { mutableStateOf(false) }
 
@@ -51,8 +53,6 @@ fun AddProduct(
     var priceError by remember { mutableStateOf<String?>(null) }
 
 
-
-    val newProduct = Products()
 
     Scaffold(
         modifier = Modifier.padding(padding),
@@ -97,6 +97,7 @@ fun AddProduct(
                         value = productName,
                         onValueChange = { name ->
                             productName = name
+                            // Product name added
                             newProduct.name = name
                             nameError = viewModel.validateEntries("Name",productName)
                         },
@@ -116,8 +117,8 @@ fun AddProduct(
                     OutlinedTextField(
                         value = productPrice,
                         onValueChange = { input ->
-
                             productPrice = input.filter { it.isDigit() || it == '.' }
+                            //product prices added
                             newProduct.stringPrice = productPrice
                             newProduct.doublePrice = productPrice.toDoubleOrNull() ?: 0.0
                             priceError = viewModel.validateEntries("Price",productPrice)
@@ -144,7 +145,11 @@ fun AddProduct(
                         OutlinedTextField(
                             value = productType.name,
                             onValueChange = { categoryString ->
+                                //the text field collects the text of the selected option
+                                // and checks which product type matches that text
+
                                 productType = ProductType.entries.first{it.name.equals(categoryString, ignoreCase = true)}
+                                //new product category displayed on screen is set here
                                 newProduct.type = productType
                             },
                             readOnly = true,
@@ -168,10 +173,12 @@ fun AddProduct(
                                     onClick = {
                                         productType = option
                                         categoryExpanded = false
+                                        //new category/product type option created via drop down menu
+                                        // when selected, already existing product type is updated
                                         newProduct.type = productType
                                         //setup default images for new products of different kinds
-                                        val canImage = R.drawable.can_image
-                                        if (productType == ProductType.CAN) newProduct.image = canImage
+                                        val canImage = "can_image"
+                                        if (productType == ProductType.CAN) newProduct.imageName = canImage
 
                                     }
                                 )
@@ -243,11 +250,9 @@ fun AddProduct(
                     // Done Button
                     Button(
                         onClick = {
-                            viewModel.createNewProduct(
-                                newProduct = newProduct,
-                                type = productType,
-                                navController = navController
-                            )
+                            //product is added to database
+                            viewModel.createNewProduct(navController = navController)
+                            Toast.makeText(context,"Product added!", Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier
                             .fillMaxWidth()

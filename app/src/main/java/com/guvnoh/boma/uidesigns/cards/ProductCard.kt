@@ -48,7 +48,7 @@ fun ProductCard(
     val enabled: Boolean by remember { mutableStateOf((stock > 0)) }
 
     val context = LocalContext.current
-    val resId = ProductsRepository().getImage(context,product.imageName?:"bottle.jpg")
+    val resId = ProductsRepository().getImage(context,product.imageName?:"bottle.jpg", product.type!!)
 
     Card(
         modifier = Modifier

@@ -15,27 +15,30 @@ import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.repositories.ProductsRepository
 
 class AddProductViewModel: ViewModel() {
-    private val _productName: MutableState<String> = mutableStateOf("")
-    val productName = _productName
-
-    private val _productPrice: MutableState<String> = mutableStateOf("")
-    val productPrice = _productPrice
-
-    private val _category: MutableState<String> = mutableStateOf("")
-    val category = _category
+    private val _newProduct: MutableState<Products> = mutableStateOf(Products())
+    val newProduct = _newProduct
+//    private val _productName: MutableState<String> = mutableStateOf("")
+//    val productName = _productName
+//
+//    private val _productPrice: MutableState<String> = mutableStateOf("")
+//    val productPrice = _productPrice
+//
+//    private val _category: MutableState<ProductType> = mutableStateOf(ProductType.BOTTLE)
+//    val category = _category
 
     private val repository = ProductsRepository()
 
 //    private val _productType: MutableState<String> = mutableStateOf("")
 //    val productType = _productType
 
-    fun setProductParams(type: ProductParameters, value: String){
-        val parameter = when(type){
-            ProductParameters.NAME -> _productName.value = value
-            ProductParameters.PRICE -> _productPrice.value = value
-            ProductParameters.CATEGORY -> _category.value = value
-        }
-    }
+//    fun setProductParams(
+//        type: ProductParameters, value: String){
+//        val parameter = when(type){
+//            ProductParameters.NAME -> _productName.value = value
+//            ProductParameters.PRICE -> _productPrice.value = value
+//            ProductParameters.CATEGORY -> _category.value = value
+//        }
+//    }
     fun addProduct(product: Products) {
         repository.addProduct(product)
     }
@@ -49,19 +52,15 @@ class AddProductViewModel: ViewModel() {
     }
 
     fun createNewProduct(
-        newProduct: Products,
-        type: ProductType,
         navController: NavController,
         ): String?{
-        val nameError = validateEntries("Name",productName.value)
-        val priceError = validateEntries("Price",productPrice.value)
+        val nameError = validateEntries("Name",newProduct.value.name)
+        val priceError = validateEntries("Price",newProduct.value.stringPrice)
         when {
             nameError != null -> return "Name is required"
             priceError != null -> return "Price is required"
             else -> {
-                if (type == ProductType.CAN)
-                    newProduct.image = R.drawable.can_image
-                addProduct(newProduct)
+                addProduct(newProduct.value)
                 navController.navigate(Screen.Products.route) {
                     popUpTo(navController.graph.findStartDestination().id) {
                         inclusive = true

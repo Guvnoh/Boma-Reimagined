@@ -9,6 +9,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import com.guvnoh.boma.R
 import com.guvnoh.boma.models.EmptiesStock
+import com.guvnoh.boma.models.ProductType
 import com.guvnoh.boma.models.Products
 
 class ProductsRepository {
@@ -65,9 +66,12 @@ class ProductsRepository {
 
 
 
-    fun getImage(context: Context, name: String):Int{
+    fun getImage(context: Context, name: String, type: ProductType):Int{
         val resId = (context.resources.getIdentifier(name,"drawable",context.packageName))
-        return if(resId !=0)resId else R.drawable.bottle
+        return if(resId !=0)
+            resId
+        else if (type == ProductType.CAN) R.drawable.can_image
+        else R.drawable.bottle
     }
 
 

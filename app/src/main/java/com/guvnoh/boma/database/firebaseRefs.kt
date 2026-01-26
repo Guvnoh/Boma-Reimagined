@@ -11,11 +11,11 @@ object FirebaseRefs {
     //database root folder
     private val root: DatabaseReference = db.reference.child("Boma")
 
-    val Products = root.child("testProducts")
+    //val Products = root.child("testProducts")
 
-    //val Products = root.child("Products")
+    val Products = root.child("Products")
 
-    val testProducts = root.child("testProducts")
+    //val testProducts = root.child("testProducts")
 
     val bomaEmpties = root.child("Empties")
 
