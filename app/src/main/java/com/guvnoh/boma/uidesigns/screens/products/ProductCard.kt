@@ -1,5 +1,5 @@
 
-package com.guvnoh.boma.uidesigns.cards
+package com.guvnoh.boma.uidesigns.screens.products
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -27,25 +27,31 @@ import androidx.compose.ui.unit.sp
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.AutoScrollingText
 import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.models.SoldProduct
 import com.guvnoh.boma.repositories.ProductsRepository
-import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
+import com.guvnoh.boma.uidesigns.screens.stock.Store
 
 @Composable
 fun ProductCard(
     product: Products,
     viewModel: ProductsViewModel,
+    soldProduct: SoldProduct?
 ) {
-    val soldProducts = viewModel.soldProducts.collectAsState()
-
-    val soldProduct = soldProducts.value.find { it.product?.name == product.name }
 
     val quantity = soldProduct?.stringQuantity?:""
 
     val total = soldProduct?.intTotal?:0
 
-    val stock = product.store?.warehouse?.closingStock?:0.0
+    val vmStore: Store = viewModel.selectedStore.value
 
-    val enabled: Boolean by remember { mutableStateOf((stock > 0)) }
+    val stock = when (vmStore){
+        Store.WAREHOUSE-> product.store?.warehouse?.closingStock?:0.0
+        Store.HEAD_OFFICE -> product.store?.headOffice?.closingStock?:0.0
+    }
+
+    //val stock =
+
+    val enabled: Boolean = stock > 0
 
     val context = LocalContext.current
     val resId = ProductsRepository().getImage(context,product.imageName?:"bottle.jpg", product.type!!)
