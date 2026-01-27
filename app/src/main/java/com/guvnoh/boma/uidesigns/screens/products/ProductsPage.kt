@@ -79,7 +79,8 @@ fun ProductsPage(
             TopAppBar(
                 scrollBehavior = scrollBehavior,
                 title = {
-                    Text(vm.selectedStore.value.name.lowercase().replace("_"," ").replaceFirstChar { it.uppercase() }
+                    val storeName = vm.selectedStore.value.name.lowercase().replace("_"," ").replaceFirstChar { it.uppercase() }
+                    Text("$storeName  ⇅"
                         ,
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
@@ -94,8 +95,9 @@ fun ProductsPage(
                         onDismissRequest = {expanded = false},
                     ) {
                         Store.entries.forEach { store ->
+                            val storeNameText = store.name.lowercase().replace("_"," ").replaceFirstChar { it.uppercase() }
                             DropdownMenuItem(
-                                text = { Text(store.name) },
+                                text = { Text(storeNameText) },
                                 onClick = {
                                     expanded = !expanded
                                     vm.setSelectedStore(store)
