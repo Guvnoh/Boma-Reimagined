@@ -40,25 +40,25 @@ fun PriceChangePage(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Button(
                         onClick = {
-                            priceChangeList.forEach { product ->
-                                if (product.id!=null && product.doublePrice!=null){
-                                    priceChangeViewmodel.updatePrice(product)
-                                }
-                            }
-                            Toast.makeText(context, "Prices updated", Toast.LENGTH_SHORT).show()
-
-                            navController.navigate(Screen.Products.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-
-                            }
+                            priceChangeViewmodel.clearPriceChangeList()
+                        },
+                        enabled = priceChangeList.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(Icons.Filled.Done, contentDescription = "Clear")
+                        Spacer(Modifier.width(8.dp))
+                        Text("Clear")
+                    }
+                    Button(
+                        onClick = {
+                            priceChangeViewmodel.updatePrices(context,priceChangeList,navController)
+                            priceChangeViewmodel.clearPriceChangeList()
                         },
                         enabled = priceChangeList.isNotEmpty(),
                         colors = ButtonDefaults.buttonColors(
