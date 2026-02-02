@@ -1,12 +1,25 @@
 package com.guvnoh.boma.uidesigns.screens.priceChange
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.R
 import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.repositories.ProductsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 
 class PriceChangeViewmodel: ViewModel() {
 
@@ -15,8 +28,8 @@ class PriceChangeViewmodel: ViewModel() {
     val products: StateFlow<List<Products>> = _products
 
     //price change products
-    private val _priceChangeProducts = MutableStateFlow<List<Products>>(emptyList())
-    val priceChangeProducts: StateFlow<List<Products>> = _priceChangeProducts
+    private val _priceChangeProducts = MutableStateFlow<Map<String, String>>(emptyMap())
+    val priceChangeProducts: StateFlow<Map<String, String>> = _priceChangeProducts
 
     init {
         observeProducts(FirebaseRefs.Products)
@@ -29,42 +42,38 @@ class PriceChangeViewmodel: ViewModel() {
         }
     }
 
-
-    private fun addToPriceChangeList(product: Products, newPrice: String ){
-        val current = _priceChangeProducts.value.toMutableList()
-        product.stringPrice = newPrice
-        current.add(product)
-        _priceChangeProducts.value = current
+    fun clearPriceChangeList(){
+        _priceChangeProducts.value = emptyMap()
     }
 
-//    // price change
-//    fun updatePrice(product: Products) {
-//        val repository = ProductsRepository()
-//        repository.updatePrice(product)
-//    }
+
+     fun addToPriceChangeList(product: Products, newPrice: String ){
+        val validPrice = validateEntry(newPrice) //ensure entry is a valid double then convert to string
+        val pricesToUpdate = _priceChangeProducts.value.toMutableMap()
+        pricesToUpdate[product.id!!] = validPrice
+        _priceChangeProducts.value = pricesToUpdate
+    }
+
 
     // Update price
-    fun updatePrice(product: Products) {
+    fun updatePrice(product: Products, newPrice: String) {
         val productsRepo = FirebaseRefs.Products
         // update string and double price of product parameter
         productsRepo.child(product.id ?: "error")
             .child("stringPrice")
-            .setValue(product.stringPrice)
+            .setValue(newPrice)
 
         productsRepo.child(product.id?:"error")
             .child("doublePrice")
-            .setValue(product.doublePrice)
+            .setValue(newPrice.toDouble())
 
     }
 
-    fun changePrices(newPrice: String, product: Products){
+    private fun validateEntry(newPrice: String): String{
         val parsedNewPrice = newPrice.filter { ch -> ch.isDigit() || ch == '.' }
         val parsed = parsedNewPrice.toDoubleOrNull()
-        if (parsed != null && parsed > 0.0) {
-            product.stringPrice = newPrice
-            product.doublePrice = parsed
-            addToPriceChangeList(product, newPrice)
-        }
+        if (parsed != null && parsed > 0.0) return parsed.toString()
+        return ""
     }
 
     fun errorCheck(newPrice: String): String?{
@@ -77,5 +86,64 @@ class PriceChangeViewmodel: ViewModel() {
         }
 
         return  result
+    }
+
+    private fun sendNotification(context: Context, content: String, id: Int){
+        val notification = NotificationCompat.Builder(context, "default_channel")
+            .setSmallIcon(R.drawable.boma_logo)
+            .setContentTitle("Price Update!")
+            .setContentText(content)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT).build()
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
+        NotificationManagerCompat.from(context).notify(id, notification)
+    }
+
+    fun getPendingPrice(productId: String): String{
+        val pendingPrice: String
+        val map = priceChangeProducts.value
+        val pendingProductId = if (productId in map.keys){map.keys.first { productId == it }} else return ""
+        pendingPrice = map[pendingProductId]!!
+        return pendingPrice
+    }
+
+    fun updatePrices(
+        context: Context,
+        map: Map<String, String>,
+        navController: NavController){
+        val notificationId = System.currentTimeMillis().toInt()
+        map.keys.forEach { productId ->
+            val productToUpdate = products.value.first { it.id == productId }
+            val newPrice = map[productId]
+            updatePrice(productToUpdate, newPrice!!)
+
+            sendNotification(
+                context = context,
+                content = "${productToUpdate.name}   ----->  ${nairaFormat(newPrice.toDouble())} ",
+                id = notificationId
+            )
+        }
+        Toast.makeText(context, "Prices updated", Toast.LENGTH_SHORT).show()
+
+        navController.navigate(Screen.Products.route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+
+        }
     }
 }

@@ -35,11 +35,12 @@ import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.brandData
 import com.guvnoh.boma.repositories.ProductsRepository
+import androidx.compose.runtime.collectAsState
 
 @Composable
 fun PriceChangeCard(
     product: Products,
-    priceChangeViewmodel: PriceChangeViewmodel
+    priceChangeViewmodel: PriceChangeViewmodel,
 ) {
     var newPrice by remember { mutableStateOf("") }
     var priceError by remember { mutableStateOf<String?>(null) }
@@ -50,13 +51,15 @@ fun PriceChangeCard(
         .getImage(context, product.imageName ?: "bottle.jpg", product.type!!)
         .takeIf { it != 0 } ?: R.drawable.bottle
 
-    val currentPrice by remember { mutableDoubleStateOf(
-        product.stringPrice?.toDoubleOrNull() ?: 0.0)}
-    val pendingPrice = newPrice.toDoubleOrNull()?:0.0
-    val priceChange  = pendingPrice - currentPrice
-    val priceChangePercent  = if (currentPrice >0.0 && pendingPrice >0.0 ) {
-        ((pendingPrice - currentPrice) / currentPrice) * 100
+    val currentPrice = product.stringPrice?.toDoubleOrNull() ?: 0.0
+    val displayCurrentPrice by remember { mutableDoubleStateOf(currentPrice) }
+    val id = product.id!!
+    val pendingPrice = priceChangeViewmodel.getPendingPrice(id).toDoubleOrNull()?:0.0
+    val priceChange  = pendingPrice - displayCurrentPrice
+    val priceChangePercent  = if (displayCurrentPrice >0.0 && pendingPrice >0.0 ) {
+        ((pendingPrice - displayCurrentPrice) / displayCurrentPrice) * 100
     } else 0.0
+    val priceChangeList = priceChangeViewmodel.priceChangeProducts.collectAsState().value
 
 
     Card(
@@ -142,14 +145,15 @@ fun PriceChangeCard(
                 }
 
                 // New Price Badge
-                if (priceError == null && pendingPrice >0.0) {
+                if (product.id in priceChangeList.keys) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(start = 4.dp)
                     ) {
+                        val badge = nairaFormat( (priceChangeList[product.id]!!).toDouble())
                         Text(
-                            text = nairaFormat(pendingPrice),
+                            text = badge,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                             style = MaterialTheme.typography.labelLarge.copy(
                                 fontWeight = FontWeight.Bold
@@ -178,17 +182,14 @@ fun PriceChangeCard(
                     OutlinedTextField(
                         value = newPrice,
                         onValueChange = { input ->
-                            val filtered = input.filter { it.isDigit() || it == '.' }
-                            if (filtered.count { it == '.' } <= 1) {
-                                newPrice = filtered
-                                if (filtered.isNotEmpty()) {
-                                    priceChangeViewmodel.changePrices(
-                                        newPrice = filtered,
-                                        product = product
-                                    )
-                                }
-                                priceError = priceChangeViewmodel.errorCheck(filtered)
+                            newPrice = input
+                            if (input.isNotEmpty()) {
+                                priceChangeViewmodel.addToPriceChangeList(
+                                    product = product,
+                                    newPrice = input,
+                                )
                             }
+                                priceError = priceChangeViewmodel.errorCheck(input)
                         },
                         label = { Text("Enter New Price") },
                         leadingIcon = {

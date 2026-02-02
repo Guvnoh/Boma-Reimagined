@@ -109,7 +109,7 @@ fun ProductCard(
                 AutoScrollingText(product.name?:"unknown", modifier = Modifier)
 
                 Text(
-                    text = nairaFormat(product.stringPrice?.toInt()?:0),
+                    text = nairaFormat(product.stringPrice?.toDouble()?:0.0),
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp

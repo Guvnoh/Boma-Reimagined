@@ -67,7 +67,6 @@ app/src/main/java/com/guvnoh/boma/ui/theme/Color.kt
 app/src/main/java/com/guvnoh/boma/ui/theme/Theme.kt
 app/src/main/java/com/guvnoh/boma/ui/theme/Type.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/cards/EmptiesStockCard.kt
-app/src/main/java/com/guvnoh/boma/uidesigns/cards/ProductCard.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/cards/SwipableProductCard.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/cards/UpdateStock.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/DrawerMenu.kt
@@ -79,7 +78,9 @@ app/src/main/java/com/guvnoh/boma/uidesigns/screens/DeleteProduct.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeCard.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangePage.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
-app/src/main/java/com/guvnoh/boma/uidesigns/screens/ProductsPage.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/products/ProductCard.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/products/ProductsPage.kt
+app/src/main/java/com/guvnoh/boma/uidesigns/screens/products/productViewModel.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/receipt/Receipt.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/receipt/ReceiptData.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/receipt/ReceiptViewmodel.kt
@@ -94,7 +95,6 @@ app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockFullsScreen.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockViewmodel.kt
 app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/Store.kt
 app/src/main/java/com/guvnoh/boma/viewmodels/AppMetaViewModel.kt
-app/src/main/java/com/guvnoh/boma/viewmodels/productViewModel.kt
 app/src/main/res/drawable/amstel.jpg
 app/src/main/res/drawable/aquafina.jpg
 app/src/main/res/drawable/beta_malt.jpg
@@ -691,364 +691,6 @@ package com.guvnoh.boma.uidesigns.cards
 //
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/addProduct/AddProductPage.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens.addProduct
-
-import android.widget.Toast
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.R
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.EmptyCompany
-import com.guvnoh.boma.models.EmptyType
-import com.guvnoh.boma.models.ProductType
-import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.viewmodels.ProductsViewModel
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AddProduct(
-    padding: PaddingValues,
-    navController: NavController,
-    viewModel: AddProductViewModel
-) {
-
-    var productName by remember { mutableStateOf("") }
-    var productPrice by remember { mutableStateOf("") }
-    var emptiesType by remember { mutableStateOf<EmptyType?>(null) }
-    var emptiesCompany by remember { mutableStateOf<EmptyCompany?>(EmptyCompany.HERO) }
-    var productType by remember { mutableStateOf(ProductType.BOTTLE) }
-    var categoryExpanded by remember { mutableStateOf(false) }
-    var emptiesExpanded by remember { mutableStateOf(false) }
-
-    val context = LocalContext.current
-
-
-    var nameError by remember { mutableStateOf<String?>(null) }
-    var priceError by remember { mutableStateOf<String?>(null) }
-
-
-
-    val newProduct = Products() // empty new product created
-
-    Scaffold(
-        modifier = Modifier.padding(padding),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Add Product",
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
-                    )
-                }
-            )
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            Card(
-                modifier = Modifier
-                    .padding(20.dp)
-                    .fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                shape = RoundedCornerShape(28.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    Text(
-                        text = "Enter product details below",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // Product Name
-                    OutlinedTextField(
-                        value = productName,
-                        onValueChange = { name ->
-                            productName = name
-                            newProduct.name = name // Product name added
-                            nameError = viewModel.validateEntries("Name",productName)
-                        },
-                        label = { Text("Product Name") },
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = nameError != null,
-                        singleLine = true,
-                        supportingText = {
-                            if (nameError != null) {
-                                Text(nameError!!, color = MaterialTheme.colorScheme.error)
-                            }
-                        },
-                        shape = RoundedCornerShape(16.dp)
-                    )
-
-                    // Product Price
-                    OutlinedTextField(
-                        value = productPrice,
-                        onValueChange = { input ->
-                            productPrice = input.filter { it.isDigit() || it == '.' }
-                            //product prices added
-                            newProduct.stringPrice = productPrice
-                            newProduct.doublePrice = productPrice.toDoubleOrNull() ?: 0.0
-                            priceError = viewModel.validateEntries("Price",productPrice)
-                        },
-                        label = { Text("Product Price (₦)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = priceError != null,
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        supportingText = {
-                            if (priceError != null) {
-                                Text(priceError!!, color = MaterialTheme.colorScheme.error)
-                            }
-                        },
-                        shape = RoundedCornerShape(16.dp)
-                    )
-
-                    // Category Dropdown
-                    ExposedDropdownMenuBox(
-                        expanded = categoryExpanded,
-                        onExpandedChange = { categoryExpanded = !categoryExpanded }
-                    ) {
-                        //add category e.g can, pet or bottle
-                        OutlinedTextField(
-                            value = productType.name,
-                            onValueChange = { categoryString ->
-                                productType = ProductType.entries.first{it.name.equals(categoryString, ignoreCase = true)}
-                                //new product category displayed on screen is set here
-                                newProduct.type = productType
-                            },
-                            readOnly = true,
-                            label = { Text("Category") },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded)
-                            },
-                            modifier = Modifier
-                                .menuAnchor()
-                                .fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        ExposedDropdownMenu(
-                            expanded = categoryExpanded,
-                            onDismissRequest = { categoryExpanded = false }
-                        ) {
-                            //setup product type/category e.g can, pet or bottle
-                            ProductType.entries.forEach { option ->
-                                DropdownMenuItem(
-                                    text = { Text(option.name) },
-                                    onClick = {
-                                        productType = option
-                                        categoryExpanded = false
-                                        //new category/product type option created via drop down menu
-                                        // when selected, already existing product type is updated
-                                        newProduct.type = productType
-                                        //setup default images for new products of different kinds
-                                        val canImage = "can_image"
-                                        if (productType == ProductType.CAN) newProduct.imageName = canImage
-
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-
-                    if (productType == ProductType.BOTTLE){
-                        // add empties company and type (e.g nb12)
-                        ExposedDropdownMenuBox(
-                            expanded = emptiesExpanded,
-                            onExpandedChange = { emptiesExpanded = !emptiesExpanded }
-                        ) {
-                            OutlinedTextField(
-                                //add empties type
-                                value = emptiesCompany?.name?:"error",
-                                onValueChange = {
-                                    newProduct.empties?.company = emptiesCompany
-                                },
-                                readOnly = true,
-                                label = { Text("Empty Type") },
-                                trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = emptiesExpanded)
-                                },
-                                modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                            ExposedDropdownMenu(
-                                expanded = emptiesExpanded,
-                                onDismissRequest = { emptiesExpanded = false }
-                            ) {
-                                EmptyCompany.entries.forEach { selected ->
-                                    DropdownMenuItem(
-                                        text = { Text(selected.name) },
-                                        onClick = {
-                                            //set new products empties company (for bottle products)
-                                            emptiesCompany = selected //selected from dropdown
-                                            emptiesExpanded = false
-                                            //setup empties company via dropdown e.g nbl, cocacola
-                                            newProduct.empties?.company = selected
-
-                                            //setup empty type
-                                            when (selected) {
-                                                EmptyCompany.COCA_COLA -> {
-                                                    newProduct.empties?.company = EmptyCompany.COCA_COLA
-                                                }
-                                                EmptyCompany.HERO -> {
-                                                    newProduct.empties?.company = EmptyCompany.HERO
-                                                }
-                                                EmptyCompany.NBL -> {
-                                                    newProduct.empties?.company = EmptyCompany.NBL
-                                                }
-                                                EmptyCompany.GUINNESS -> {
-                                                    newProduct.empties?.company = EmptyCompany.GUINNESS
-                                                }
-                                            }
-
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                    }
-
-                    // Done Button
-                    Button(
-                        onClick = {
-                            //product is added to database
-                            viewModel.createNewProduct(
-                                newProduct = newProduct,
-                                navController = navController
-                            )
-                            Toast.makeText(context,"Product added!", Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                        shape = CircleShape
-                    ) {
-                        Icon(Icons.Filled.Done, contentDescription = "Done")
-                        Spacer(Modifier.width(8.dp))
-                        Text("Save Product", style = MaterialTheme.typography.labelLarge)
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Preview
-@Composable
-fun ShowAddScreen(){
-    val avm: AddProductViewModel = viewModel()
-    AddProduct(PaddingValues(5.dp), rememberNavController(),avm)
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/addProduct/AddProductViewModel.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens.addProduct
-
-import android.content.Context
-import android.widget.Toast
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.guvnoh.boma.R
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.models.ProductType
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.repositories.ProductsRepository
-
-class AddProductViewModel: ViewModel() {
-    private val _productName: MutableState<String> = mutableStateOf("")
-    val productName = _productName
-
-    private val _productPrice: MutableState<String> = mutableStateOf("")
-    val productPrice = _productPrice
-
-    private val _category: MutableState<String> = mutableStateOf("")
-    val category = _category
-
-    private val repository = ProductsRepository()
-
-//    private val _productType: MutableState<String> = mutableStateOf("")
-//    val productType = _productType
-
-    fun setProductParams(type: ProductParameters, value: String){
-        val parameter = when(type){
-            ProductParameters.NAME -> _productName.value = value
-            ProductParameters.PRICE -> _productPrice.value = value
-            ProductParameters.CATEGORY -> _category.value = value
-        }
-    }
-    fun addProduct(product: Products) {
-        repository.addProduct(product)
-    }
-
-    fun validateEntries(
-        entryName: String,
-        entryValue: String?
-    ): String?{
-        entryValue?.let { if (it.isBlank()) return "$entryName is required!"}
-        return null
-    }
-
-    fun createNewProduct(
-        newProduct: Products,
-        navController: NavController,
-        ): String?{
-        val nameError = validateEntries("Name",productName.value)
-        val priceError = validateEntries("Price",productPrice.value)
-        when {
-            nameError != null -> return "Name is required"
-            priceError != null -> return "Price is required"
-            else -> {
-                addProduct(newProduct)
-                navController.navigate(Screen.Products.route) {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        inclusive = true
-                    }
-                    launchSingleTop = true
-                }
-                return  null
-            }
-        }
-    }
-
-}
-```
-
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/addProduct/ProductParameters.kt
 ```kotlin
 package com.guvnoh.boma.uidesigns.screens.addProduct
@@ -1057,6 +699,179 @@ enum class ProductParameters {
     NAME,
     PRICE,
     CATEGORY,
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/products/ProductCard.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.products
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.models.AutoScrollingText
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.repositories.ProductsRepository
+import com.guvnoh.boma.uidesigns.screens.stock.Store
+
+@Composable
+fun ProductCard(
+    product: Products,
+    viewModel: ProductsViewModel,
+    soldProduct: SoldProduct?
+) {
+
+    val quantity = soldProduct?.stringQuantity?:""
+
+    val total = soldProduct?.intTotal?:0
+
+    val vmStore: Store = viewModel.selectedStore.value
+
+    val stock = when (vmStore){
+        Store.WAREHOUSE-> product.store?.warehouse?.closingStock?:0.0
+        Store.HEAD_OFFICE -> product.store?.headOffice?.closingStock?:0.0
+    }
+
+    //val stock =
+
+    val enabled: Boolean = stock > 0
+
+    val context = LocalContext.current
+    val resId = ProductsRepository().getImage(context,product.imageName?:"bottle.jpg", product.type!!)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 12.dp),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = if (enabled){
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        }else{
+            CardDefaults.cardColors(containerColor = Color.LightGray)
+        }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // 🖼 Product Image with gradient ring
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(CircleShape)
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(resId),
+                    contentDescription = product.name,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                )
+            }
+
+            // 📋 Product Details
+            Column(
+                modifier = Modifier
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                AutoScrollingText(product.name?:"unknown", modifier = Modifier)
+
+                Text(
+                    text = nairaFormat(product.stringPrice?.toInt()?:0),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp
+                    )
+                )
+
+                if (!enabled) {
+                    Text( text = "⚠️out of stock!",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 14.sp
+                        )
+                    )
+                }
+
+                //TOTAL
+                Column (Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End){
+                    // 🧮 Show Total if available
+                    AnimatedVisibility(
+                        visible = total > 0,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Text(
+                            text = nairaFormat(total),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF2E7D32) // deep green
+                            )
+                        )
+                    }
+                }
+            }
+
+            // 🔢 Quantity Input
+            if (enabled){
+                OutlinedTextField(
+                    value = quantity,
+                    onValueChange = { newValue ->
+                        val input = newValue.toDoubleOrNull()?:0.0
+
+                        viewModel.updateSoldProduct(
+                            product = product,
+                            stringQuantity = newValue,
+                            doubleQuantity = input
+                        )
+                    },
+                    label = { Text("Qty") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier
+                        .width(90.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        }
+    }
 }
 ```
 
@@ -1677,249 +1492,6 @@ fun DeleteRecordAlertDialog(
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockFullsScreen.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens.stock
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import androidx.wear.compose.material.Icon
-import com.guvnoh.boma.R
-import com.guvnoh.boma.formatters.getDate
-import com.guvnoh.boma.models.FullsStock
-import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.models.StockSplashScreen
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun StockFullsScreen(
-    paddingValues: PaddingValues,
-    stockViewModel: StockViewModel,
-    modifier: Modifier = Modifier,
-    navController: NavHostController,
-
-    ) {
-    val warehouse by stockViewModel.wareHouseStock.collectAsState()
-    val headOffice by stockViewModel.headOfficeStock.collectAsState()
-    var store by remember { mutableStateOf(Store.WAREHOUSE)}
-    var stockChoice = when(store){
-        Store.WAREHOUSE -> warehouse
-        Store.HEAD_OFFICE -> headOffice
-    }
-
-    var showSplash by remember { mutableStateOf(true) }
-
-    Scaffold(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(paddingValues),
-        containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-
-        // --- Top Bar ---
-        topBar = {
-            Column(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.surface)
-                    .wrapContentHeight()
-                    .statusBarsPadding()
-                    .padding(vertical = 12.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = getDate(),
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = Color.Black//MaterialTheme.colorScheme.onSurface
-                )
-                HorizontalDivider(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .fillMaxWidth(0.85f),
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                    thickness = 1.dp
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-
-                ) {
-                    // warehouse stock button
-
-                    Button(
-                        onClick = {
-                            stockChoice = warehouse
-                            store = Store.WAREHOUSE
-                        },
-                        colors = if (stockChoice != warehouse) {
-                            ButtonDefaults.buttonColors(containerColor = Color.LightGray)
-                        }else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ){
-                        Text(
-                            text = Screen.WarehouseStock.title,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                    }
-
-                    //headOffice button
-                    Button(
-                        onClick = {
-                            stockChoice = headOffice
-                            store = Store.HEAD_OFFICE
-                        },
-                        colors = if (stockChoice != headOffice) {
-                            ButtonDefaults.buttonColors(containerColor = Color.LightGray)
-                        }else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ){
-                        Text(
-                            text = Screen.HeadOfficeStock.title,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                    }
-                }
-
-            }
-        },
-
-        // --- Bottom Bar ---
-        bottomBar = {
-            NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 4.dp
-            ) {
-                val bottomBarItems = listOf(BottomBarItem.Fulls, BottomBarItem.Empties)
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
-
-                bottomBarItems.forEach { item ->
-                    val selected = currentRoute == item.route
-
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(item.route) {
-                                launchSingleTop = true
-                            }
-                        },
-                        icon = { item.icon },
-                        label = { Text(item.title) },
-                        alwaysShowLabel = true
-                    )
-                }
-            }
-        }
-    ) { innerPadding ->
-        // --- Screen Content ---
-        Box(
-            modifier = Modifier
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            if (showSplash) {
-                StockSplashScreen(
-                    modifier = Modifier.fillMaxSize(),
-                    onTimeOut = { showSplash = false },
-                    stock = stockChoice.values.toMutableList()
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(horizontal = 12.dp)
-                ) {
-                    items(stockChoice.keys.toMutableList()) {
-                        brand ->
-                        val name = brand.name?:"error"
-                        val brandStock = stockChoice[brand] ?: FullsStock()
-                        StockCard(
-                            product = brand,
-                            stock = brandStock,
-                            viewModel = stockViewModel,
-                            store = store )
-                    }
-                }
-            }
-        }
-    }
-}
-
-open class BottomBarItem(
-    val route: String,
-    val title: String,
-    val icon: Int,
-
-    ){
-    data object Fulls: BottomBarItem(route = "fulls", title = "Fulls", R.drawable.orijin)
-    data object Empties: BottomBarItem(route = "empties", title = "Empties", R.drawable.bottle)
-}
-
-
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview
-@Composable
-private fun ShowStock(){
-    val vm: StockViewModel = viewModel()
-   StockFullsScreen(
-       paddingValues = PaddingValues(),
-       stockViewModel = vm,
-       navController = rememberNavController(),
-       modifier = Modifier,
-   )
-
-}
-```
-
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/Store.kt
 ```kotlin
 package com.guvnoh.boma.uidesigns.screens.stock
@@ -2444,8 +2016,8 @@ include(":app")
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
 
 
@@ -2481,20 +2053,6 @@ include(":app")
 package com.guvnoh.boma.formatters
 
 import java.text.DecimalFormat
-
-//fun nairaFormat(num: Double): String{
-//    var format = DecimalFormat("#,###")
-//    val decimal =  num % 1 != 0.0
-//
-//    return if (num>=0.0 && decimal){
-//        format = DecimalFormat("#,##0.00")
-//        "₦${format.format(num)}.${num.toString().split(".")[1]}"
-//    }else if (num == 0.0) {
-//        "₦0.00"
-//    }else if (num>=0.0){
-//        "₦${format.format(num)}"
-//    }else{"₦0.00"}
-//}
 
 fun nairaFormat(num: Double): String {
     val hasDecimal = num % 1 != 0.0
@@ -2946,14 +2504,105 @@ fun DrawerPreview() {
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/addProduct/AddProductViewModel.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.addProduct
+
+import android.content.Context
+import android.widget.Toast
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.guvnoh.boma.R
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.ProductType
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.repositories.ProductsRepository
+
+class AddProductViewModel: ViewModel() {
+    private val _newProduct: MutableState<Products> = mutableStateOf(Products())
+    val newProduct = _newProduct
+//    private val _productName: MutableState<String> = mutableStateOf("")
+//    val productName = _productName
+//
+//    private val _productPrice: MutableState<String> = mutableStateOf("")
+//    val productPrice = _productPrice
+//
+//    private val _category: MutableState<ProductType> = mutableStateOf(ProductType.BOTTLE)
+//    val category = _category
+
+    private val repository = ProductsRepository()
+
+//    private val _productType: MutableState<String> = mutableStateOf("")
+//    val productType = _productType
+
+//    fun setProductParams(
+//        type: ProductParameters, value: String){
+//        val parameter = when(type){
+//            ProductParameters.NAME -> _productName.value = value
+//            ProductParameters.PRICE -> _productPrice.value = value
+//            ProductParameters.CATEGORY -> _category.value = value
+//        }
+//    }
+    fun addProduct(product: Products) {
+        repository.addProduct(product)
+    }
+
+    fun validateEntries(
+        entryName: String,
+        entryValue: String?
+    ): String?{
+        entryValue?.let { if (it.isBlank()) return "$entryName is required!"}
+        return null
+    }
+
+    fun createNewProduct(
+        navController: NavController,
+        ): String?{
+        val nameError = validateEntries("Name",newProduct.value.name)
+        val priceError = validateEntries("Price",newProduct.value.stringPrice)
+        when {
+            nameError != null -> return "Name is required"
+            priceError != null -> return "Price is required"
+            else -> {
+                addProduct(newProduct.value)
+                navController.navigate(Screen.Products.route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+                return  null
+            }
+        }
+    }
+
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
 ```kotlin
 package com.guvnoh.boma.uidesigns.screens.priceChange
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.R
 import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.repositories.ProductsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -2979,6 +2628,12 @@ class PriceChangeViewmodel: ViewModel() {
         }
     }
 
+    fun addToPriceChangeList(product: Products){
+        val list = _priceChangeProducts.value.toMutableList()
+        list += product
+        _priceChangeProducts.value = list
+    }
+
 
     private fun addToPriceChangeList(product: Products, newPrice: String ){
         val current = _priceChangeProducts.value.toMutableList()
@@ -2987,11 +2642,6 @@ class PriceChangeViewmodel: ViewModel() {
         _priceChangeProducts.value = current
     }
 
-//    // price change
-//    fun updatePrice(product: Products) {
-//        val repository = ProductsRepository()
-//        repository.updatePrice(product)
-//    }
 
     // Update price
     fun updatePrice(product: Products) {
@@ -3027,6 +2677,185 @@ class PriceChangeViewmodel: ViewModel() {
         }
 
         return  result
+    }
+
+    fun sendNotification(context: Context, content: String, id: Int){
+        val notification = NotificationCompat.Builder(context, "default_channel")
+            .setSmallIcon(R.drawable.boma_logo)
+            .setContentTitle("Price Update!")
+            .setContentText(content)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT).build()
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
+        NotificationManagerCompat.from(context).notify(id, notification)
+    }
+
+    fun updatePrices(context: Context, list: List<Products>, navController: NavController){
+        val notificationId = System.currentTimeMillis().toInt()
+        list.forEach { product ->
+            if (product.id!=null && product.doublePrice!=null){
+                updatePrice(product)
+            }
+            sendNotification(
+                context,
+                "${product.name}   ----->  ${nairaFormat(product.doublePrice!!)} ",
+                notificationId
+                )
+        }
+        Toast.makeText(context, "Prices updated", Toast.LENGTH_SHORT).show()
+
+        navController.navigate(Screen.Products.route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+
+        }
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/products/productViewModel.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.products
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.formatters.getDate
+import com.guvnoh.boma.formatters.halfAndQuarter
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
+import com.guvnoh.boma.models.SoldProduct
+import com.guvnoh.boma.repositories.ProductsRepository
+import com.guvnoh.boma.uidesigns.screens.stock.Store
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+
+
+class ProductsViewModel(
+    private val repository: ProductsRepository = ProductsRepository()
+) : ViewModel() {
+
+    private val _products = MutableStateFlow<List<Products>>(emptyList())
+    val products: StateFlow<List<Products>> = _products
+
+    private val _selectedStore = mutableStateOf(Store.WAREHOUSE)
+    val selectedStore = _selectedStore
+
+    //customer
+    private val _customerName = mutableStateOf("")
+    var customerName: State<String> = _customerName
+
+    //sold products
+    private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
+    val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
+
+
+    init {
+        observeProducts(FirebaseRefs.Products)
+    }
+
+    //get products from database
+
+    fun observeProducts(repo: DatabaseReference) {
+        repository.observeProducts(repo) { list ->
+            _products.value = list
+        }
+    }
+
+    //set selected store
+    fun setSelectedStore(store: Store){
+        _selectedStore.value = store
+    }
+
+    // customer name
+
+    fun setCustomerName(name: String) {
+        _customerName.value = name
+    }
+
+    //sold products management
+
+    fun updateSoldProduct(
+        product: Products,
+        stringQuantity: String,
+        doubleQuantity: Double
+    ) {
+        _soldProducts.update { list ->
+            val updated = list.toMutableList()
+            val index = updated.indexOfFirst { it.product?.name == product.name }
+
+            val total = ((product.stringPrice?.toDoubleOrNull() ?: 0.0) * doubleQuantity).toInt()
+
+            val soldProduct = SoldProduct(
+                product = product,
+                stringQuantity = stringQuantity,
+                doubleQuantity = doubleQuantity,
+                intTotal = total,
+                receiptQuantity = halfAndQuarter(doubleQuantity)
+            )
+
+            if (index >= 0) {
+                updated[index] = soldProduct
+            } else {
+                updated.add(soldProduct)
+            }
+
+            updated
+        }
+    }
+
+    //generate receipt
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun generateReceipt(): Receipt {
+        val validSoldProducts = soldProducts.value.filter { (it.intTotal ?: 0) > 0 }.toList()
+
+        val grandTotal = validSoldProducts.sumOf { it.intTotal ?: 0 }
+        val date = getDate()
+        val receipt = Receipt(
+            id = FirebaseRefs.records.push().key.toString().replace("-", ""),
+            soldProducts = validSoldProducts,
+            customerName = customerName.value,
+            date = date,
+            grandTotal = grandTotal.toString(),
+        )
+
+        return receipt
+    }
+
+
+
+
+    fun deleteProduct(productId: String) {
+        repository.deleteProduct(productId)
+    }
+
+    fun clearTotals() {
+        _soldProducts.value = emptyList()
+    }
+
+    fun clearName() {
+        _customerName.value = ""
     }
 }
 ```
@@ -3921,119 +3750,253 @@ private fun ShowStock(){
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/stock/StockFullsScreen.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.stock
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.wear.compose.material.Icon
+import com.guvnoh.boma.R
+import com.guvnoh.boma.formatters.getDate
+import com.guvnoh.boma.models.FullsStock
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.models.StockSplashScreen
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun StockFullsScreen(
+    paddingValues: PaddingValues,
+    stockViewModel: StockViewModel,
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+
+    ) {
+    val warehouse by stockViewModel.wareHouseStock.collectAsState()
+    val headOffice by stockViewModel.headOfficeStock.collectAsState()
+    var store by remember { mutableStateOf(Store.WAREHOUSE)}
+    var stockChoice = when(store){
+        Store.WAREHOUSE -> warehouse
+        Store.HEAD_OFFICE -> headOffice
+    }
+
+    var showSplash by remember { mutableStateOf(true) }
+
+    Scaffold(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(paddingValues),
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
+
+        // --- Top Bar ---
+        topBar = {
+            Column(
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.surface)
+                    .wrapContentHeight()
+                    .statusBarsPadding()
+                    .padding(vertical = 12.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = getDate(),
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                HorizontalDivider(
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .fillMaxWidth(0.85f),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                    thickness = 1.dp
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+
+                ) {
+                    // warehouse stock button
+
+                    Button(
+                        onClick = {
+                            stockChoice = warehouse
+                            store = Store.WAREHOUSE
+                        },
+                        colors = if (stockChoice != warehouse) {
+                            ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                        }else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ){
+                        Text(
+                            text = Screen.WarehouseStock.title,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                    }
+
+                    //headOffice button
+                    Button(
+                        onClick = {
+                            stockChoice = headOffice
+                            store = Store.HEAD_OFFICE
+                        },
+                        colors = if (stockChoice != headOffice) {
+                            ButtonDefaults.buttonColors(containerColor = Color.LightGray)
+                        }else ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ){
+                        Text(
+                            text = Screen.HeadOfficeStock.title,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                    }
+                }
+
+            }
+        },
+
+        // --- Bottom Bar ---
+        bottomBar = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                tonalElevation = 4.dp
+            ) {
+                val bottomBarItems = listOf(BottomBarItem.Fulls, BottomBarItem.Empties)
+                val navBackStackEntry by navController.currentBackStackEntryAsState()
+                val currentRoute = navBackStackEntry?.destination?.route
+
+                //fulls and empties bottom bar options setup
+                bottomBarItems.forEach { item ->
+                    val selected = currentRoute == item.route
+
+                    NavigationBarItem(
+                        selected = selected,
+                        onClick = {
+                            navController.navigate(item.route) {
+                                launchSingleTop = true
+                            }
+                        },
+                        icon = { item.icon },
+                        label = { Text(item.title) },
+                        alwaysShowLabel = true
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        //Screen Content
+        Box(
+            modifier = Modifier
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            if (showSplash) {
+                StockSplashScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    onTimeOut = { showSplash = false },
+                    stock = stockChoice.values.toMutableList()
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp)
+                ) {
+                    //sorted by name (descending order) alphabetically a-z
+                    items(stockChoice.keys.sortedBy { it.name }) {
+                        brand ->
+                        //val name = brand.name?:"error"
+                        val brandStock = stockChoice[brand] ?: FullsStock()
+                        StockCard(
+                            product = brand,
+                            stock = brandStock,
+                            viewModel = stockViewModel,
+                            store = store )
+                    }
+                }
+            }
+        }
+    }
+}
+
+open class BottomBarItem(
+    val route: String,
+    val title: String,
+    val icon: Int,
+
+    ){
+    data object Fulls: BottomBarItem(route = "fulls", title = "Fulls", R.drawable.orijin)
+    data object Empties: BottomBarItem(route = "empties", title = "Empties", R.drawable.bottle)
+}
+
+
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview
+@Composable
+private fun ShowStock(){
+    val vm: StockViewModel = viewModel()
+   StockFullsScreen(
+       paddingValues = PaddingValues(),
+       stockViewModel = vm,
+       navController = rememberNavController(),
+       modifier = Modifier,
+   )
+
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/viewmodels/AppMetaViewModel.kt
 ```kotlin
-//package com.guvnoh.boma.models
-//
-//import android.os.Build
-//import android.util.Log
-//import androidx.annotation.RequiresApi
-//import androidx.compose.runtime.State
-//import androidx.compose.runtime.mutableStateOf
-//import androidx.lifecycle.ViewModel
-//import androidx.lifecycle.viewModelScope
-//import com.guvnoh.boma.database.bomaStock
-//import com.guvnoh.boma.formatters.checkIfSoldToday
-//import com.guvnoh.boma.formatters.getDate
-//import com.guvnoh.boma.functions.getDBProductList
-//import com.guvnoh.boma.functions.getDBaseEmptiesStock
-//import kotlinx.coroutines.flow.MutableStateFlow
-//import kotlinx.coroutines.flow.StateFlow
-//import kotlinx.coroutines.launch
-//import kotlinx.coroutines.tasks.await
-//
-//class BomaViewModel : ViewModel() {
-//    //products
-//    private val _products = MutableStateFlow<List<Product>>(emptyList())
-//    val products: StateFlow<List<Product>> = getProductList()
-//
-//    //sold products
-//    private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
-//    val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
-//
-
-//
-
-//
-
-//
-//    //fulls stock
-//    private val _fullsStock = MutableStateFlow<List<FullsStock>>(emptyList())
-//    val fullsStock: StateFlow<List<FullsStock>> = getDBFullsStock()
-//
-
-//
-//    @RequiresApi(Build.VERSION_CODES.O)
-//    fun confirmSoldToday(productList: List<Product>){
-//        val stockDataBase = bomaStock.child("Fulls")
-//
-//        productList.forEach {
-//            val isSoldToday = checkIfSoldToday(it.stock?.lastTimeSold?:"")
-//            //Log.d("SendData", "Processing ${it.name} - soldToday=${it.stock.soldToday} - isSoldToday=$isSoldToday")
-//            if (!isSoldToday && (it.stock?.soldToday?:0.0) > 0){
-//                it.name?.let { brandName ->
-//                    stockDataBase
-//                        .child(brandName)
-//                        .child("stock")
-//                        .child("soldToday")
-//                        .setValue(0.0)
-//                }
-//            }
-//
-//        }
-//    }
-//
-//
-//    //get stock data from database
-//    private fun getDBFullsStock(): StateFlow<List<FullsStock>> {
-//        val list = mutableListOf<FullsStock>()
-//         _products.value.forEach {
-//             it.stock?.let { it1 -> list.add(it1) }
-//        }
-//        _fullsStock.value = list
-//        return _fullsStock
-//    }
-//
-//    private fun getDBEmpties(): StateFlow<List<EmptiesStock>> {
-//        getDBaseEmptiesStock {
-//            emptiesStock ->
-//            _emptiesStock.value = emptiesStock
-//        }
-//        return _emptiesStock
-//    }
-//
-//
-
-//
-
-//
-//    private fun getProductList(): StateFlow<List<Product>> {
-//        // Fetch products
-//        getDBProductList { dbList ->
-//            _products.value = dbList
-//        }
-//
-//        return _products
-//    }
-//
-//    fun updateCustomerName(name: String){
-//        _customerName.value = name
-//    }
-//
-
-//
-//    fun removeProduct(soldProduct: SoldProduct?) {
-//        val current = _soldProducts.value.toMutableList()
-//        val validSoldProduct = soldProduct ?: return
-//        current.removeAll { it.product?.name == validSoldProduct.product?.name }
-//        _soldProducts.value = current.toList()
-//    }
-//
-
-//
-//}
-//
-
 package com.guvnoh.boma.viewmodels
 
 import android.os.Build
@@ -4102,6 +4065,10 @@ class AppMetaViewModel : ViewModel() {
 
             }
         }
+    }
+
+    fun checkNewPrices(){
+
     }
 }
 ```
@@ -4275,16 +4242,19 @@ object SendDummyData {
 package com.guvnoh.boma
 
 
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.guvnoh.boma.ui.theme.BOMATheme
 import com.guvnoh.boma.uidesigns.Boma
 
@@ -4292,6 +4262,12 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001
+            )
+        }
+        createNotificationChannel(this)
 
         setContent {
             BOMATheme {
@@ -4299,6 +4275,22 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+    private fun createNotificationChannel(context: Context){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "default_channel",
+                "General Notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "App notifications"
+            }
+            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
+                    as NotificationManager
+            manager.createNotificationChannel(channel)
+
+        }
+    }
+
 }
 ```
 
@@ -4388,425 +4380,707 @@ fun AutoScrollingText(
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/repositories/ProductRepository.kt
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/addProduct/AddProductPage.kt
 ```kotlin
-package com.guvnoh.boma.repositories
+package com.guvnoh.boma.uidesigns.screens.addProduct
 
-import android.content.Context
-import android.util.Log
-import com.guvnoh.boma.database.FirebaseRefs
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ValueEventListener
-import com.guvnoh.boma.R
-import com.guvnoh.boma.models.EmptiesStock
-import com.guvnoh.boma.models.Products
-
-class ProductsRepository {
-
-    private val productsRepo = FirebaseRefs.Products
-
-    private var listener: ValueEventListener? = null
-
-
-     // Observe products in realtime
-    fun observeProducts(
-         repo: DatabaseReference,
-        onChange: (List<Products>) -> Unit
-    ) {
-        listener?.let { repo.removeEventListener(it) }
-
-        listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val products = snapshot.children.mapNotNull { child ->
-                    child.getValue(Products::class.java)
-                }
-                onChange(products.filter { it.id!=null })
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // log if needed
-            }
-        }
-
-        repo.addValueEventListener(listener!!)
-    }
-
-
-    fun getDBaseEmptiesStock(callback: (MutableList<EmptiesStock>) -> Unit) {
-
-        FirebaseRefs.empties.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val stockList = mutableListOf<EmptiesStock>()
-                for (product in snapshot.children) {
-                    val stock = product.getValue(EmptiesStock::class.java)
-                    if (stock!=null){
-                        stockList.add(stock)
-                    }
-                }
-                callback(stockList)
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                // handle error if needed
-                Log.d("DB_getDBStock_ERR", "onCancelled: $error")
-            }
-        })
-    }
-
-
-
-    fun getImage(context: Context, name: String):Int{
-        val resId = (context.resources.getIdentifier(name,"drawable",context.packageName))
-        return if(resId !=0)resId else R.drawable.bottle
-    }
-
-
-
-    // Add new product
-    fun addProduct(product: Products) {
-        val key = productsRepo.push().key.toString()
-         product.id = key
-        product.id?.let { productsRepo.child(it).setValue(product)}
-    }
-
-
-
-     // Delete product completely
-    fun deleteProduct(productId: String) {
-         productsRepo.child(productId).removeValue()
-    }
-
-
-     // Call this when ViewModel is cleared
-    fun clear() {
-        listener?.let { productsRepo.removeEventListener(it) }
-        listener = null
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeCard.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens.priceChange
-
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.guvnoh.boma.R
-import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.brandData
-import com.guvnoh.boma.repositories.ProductsRepository
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.guvnoh.boma.models.EmptyCompany
+import com.guvnoh.boma.models.ProductType
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PriceChangeCard(
-    product: Products,
-    priceChangeViewmodel: PriceChangeViewmodel
+fun AddProduct(
+    padding: PaddingValues,
+    navController: NavController,
+    viewModel: AddProductViewModel
 ) {
-    var newPrice by remember { mutableStateOf("") }
-    var priceError by remember { mutableStateOf<String?>(null) }
-    var isExpanded by remember { mutableStateOf(false) }
+
+    val newProduct by viewModel.newProduct
+
+    var productName by remember { mutableStateOf(newProduct.name?:"") }
+    var productPrice by remember { mutableStateOf(newProduct.stringPrice?:"") }
+    //var emptiesType by remember { mutableStateOf<EmptyType?>(null) }
+    var emptiesCompany by remember { mutableStateOf<EmptyCompany?>(newProduct.empties?.company?:EmptyCompany.HERO) }
+    var productType by remember { mutableStateOf(newProduct.type?:ProductType.BOTTLE) }
+    var categoryExpanded by remember { mutableStateOf(false) }
+    var emptiesExpanded by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val imageRes = ProductsRepository()
-        .getImage(context, product.imageName ?: "bottle.jpg")
-        .takeIf { it != 0 } ?: R.drawable.bottle
-
-    val currentPrice by remember { mutableDoubleStateOf(
-        product.stringPrice?.toDoubleOrNull() ?: 0.0)}
-    val pendingPrice = newPrice.toDoubleOrNull()?:0.0
-    val priceChange  = pendingPrice - currentPrice
-    val priceChangePercent  = if (currentPrice >0.0 && pendingPrice >0.0 ) {
-        ((pendingPrice - currentPrice) / currentPrice) * 100
-    } else 0.0
 
 
-    Card(
-        onClick = { isExpanded = !isExpanded },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isExpanded)
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.08f)
-            else
-                MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isExpanded) 4.dp else 2.dp
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Main Row: Image + Product Info + Price
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                // Product Image
-                Surface(
-                    modifier = Modifier.size(64.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ) {
-                    Image(
-                        painter = painterResource(imageRes),
-                        contentDescription = product.name,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                }
+    var nameError by remember { mutableStateOf<String?>(null) }
+    var priceError by remember { mutableStateOf<String?>(null) }
 
-                // Product Name & Current Price
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
+
+
+    Scaffold(
+        modifier = Modifier.padding(padding),
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
                     Text(
-                        text = product.name ?: "Unknown",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
+                        "Add Product",
+                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
                     )
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = nairaFormat(currentPrice),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        if (priceError == null) {
-                            Icon(
-                                imageVector = Icons.Default.TrendingUp,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = if (priceChange > 0)
-                                    Color(0xFF4CAF50)
-                                else
-                                    Color(0xFFF44336)
-                            )
-                        }
-                    }
                 }
-
-                // New Price Badge
-                if (priceError == null && pendingPrice >0.0) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 4.dp)
-                    ) {
-                        Text(
-                            text = nairaFormat(pendingPrice),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                }
-            }
-
-            // Expanded Section: Input + Stats
-            AnimatedVisibility(
-                visible = isExpanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
+            )
+        }
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            Card(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+                shape = RoundedCornerShape(28.dp)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Text(
+                        text = "Enter product details below",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
-                    // Input Field
+                    // Product Name
                     OutlinedTextField(
-                        value = newPrice,
-                        onValueChange = { input ->
-                            val filtered = input.filter { it.isDigit() || it == '.' }
-                            if (filtered.count { it == '.' } <= 1) {
-                                newPrice = filtered
-                                if (filtered.isNotEmpty()) {
-                                    priceChangeViewmodel.changePrices(
-                                        newPrice = filtered,
-                                        product = product
-                                    )
-                                }
-                                priceError = priceChangeViewmodel.errorCheck(filtered)
-                            }
+                        value = productName,
+                        onValueChange = { name ->
+                            productName = name
+                            // Product name added
+                            newProduct.name = name
+                            nameError = viewModel.validateEntries("Name",productName)
                         },
-                        label = { Text("Enter New Price") },
-                        leadingIcon = {
-                            Text(
-                                "₦",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            )
-                        },
-                        trailingIcon = {
-                            if (newPrice.isNotEmpty()) {
-                                IconButton(onClick = {
-                                    newPrice = ""
-                                    priceError = null
-                                }) {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = "Clear",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        },
-                        placeholder = {
-                            Text(
-                                currentPrice.toString(),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                            )
-                        },
+                        label = { Text("Product Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = nameError != null,
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        supportingText = {
+                            if (nameError != null) {
+                                Text(nameError!!, color = MaterialTheme.colorScheme.error)
+                            }
+                        },
+                        shape = RoundedCornerShape(16.dp)
+                    )
+
+                    // Product Price
+                    OutlinedTextField(
+                        value = productPrice,
+                        onValueChange = { input ->
+                            productPrice = input.filter { it.isDigit() || it == '.' }
+                            //product prices added
+                            newProduct.stringPrice = productPrice
+                            newProduct.doublePrice = productPrice.toDoubleOrNull() ?: 0.0
+                            priceError = viewModel.validateEntries("Price",productPrice)
+                        },
+                        label = { Text("Product Price (₦)") },
+                        modifier = Modifier.fillMaxWidth(),
                         isError = priceError != null,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         supportingText = {
                             if (priceError != null) {
                                 Text(priceError!!, color = MaterialTheme.colorScheme.error)
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        )
+                        shape = RoundedCornerShape(16.dp)
                     )
 
-                    // Price Change Stats
-                    if (priceError == null) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    // Category Dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = categoryExpanded,
+                        onExpandedChange = { categoryExpanded = !categoryExpanded }
+                    ) {
+                        //add category e.g can, pet or bottle
+                        OutlinedTextField(
+                            value = productType.name,
+                            onValueChange = { categoryString ->
+                                //the text field collects the text of the selected option
+                                // and checks which product type matches that text
+
+                                productType = ProductType.entries.first{it.name.equals(categoryString, ignoreCase = true)}
+                                //new product category displayed on screen is set here
+                                newProduct.type = productType
+                            },
+                            readOnly = true,
+                            label = { Text("Category") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded)
+                            },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = categoryExpanded,
+                            onDismissRequest = { categoryExpanded = false }
                         ) {
-                            // Change Amount
-                            Surface(
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "Change",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        text = "${if (priceChange > 0) "+" else ""}${nairaFormat(priceChange)}",
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = if (priceChange > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
-                                    )
-                                }
-                            }
+                            //setup product type/category e.g can, pet or bottle
+                            ProductType.entries.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option.name) },
+                                    onClick = {
+                                        productType = option
+                                        categoryExpanded = false
+                                        //new category/product type option created via drop down menu
+                                        // when selected, already existing product type is updated
+                                        newProduct.type = productType
+                                        //setup default images for new products of different kinds
+                                        val canImage = "can_image"
+                                        if (productType == ProductType.CAN) newProduct.imageName = canImage
 
-                            // Percentage Change
-
-                            Surface(
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "Percent",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        text = "${if (priceChangePercent > 0) "+" else ""}%.1f%%".format(priceChangePercent),
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = if (priceChangePercent > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
-                                    )
-                                }
+                                    }
+                                )
                             }
                         }
                     }
 
-                    // Confirm Button
-                    if (priceError == null) {
-                        Button(
-                            onClick = {
-                                newPrice = ""
-                                isExpanded = false
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            )
+
+                    if (productType == ProductType.BOTTLE){
+                        // add empties company and type (e.g nb12)
+                        ExposedDropdownMenuBox(
+                            expanded = emptiesExpanded,
+                            onExpandedChange = { emptiesExpanded = !emptiesExpanded }
                         ) {
-                            Icon(Icons.Default.Check, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "Confirm Price Change",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.SemiBold
+                            OutlinedTextField(
+                                //add empties type
+                                value = emptiesCompany?.name?:"error",
+                                onValueChange = {
+                                    newProduct.empties?.company = emptiesCompany
+                                },
+                                readOnly = true,
+                                label = { Text("Empty Type") },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = emptiesExpanded)
+                                },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = emptiesExpanded,
+                                onDismissRequest = { emptiesExpanded = false }
+                            ) {
+                                EmptyCompany.entries.forEach { selected ->
+                                    DropdownMenuItem(
+                                        text = { Text(selected.name) },
+                                        onClick = {
+                                            //set new products empties company (for bottle products)
+                                            emptiesCompany = selected //selected from dropdown
+                                            emptiesExpanded = false
+                                            //setup empties company via dropdown e.g nbl, cocacola
+                                            newProduct.empties?.company = selected
+
+                                            //setup empty type
+                                            when (selected) {
+                                                EmptyCompany.COCA_COLA -> {
+                                                    newProduct.empties?.company = EmptyCompany.COCA_COLA
+                                                }
+                                                EmptyCompany.HERO -> {
+                                                    newProduct.empties?.company = EmptyCompany.HERO
+                                                }
+                                                EmptyCompany.NBL -> {
+                                                    newProduct.empties?.company = EmptyCompany.NBL
+                                                }
+                                                EmptyCompany.GUINNESS -> {
+                                                    newProduct.empties?.company = EmptyCompany.GUINNESS
+                                                }
+                                            }
+
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                    }
+
+                    // Done Button
+                    Button(
+                        onClick = {
+                            //product is added to database
+                            viewModel.createNewProduct(navController = navController)
+                            Toast.makeText(context,"Product added!", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = CircleShape
+                    ) {
+                        Icon(Icons.Filled.Done, contentDescription = "Done")
+                        Spacer(Modifier.width(8.dp))
+                        Text("Save Product", style = MaterialTheme.typography.labelLarge)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+fun ShowAddScreen(){
+    val avm: AddProductViewModel = viewModel()
+    AddProduct(PaddingValues(5.dp), rememberNavController(),avm)
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/products/ProductsPage.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.products
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.guvnoh.boma.R
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.models.EmptyCompany
+import com.guvnoh.boma.models.ProductSplashScreen
+import com.guvnoh.boma.models.ProductType
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptViewmodel
+import com.guvnoh.boma.uidesigns.screens.stock.Store
+
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProductsPage(
+    navController: NavController,
+    paddingValues: PaddingValues,
+    vm: ProductsViewModel,
+    receiptViewmodel: ReceiptViewmodel
+) {
+
+    var search: Boolean by rememberSaveable { mutableStateOf(false) }
+    var searchEntry by rememberSaveable { mutableStateOf("") }
+    val soldProducts by vm.soldProducts.collectAsState()
+    val customerName by vm.customerName
+    val productList by vm.products.collectAsState()
+    val grandTotal = soldProducts.sumOf { it.intTotal ?: 0 }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    var expanded by remember { mutableStateOf(false) }
+    //val selectedStore by vm.selectedStore
+
+    val bottlesDisplay = productList.filter { it.type == ProductType.BOTTLE }
+    val petsDisplay = productList.filter { it.type == ProductType.PET }
+
+    val  cansDisplay = productList.filter { it.type == ProductType.CAN }
+
+    val cocacolaGroup = bottlesDisplay.filter { it.empties?.company == EmptyCompany.COCA_COLA}
+    val heroGroup = bottlesDisplay.filter { it.empties?.company == EmptyCompany.HERO}
+    val nblGroup = bottlesDisplay.filter { it.empties?.company == EmptyCompany.NBL}
+    val guinnessGroup = bottlesDisplay.filter { it.empties?.company == EmptyCompany.GUINNESS}
+    //vm.confirmSoldToday(productList)
+    //sendFullsDataToDB()
+
+    Scaffold(
+        modifier = Modifier
+            .padding(paddingValues)
+            .imePadding()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            TopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = {
+                    val storeName = vm.selectedStore.value.name.lowercase().replace("_"," ").replaceFirstChar { it.uppercase() }
+                    Text("$storeName  ⇅"
+                        ,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        modifier = Modifier.clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = LocalIndication.current,
+                        ){expanded = true}
+                    )
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = {expanded = false},
+                    ) {
+                        Store.entries.forEach { store ->
+                            val storeNameText = store.name.lowercase().replace("_"," ").replaceFirstChar { it.uppercase() }
+                            DropdownMenuItem(
+                                text = { Text(storeNameText) },
+                                onClick = {
+                                    expanded = !expanded
+                                    vm.setSelectedStore(store)
+                                    vm.observeProducts(FirebaseRefs.Products)
+                                }
+                            )
+                        }
+                    }
+
+
+                },
+                actions = {
+                    IconButton(
+                        onClick = { search = !search },
+                        ) {
+                        if (!search) Icon(Icons.Filled.Search, contentDescription = "Search")
+                    }
+                    if (search){
+                        OutlinedTextField(
+                            value = searchEntry,
+                            onValueChange = {
+                                    entry ->
+                                searchEntry = entry
+                            },
+                            label = { Text("Search products...") },
+                            modifier = Modifier
+                                .padding(start = 8.dp, bottom = 5.dp)
+                                .width(200.dp)
+                        )
+                    }
+
+                }
+            )
+        },
+        bottomBar = {
+            Surface(
+                tonalElevation = 4.dp,
+                shadowElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    // Clear Button
+                    OutlinedButton(
+                        onClick = {
+                            if (searchEntry!="") {
+                                search = !search
+                                searchEntry = ""
+                            }
+                            //search text field is replaced by search icon
+                            vm.clearTotals()
+                            vm.clearName()
+                        },
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Icon(Icons.Filled.Clear, contentDescription = "Clear")
+                        Spacer(Modifier.width(6.dp))
+                        Text("Clear")
+                    }
+
+                    // Grand Total
+                    if (grandTotal > 0) {
+                        Text(
+                            nairaFormat(grandTotal),
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.ExtraBold
+                            ),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    // Done Button
+                    Button(
+                        onClick = {
+
+                            searchEntry = ""
+                            navController.navigate(Screen.Receipt.route)
+                            val receipt = vm.generateReceipt()
+                            receiptViewmodel.setCurrentReceipt(receipt)
+
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(Icons.Filled.Done, contentDescription = "Done")
+                        Spacer(Modifier.width(6.dp))
+                        Text("Done")
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        var showSplash by remember { mutableStateOf(true) }
+        if (showSplash){
+            ProductSplashScreen(
+                modifier = Modifier,
+                list = productList.toMutableList(),
+                onTimeOut = {showSplash = false}
+            )
+        }else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                // Customer Name
+                OutlinedTextField(
+                    value = customerName,
+                    onValueChange = {
+                        vm.setCustomerName(it)
+                                    },
+                    label = { Text("Customer Name") },
+                    leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = null) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                )
+
+                // Product List
+                if (!search) {
+                    LazyColumn(
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+
+                        // products are separated based on types e.g pets, cans etc
+                        // bottle products are further separated based on companies i.e nbl, hero, etc
+
+                        //COCACOLA GROUP
+                        stickyHeader {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Coca_cola",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
                                 )
+                            }
+                        }
+
+                        //COCACOLA GROUP
+                        items(cocacolaGroup.sortedBy {it.name}, key = {it.id!!}){ product ->
+                            val soldProduct = soldProducts.find { it.product?.id == product.id }
+
+                            ProductCard(
+                                product = product,
+                                soldProduct = soldProduct,
+                                viewModel = vm,
+                            )
+                        }
+
+                        // HERO GROUP
+                        stickyHeader {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "International Breweries",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
+                            }
+                        }
+                        // HERO GROUP
+                        items(heroGroup.sortedBy { it.name }) { product ->
+                            val soldProduct = soldProducts.find { it.product?.id == product.id }
+
+                            ProductCard(
+                                product = product,
+                                soldProduct = soldProduct,
+                                viewModel = vm,
+                            )
+                        }
+
+                        //NBL GROUP
+                        stickyHeader {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+
+                                Text(
+                                    text = "Nigerian Breweries",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
+                            }
+                        }
+                        //NBL GROUP
+                        items(nblGroup.sortedBy { it.name }) { product ->
+                            val soldProduct = soldProducts.find { it.product?.id == product.id }
+
+                            ProductCard(
+                                product = product,
+                                soldProduct = soldProduct,
+                                viewModel = vm,
+                            )
+                        }
+
+                        //GUINNESS GROUP
+                        stickyHeader {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+
+                                Text(
+                                    text = "Guinness",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
+
+                            }
+                        }
+                        //GUINNESS GROUP
+                        items(guinnessGroup.sortedBy { it.name }) { product ->
+                            val soldProduct = soldProducts.find { it.product?.id == product.id }
+
+                            ProductCard(
+                                product = product,
+                                soldProduct = soldProduct,
+                                viewModel = vm,
+                            )
+                        }
+
+                        //PETS
+                        stickyHeader {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Pets",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                )
+                            }
+                        }
+                        //PETS
+                        items(petsDisplay.sortedBy { it.name }) { product ->
+
+                            val soldProduct = soldProducts.find { it.product?.id == product.id }
+
+                            ProductCard(
+                                product = product,
+                                soldProduct = soldProduct,
+                                viewModel = vm,
+                            )
+                        }
+
+                        //CANS
+                        stickyHeader {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(40.dp)
+                                    .background(color = Color.White),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "Cans",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    )
+                            }
+                        }
+
+                        //CANS
+                        items(cansDisplay.sortedBy { it.name }) { product ->
+
+                            val soldProduct = soldProducts.find { it.product?.id == product.id }
+//                            val bottleImage = R.drawable.bottle
+//                            val canImage = R.drawable.can_image
+//                            if (product.image == bottleImage)product.image = canImage
+                            ProductCard(
+                                product = product,
+                                soldProduct = soldProduct,
+                                viewModel = vm,
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        val newList = mutableListOf<Products>()
+                        productList.forEach {
+                            if (it.name?.lowercase()?.contains(searchEntry) == true) {
+                                newList.add(it)
+                            }
+                        }
+                        items(newList.sortedBy { it.name}) { product ->
+                            val soldProduct = soldProducts.find { it.product?.id == product.id }
+                            ProductCard(
+                                product = product,
+                                soldProduct = soldProduct,
+                                viewModel = vm,
                             )
                         }
                     }
@@ -4817,22 +5091,12 @@ fun PriceChangeCard(
 }
 
 
+
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true)
 @Composable
-fun ShowCard() {
-    MaterialTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            Column(
-                modifier = Modifier.padding(vertical = 16.dp)
-            ) {
-                PriceChangeCard(brandData[1], viewModel())
-            }
-        }
-    }
+fun ShowProducts() {
+   // ProductsPage(rememberNavController(), PaddingValues(), viewModel())
 }
 ```
 
@@ -4959,189 +5223,105 @@ enum class EmptyType{
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/repositories/StockRepository.kt
+## File: app/src/main/java/com/guvnoh/boma/repositories/ProductRepository.kt
 ```kotlin
 package com.guvnoh.boma.repositories
 
+import android.content.Context
+import android.util.Log
 import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.models.FullsStock
-import com.google.firebase.database.*
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ValueEventListener
+import com.guvnoh.boma.R
 import com.guvnoh.boma.models.EmptiesStock
+import com.guvnoh.boma.models.ProductType
 import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.uidesigns.screens.stock.Store
 
-class StockRepository() {
+class ProductsRepository {
 
-    private val productsRef = FirebaseRefs.Products
-    private val emptiesRef = FirebaseRefs.empties
+    private val productsRepo = FirebaseRefs.Products
 
-    private var productsListener: ValueEventListener? = null
-    private var emptiesListener: ValueEventListener? = null
+    private var listener: ValueEventListener? = null
 
 
-    // OBSERVE FULLS STOCK
-    fun observeFullsStock(
-        store: Store,
-        onChange: (MutableMap<String, Pair<Products, FullsStock>>) -> Unit,
-    ){
-        var listener = productsListener
-        listener?.let { FirebaseRefs.Products.removeEventListener(it) }
+     // Observe products in realtime
+    fun observeProducts(
+         repo: DatabaseReference,
+        onChange: (List<Products>) -> Unit
+    ) {
+        listener?.let { repo.removeEventListener(it) }
 
         listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val products = snapshot.children.mapNotNull { child ->
                     child.getValue(Products::class.java)
                 }
-                val stockMap: MutableMap<String, Pair<Products,FullsStock>> = mutableMapOf()
-                when (store){
-                    Store.WAREHOUSE -> {
-                        products.forEach { product ->
-
-                            val stock = product.store?.warehouse ?: FullsStock()
-                            stockMap[product.id?:""] = Pair(product, stock)
-                        }
-                    }
-                    Store.HEAD_OFFICE -> {
-                        products.forEach { product ->
-
-                            val stock = product.store?.headOffice ?: FullsStock()
-                            stockMap[product.id?:""] = Pair(product, stock)
-                        }
-                    }
-                }
-
-                onChange(stockMap)
+                onChange(products.filter { it.id!=null })
             }
 
-            override fun onCancelled(error: DatabaseError) = Unit
+            override fun onCancelled(error: DatabaseError) {
+                // log if needed
+            }
         }
 
-        productsRef.addValueEventListener(listener)
-    }
-
-    fun updateStock(productId: String, store: Store, newStock: Double? = null){
-        val dbStore = when(store){
-            Store.WAREHOUSE -> "warehouse"
-            else -> "headOffice"
-        }
-        val product = FirebaseRefs.Products.child(productId)
-        val stock = product
-            .child("store")
-            .child(dbStore)
-            .child("closingStock")
-
-        stock.setValue(newStock)
+        repo.addValueEventListener(listener!!)
     }
 
 
+    fun getDBaseEmptiesStock(callback: (MutableList<EmptiesStock>) -> Unit) {
 
-    // OBSERVE EMPTIES
-    fun observeEmptiesStock(
-        onChange: (Map<String, EmptiesStock>) -> Unit
-    ) {
-        emptiesListener?.let { emptiesRef.removeEventListener(it) }
-
-        emptiesListener = object : ValueEventListener {
+        FirebaseRefs.empties.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val result = mutableMapOf<String, EmptiesStock>()
-
-                snapshot.children.forEach { productSnap ->
-                    val productId = productSnap.key ?: return@forEach
-                    val empty = productSnap.getValue(EmptiesStock::class.java)
-                        ?: EmptiesStock()
-
-                    result[productId] = empty
+                val stockList = mutableListOf<EmptiesStock>()
+                for (product in snapshot.children) {
+                    val stock = product.getValue(EmptiesStock::class.java)
+                    if (stock!=null){
+                        stockList.add(stock)
+                    }
                 }
-
-                onChange(result)
+                callback(stockList)
             }
 
-            override fun onCancelled(error: DatabaseError) = Unit
-        }
-
-        emptiesRef.addValueEventListener(emptiesListener!!)
-    }
-
-
-    // SELL PRODUCT
-    fun sellProduct(
-        productId: String,
-        soldQty: Double,
-        store: String
-    ) {
-        if (soldQty <= 0) return
-
-        val stockRef = when(store){
-            "warehouse" -> FirebaseRefs.Products.child(productId).child("store").child("warehouse")
-            "headOffice" -> FirebaseRefs.Products.child(productId).child("store").child("headOffice")
-            else -> FirebaseRefs.Products.child(productId).child("store").child("warehouse")
-        }
-
-        stockRef.runTransaction(object : Transaction.Handler {
-            override fun doTransaction(data: MutableData): Transaction.Result {
-                val stock = data.getValue(FullsStock::class.java)
-                    ?: FullsStock()
-
-                val opening = stock.openingStock ?: 0.0
-                val currentClosing =
-                    stock.closingStock ?: opening
-
-                if (currentClosing < soldQty) {
-                    return Transaction.abort()
-                }
-
-                stock.soldToday =
-                    (stock.soldToday ?: 0.0) + soldQty
-
-                stock.closingStock =
-                    (currentClosing - soldQty).coerceAtLeast(0.0)
-
-                data.value = stock
-                return Transaction.success(data)
+            override fun onCancelled(error: DatabaseError) {
+                // handle error if needed
+                Log.d("DB_getDBStock_ERR", "onCancelled: $error")
             }
-
-            override fun onComplete(
-                error: DatabaseError?,
-                committed: Boolean,
-                snapshot: DataSnapshot?
-            ) = Unit
         })
     }
 
-    // UPDATE EMPTIES
-    fun updateEmpties(
-        productId: String,
-        delta: Double
-    ) {
-        val emptyRef = emptiesRef.child(productId)
 
-        emptyRef.runTransaction(object : Transaction.Handler {
-            override fun doTransaction(data: MutableData): Transaction.Result {
-                val empty = data.getValue(EmptiesStock::class.java)
-                    ?: EmptiesStock()
 
-                empty.quantity =
-                    ((empty.quantity ?: 0.0) + delta).coerceAtLeast(0.0)
-
-                data.value = empty
-                return Transaction.success(data)
-            }
-
-            override fun onComplete(
-                error: DatabaseError?,
-                committed: Boolean,
-                snapshot: DataSnapshot?
-            ) = Unit
-        })
+    fun getImage(context: Context, name: String, type: ProductType):Int{
+        val resId = (context.resources.getIdentifier(name,"drawable",context.packageName))
+        return if(resId !=0)
+            resId
+        else if (type == ProductType.CAN) R.drawable.can_image
+        else R.drawable.bottle
     }
 
-    // CLEANUP
-    fun clear(repo: DatabaseReference) {
-        productsListener?.let { FirebaseRefs.Products.removeEventListener(it) }
-        emptiesListener?.let { emptiesRef.removeEventListener(it) }
 
-        productsListener = null
-        emptiesListener = null
+
+    // Add new product
+    fun addProduct(product: Products) {
+        val key = productsRepo.push().key.toString()
+         product.id = key
+        product.id?.let { productsRepo.child(it).setValue(product)}
+    }
+
+
+
+     // Delete product completely
+    fun deleteProduct(productId: String) {
+         productsRepo.child(productId).removeValue()
+    }
+
+
+     // Call this when ViewModel is cleared
+    fun clear() {
+        listener?.let { productsRepo.removeEventListener(it) }
+        listener = null
     }
 }
 ```
@@ -5452,6 +5632,358 @@ private fun ShowDemo(){
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeCard.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.priceChange
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.guvnoh.boma.R
+import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.models.brandData
+import com.guvnoh.boma.repositories.ProductsRepository
+import androidx.compose.runtime.collectAsState
+
+@Composable
+fun PriceChangeCard(
+    product: Products,
+    priceChangeViewmodel: PriceChangeViewmodel,
+) {
+    var newPrice by remember { mutableStateOf("") }
+    var priceError by remember { mutableStateOf<String?>(null) }
+    var isExpanded by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val imageRes = ProductsRepository()
+        .getImage(context, product.imageName ?: "bottle.jpg", product.type!!)
+        .takeIf { it != 0 } ?: R.drawable.bottle
+
+    val currentPrice = product.stringPrice?.toDoubleOrNull() ?: 0.0
+    val displayCurrentPrice by remember { mutableDoubleStateOf(currentPrice) }
+    val pendingPrice = newPrice.toDoubleOrNull()?:0.0
+    val priceChange  = pendingPrice - displayCurrentPrice
+    val priceChangePercent  = if (displayCurrentPrice >0.0 && pendingPrice >0.0 ) {
+        ((pendingPrice - displayCurrentPrice) / displayCurrentPrice) * 100
+    } else 0.0
+    val priceChangeList = priceChangeViewmodel.priceChangeProducts.collectAsState().value
+
+
+    Card(
+        onClick = { isExpanded = !isExpanded },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isExpanded)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.08f)
+            else
+                MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isExpanded) 4.dp else 2.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Main Row: Image + Product Info + Price
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                // Product Image
+                Surface(
+                    modifier = Modifier.size(64.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                ) {
+                    Image(
+                        painter = painterResource(imageRes),
+                        contentDescription = product.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+
+                // Product Name & Current Price
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = product.name ?: "Unknown",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = nairaFormat(currentPrice),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        if (priceError == null) {
+                            Icon(
+                                imageVector = Icons.Default.TrendingUp,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = if (priceChange > 0)
+                                    Color(0xFF4CAF50)
+                                else
+                                    Color(0xFFF44336)
+                            )
+                        }
+                    }
+                }
+
+                // New Price Badge
+                if (product in priceChangeList) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 4.dp)
+                    ) {
+                        Text(
+                            text = nairaFormat(newPrice.toDoubleOrNull()?:0.0),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            }
+
+            // Expanded Section: Input + Stats
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    // Input Field
+                    OutlinedTextField(
+                        value = newPrice,
+                        onValueChange = { input ->
+                            val filtered = input.filter { it.isDigit() || it == '.' } //make sure input is either a number or "."
+                            if (filtered.count { it == '.' } <= 1) { //make sure there is only one "." if any
+                                newPrice = filtered //update variable after check
+                                if (newPrice.isNotEmpty()) {
+                                    priceChangeViewmodel.changePrices(
+                                        newPrice = newPrice,
+                                        product = product
+                                    )
+                                    priceChangeViewmodel.addToPriceChangeList(product)
+                                }
+                                priceError = priceChangeViewmodel.errorCheck(filtered)
+                            }
+                        },
+                        label = { Text("Enter New Price") },
+                        leadingIcon = {
+                            Text(
+                                "₦",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        },
+                        trailingIcon = {
+                            if (newPrice.isNotEmpty()) {
+                                IconButton(onClick = {
+                                    newPrice = ""
+                                    priceError = null
+                                }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Clear",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        },
+                        placeholder = {
+                            Text(
+                                currentPrice.toString(),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            )
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        isError = priceError != null,
+                        supportingText = {
+                            if (priceError != null) {
+                                Text(priceError!!, color = MaterialTheme.colorScheme.error)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+
+                    // Price Change Stats
+                    if (priceError == null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Change Amount
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Change",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "${if (priceChange > 0) "+" else ""}${nairaFormat(priceChange)}",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = if (priceChange > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+                                    )
+                                }
+                            }
+
+                            // Percentage Change
+
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Percent",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "${if (priceChangePercent > 0) "+" else ""}%.1f%%".format(priceChangePercent),
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = if (priceChangePercent > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Confirm Button
+                    if (priceError == null) {
+                        Button(
+                            onClick = {
+                                newPrice = ""
+                                isExpanded = false
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Confirm Price Change",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun ShowCard() {
+    MaterialTheme {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            Column(
+                modifier = Modifier.padding(vertical = 16.dp)
+            ) {
+                PriceChangeCard(brandData[1], viewModel())
+            }
+        }
+    }
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangePage.kt
 ```kotlin
 package com.guvnoh.boma.uidesigns.screens.priceChange
@@ -5500,21 +6032,7 @@ fun PriceChangePage(
                 ) {
                     Button(
                         onClick = {
-                            priceChangeList.forEach { product ->
-                                if (product.id!=null && product.doublePrice!=null){
-                                    priceChangeViewmodel.updatePrice(product)
-                                }
-                            }
-                            Toast.makeText(context, "Prices updated", Toast.LENGTH_SHORT).show()
-
-                            navController.navigate(Screen.Products.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-
-                            }
+                            priceChangeViewmodel.updatePrices(context,priceChangeList,navController)
                         },
                         enabled = priceChangeList.isNotEmpty(),
                         colors = ButtonDefaults.buttonColors(
@@ -5541,38 +6059,6 @@ fun PriceChangePage(
             }
         }
     }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/database/firebaseRefs.kt
-```kotlin
-package com.guvnoh.boma.database
-
-
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-
-object FirebaseRefs {
-
-    private val db = FirebaseDatabase.getInstance()
-
-    //database root folder
-    private val root: DatabaseReference = db.reference.child("Boma")
-
-    //val Products = root.child("testProducts")
-
-    val Products = root.child("Products")
-
-    val testProducts = root.child("testProducts")
-
-    val bomaEmpties = root.child("Empties")
-
-    val empties = root.child("BomaStock").child("Empties")
-
-    val records = root.child("BomaDBRecords3")
-
-    // stores dates and is used for new day validation
-    val appMeta = root.child("appMeta")
 }
 ```
 
@@ -5773,6 +6259,467 @@ fun ProductSplashScreen(
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/repositories/StockRepository.kt
+```kotlin
+package com.guvnoh.boma.repositories
+
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.FullsStock
+import com.google.firebase.database.*
+import com.guvnoh.boma.models.EmptiesStock
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.uidesigns.screens.stock.Store
+
+class StockRepository() {
+
+    private val productsRef = FirebaseRefs.Products
+    private val emptiesRef = FirebaseRefs.empties
+
+    private var productsListener: ValueEventListener? = null
+    private var emptiesListener: ValueEventListener? = null
+
+
+    // OBSERVE FULLS STOCK
+    fun observeFullsStock(
+        store: Store,
+        onChange: (MutableMap<String, Pair<Products, FullsStock>>) -> Unit,
+    ){
+        var listener = productsListener
+        listener?.let { FirebaseRefs.Products.removeEventListener(it) }
+
+        listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val products = snapshot.children.mapNotNull { child ->
+                    child.getValue(Products::class.java)
+                }
+                val stockMap: MutableMap<String, Pair<Products,FullsStock>> = mutableMapOf()
+                when (store){
+                    Store.WAREHOUSE -> {
+                        products.forEach { product ->
+
+                            val stock = product.store?.warehouse ?: FullsStock()
+                            stockMap[product.id?:""] = Pair(product, stock)
+                        }
+                    }
+                    Store.HEAD_OFFICE -> {
+                        products.forEach { product ->
+
+                            val stock = product.store?.headOffice ?: FullsStock()
+                            stockMap[product.id?:""] = Pair(product, stock)
+                        }
+                    }
+                }
+
+                onChange(stockMap)
+            }
+
+            override fun onCancelled(error: DatabaseError) = Unit
+        }
+
+        productsRef.addValueEventListener(listener)
+    }
+
+    fun updateStock(productId: String, store: Store, newStock: Double? = null){
+        val dbStore = when(store){
+            Store.WAREHOUSE -> "warehouse"
+            else -> "headOffice"
+        }
+        val product = FirebaseRefs.Products.child(productId)
+        val stock = product
+            .child("store")
+            .child(dbStore)
+            .child("closingStock")
+
+        stock.setValue(newStock)
+    }
+
+
+
+    // OBSERVE EMPTIES
+    fun observeEmptiesStock(
+        onChange: (Map<String, EmptiesStock>) -> Unit
+    ) {
+        emptiesListener?.let { emptiesRef.removeEventListener(it) }
+
+        emptiesListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val result = mutableMapOf<String, EmptiesStock>()
+
+                snapshot.children.forEach { productSnap ->
+                    val productId = productSnap.key ?: return@forEach
+                    val empty = productSnap.getValue(EmptiesStock::class.java)
+                        ?: EmptiesStock()
+
+                    result[productId] = empty
+                }
+
+                onChange(result)
+            }
+
+            override fun onCancelled(error: DatabaseError) = Unit
+        }
+
+        emptiesRef.addValueEventListener(emptiesListener!!)
+    }
+
+
+    // SELL PRODUCT
+    fun sellProduct(
+        productId: String,
+        soldQty: Double,
+        store: String
+    ) {
+        if (soldQty <= 0) return
+
+        val stockRef = when(store){
+            "warehouse" -> FirebaseRefs.Products.child(productId).child("store").child("warehouse")
+            "headOffice" -> FirebaseRefs.Products.child(productId).child("store").child("headOffice")
+            else -> FirebaseRefs.Products.child(productId).child("store").child("warehouse")
+        }
+
+        stockRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(data: MutableData): Transaction.Result {
+                val stock = data.getValue(FullsStock::class.java)
+                    ?: FullsStock()
+
+                val opening = stock.openingStock ?: 0.0
+                val currentClosing =
+                    stock.closingStock ?: opening
+
+                if (currentClosing < soldQty) {
+                    return Transaction.abort()
+                }
+
+                stock.soldToday =
+                    (stock.soldToday ?: 0.0) + soldQty
+
+                stock.closingStock =
+                    (currentClosing - soldQty).coerceAtLeast(0.0)
+
+                data.value = stock
+                return Transaction.success(data)
+            }
+
+            override fun onComplete(
+                error: DatabaseError?,
+                committed: Boolean,
+                snapshot: DataSnapshot?
+            ) = Unit
+        })
+    }
+
+    // UPDATE EMPTIES
+    fun updateEmpties(
+        productId: String,
+        delta: Double
+    ) {
+        val emptyRef = emptiesRef.child(productId)
+
+        emptyRef.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(data: MutableData): Transaction.Result {
+                val empty = data.getValue(EmptiesStock::class.java)
+                    ?: EmptiesStock()
+
+                empty.quantity =
+                    ((empty.quantity ?: 0.0) + delta).coerceAtLeast(0.0)
+
+                data.value = empty
+                return Transaction.success(data)
+            }
+
+            override fun onComplete(
+                error: DatabaseError?,
+                committed: Boolean,
+                snapshot: DataSnapshot?
+            ) = Unit
+        })
+    }
+
+    // CLEANUP
+    fun clear(repo: DatabaseReference) {
+        productsListener?.let { FirebaseRefs.Products.removeEventListener(it) }
+        emptiesListener?.let { emptiesRef.removeEventListener(it) }
+
+        productsListener = null
+        emptiesListener = null
+    }
+}
+```
+
+## File: gradle/libs.versions.toml
+```toml
+[versions]
+agp = "8.8.0"
+kotlin = "2.0.0"
+coreKtx = "1.13.1"
+junit = "4.13.2"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+lifecycleRuntimeKtx = "2.9.4"
+activityCompose = "1.9.2"
+composeBom = "2024.04.01"
+navigationCompose = "2.9.4"
+googleGmsGoogleServices = "4.4.3"
+firebaseDatabase = "22.0.1"
+composeMaterial = "1.5.2"
+ui = "1.9.4"
+
+
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+androidx-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
+ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+```
+
+## File: app/src/main/java/com/guvnoh/boma/database/firebaseRefs.kt
+```kotlin
+package com.guvnoh.boma.database
+
+
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+
+object FirebaseRefs {
+
+    private val db = FirebaseDatabase.getInstance()
+
+    //database root folder
+    private val root: DatabaseReference = db.reference.child("Boma")
+
+    val Products = root.child("testProducts")
+
+    //val Products = root.child("Products")
+
+    //val testProducts = root.child("testProducts")
+
+    val bomaEmpties = root.child("Empties")
+
+    val empties = root.child("BomaStock").child("Empties")
+
+    val records = root.child("BomaDBRecords3")
+
+    // stores dates and is used for new day validation
+    val appMeta = root.child("appMeta")
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/navigation/StockPageNavigation.kt
+```kotlin
+package com.guvnoh.boma.navigation
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.Composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.guvnoh.boma.uidesigns.screens.stock.BottomBarItem
+import com.guvnoh.boma.uidesigns.screens.stock.StockEmptiesScreen
+import com.guvnoh.boma.uidesigns.screens.stock.StockFullsScreen
+import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun StockPageNav(
+    vm: StockViewModel,
+    paddingValues: PaddingValues
+){
+    val navController = rememberNavController()
+
+    NavHost(
+        startDestination = BottomBarItem.Fulls.route,
+        navController = navController
+    ){
+        composable(BottomBarItem.Empties.route){ StockEmptiesScreen(paddingValues, vm, navController) }
+        composable(BottomBarItem.Fulls.route){
+            StockFullsScreen(
+                paddingValues = paddingValues,
+                stockViewModel = vm,
+                navController = navController
+            ) }
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/DeleteProduct.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.wear.compose.material.Icon
+import com.guvnoh.boma.uidesigns.cards.SwipeableProductCard
+import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
+
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DeleteProduct(
+    navController: NavController,
+    paddingValues: PaddingValues,
+    productsViewModel: ProductsViewModel
+) {
+    val productList by productsViewModel.products.collectAsState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    Scaffold(
+        modifier = Modifier
+            .padding(paddingValues)
+            .imePadding()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            TopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = {
+                    Icon(Icons.Filled.Info, "")
+                    Text(
+                        text = "Remove Product from Database",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    )
+
+                }
+            )
+        }
+    ){
+        innerPadding ->
+        Column (Modifier.padding(innerPadding)){
+            // Product List
+            LazyColumn(
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(productList.sortedBy { it.name }) { product ->
+                    SwipeableProductCard(
+                        product = product,
+                        navController = navController,
+                        productsViewModel
+                    )
+                }
+            }
+        }
+    }
+}
+```
+
+## File: app/build.gradle.kts
+```kotlin
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.gms.google.services)
+}
+
+android {
+    namespace = "com.guvnoh.boma"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.guvnoh.boma"
+        minSdk = 25
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+
+    implementation(libs.ui) // or your Compose version
+
+
+
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.navigation.compose )
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+    implementation(libs.firebase.database)
+    implementation(libs.androidx.compose.material)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/cards/SwipableProductCard.kt
 ```kotlin
 package com.guvnoh.boma.uidesigns.cards
@@ -5809,11 +6756,10 @@ import androidx.wear.compose.material.ExperimentalWearMaterialApi
 import androidx.wear.compose.material.FractionalThreshold
 import androidx.wear.compose.material.rememberSwipeableState
 import androidx.wear.compose.material.swipeable
-import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.functions.vibratePhone
 import com.guvnoh.boma.repositories.ProductsRepository
-import com.guvnoh.boma.viewmodels.ProductsViewModel
+import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
 import kotlin.math.roundToInt
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -5958,7 +6904,7 @@ fun DeleteProductCard(
 
     val context = LocalContext.current
     val resId =
-        ProductsRepository().getImage(context,product.imageName?:"bottle.jpg")
+        ProductsRepository().getImage(context,product.imageName?:"bottle.jpg", product.type!!)
 
     Card(
         modifier = Modifier
@@ -6027,537 +6973,6 @@ fun DeleteProductCard(
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/DeleteProduct.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.wear.compose.material.Icon
-import com.guvnoh.boma.uidesigns.cards.SwipeableProductCard
-import com.guvnoh.boma.viewmodels.ProductsViewModel
-
-@RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DeleteProduct(
-    navController: NavController,
-    paddingValues: PaddingValues,
-    productsViewModel: ProductsViewModel
-) {
-    val productList by productsViewModel.products.collectAsState()
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    Scaffold(
-        modifier = Modifier
-            .padding(paddingValues)
-            .imePadding()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            TopAppBar(
-                scrollBehavior = scrollBehavior,
-                title = {
-                    Icon(Icons.Filled.Info, "")
-                    Text(
-                        text = "Remove Product from Database",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                    )
-
-                }
-            )
-        }
-    ){
-        innerPadding ->
-        Column (Modifier.padding(innerPadding)){
-            // Product List
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(productList.sortedBy { it.name }) { product ->
-                    SwipeableProductCard(
-                        product = product,
-                        navController = navController,
-                        productsViewModel
-                    )
-                }
-            }
-        }
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/viewmodels/productViewModel.kt
-```kotlin
-package com.guvnoh.boma.viewmodels
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
-import com.google.firebase.database.DatabaseReference
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.formatters.getDate
-import com.guvnoh.boma.formatters.halfAndQuarter
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.uidesigns.screens.receipt.Receipt
-import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.repositories.ProductsRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
-
-
-class ProductsViewModel(
-    private val repository: ProductsRepository = ProductsRepository()
-) : ViewModel() {
-
-    private val _products = MutableStateFlow<List<Products>>(emptyList())
-    val products: StateFlow<List<Products>> = _products
-
-    //customer
-    private val _customerName = mutableStateOf("")
-    var customerName: State<String> = _customerName
-
-    //sold products
-    private val _soldProducts = MutableStateFlow<List<SoldProduct>>(emptyList())
-    val soldProducts: StateFlow<List<SoldProduct>> = _soldProducts
-
-
-    init {
-        observeProducts(FirebaseRefs.Products)
-    }
-
-    //get products from database
-
-    private fun observeProducts(repo: DatabaseReference) {
-        repository.observeProducts(repo) { list ->
-            _products.value = list
-        }
-    }
-
-    // customer name
-
-    fun setCustomerName(name: String) {
-        _customerName.value = name
-    }
-
-    //sold products management
-
-    fun updateSoldProduct(
-        product: Products,
-        stringQuantity: String,
-        doubleQuantity: Double
-    ) {
-        _soldProducts.update { list ->
-            val updated = list.toMutableList()
-            val index = updated.indexOfFirst { it.product?.name == product.name }
-
-            val total = ((product.stringPrice?.toDoubleOrNull() ?: 0.0) * doubleQuantity).toInt()
-
-            val soldProduct = SoldProduct(
-                product = product,
-                stringQuantity = stringQuantity,
-                doubleQuantity = doubleQuantity,
-                intTotal = total,
-                receiptQuantity = halfAndQuarter(doubleQuantity)
-            )
-
-            if (index >= 0) {
-                updated[index] = soldProduct
-            } else {
-                updated.add(soldProduct)
-            }
-
-            updated
-        }
-    }
-
-    //generate receipt
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun generateReceipt(): Receipt {
-        val validSoldProducts = soldProducts.value.filter { (it.intTotal ?: 0) > 0 }.toList()
-
-        val grandTotal = validSoldProducts.sumOf { it.intTotal ?: 0 }
-        val date = getDate()
-        val receipt = Receipt(
-            id = FirebaseRefs.records.push().key.toString().replace("-", ""),
-            soldProducts = validSoldProducts,
-            customerName = customerName.value,
-            date = date,
-            grandTotal = grandTotal.toString(),
-        )
-
-        return receipt
-    }
-
-
-
-
-    fun deleteProduct(productId: String) {
-        repository.deleteProduct(productId)
-    }
-
-    fun clearTotals() {
-        _soldProducts.value = emptyList()
-    }
-
-    fun clearName() {
-        _customerName.value = ""
-    }
-}
-```
-
-## File: gradle/libs.versions.toml
-```toml
-[versions]
-agp = "8.8.0"
-kotlin = "2.0.0"
-coreKtx = "1.13.1"
-junit = "4.13.2"
-junitVersion = "1.3.0"
-espressoCore = "3.7.0"
-lifecycleRuntimeKtx = "2.9.4"
-activityCompose = "1.9.2"
-composeBom = "2024.04.01"
-navigationCompose = "2.9.4"
-googleGmsGoogleServices = "4.4.3"
-firebaseDatabase = "22.0.1"
-composeMaterial = "1.5.2"
-ui = "1.9.4"
-
-
-[libraries]
-androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
-androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
-androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
-androidx-ui = { group = "androidx.compose.ui", name = "ui" }
-androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
-androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
-androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
-androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
-androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
-firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
-androidx-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
-ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
-
-[plugins]
-android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
-```
-
-## File: app/src/main/java/com/guvnoh/boma/navigation/StockPageNavigation.kt
-```kotlin
-package com.guvnoh.boma.navigation
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.Composable
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.uidesigns.screens.stock.BottomBarItem
-import com.guvnoh.boma.uidesigns.screens.stock.StockEmptiesScreen
-import com.guvnoh.boma.uidesigns.screens.stock.StockFullsScreen
-import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun StockPageNav(
-    vm: StockViewModel,
-    paddingValues: PaddingValues
-){
-    val navController = rememberNavController()
-
-    NavHost(
-        startDestination = BottomBarItem.Fulls.route,
-        navController = navController
-    ){
-        composable(BottomBarItem.Empties.route){ StockEmptiesScreen(paddingValues, vm, navController) }
-        composable(BottomBarItem.Fulls.route){
-            StockFullsScreen(
-                paddingValues = paddingValues,
-                stockViewModel = vm,
-                navController = navController
-            ) }
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/cards/ProductCard.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.cards
-
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.models.AutoScrollingText
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.repositories.ProductsRepository
-import com.guvnoh.boma.viewmodels.ProductsViewModel
-
-@Composable
-fun ProductCard(
-    product: Products,
-    viewModel: ProductsViewModel,
-) {
-    val soldProducts = viewModel.soldProducts.collectAsState()
-
-    val soldProduct = soldProducts.value.find { it.product?.name == product.name }
-
-    val quantity = soldProduct?.stringQuantity?:""
-
-    val total = soldProduct?.intTotal?:0
-
-    val stock = product.store?.warehouse?.closingStock?:0.0
-
-    val enabled: Boolean by remember { mutableStateOf((stock > 0)) }
-
-    val context = LocalContext.current
-    val resId = ProductsRepository().getImage(context,product.imageName?:"bottle.jpg")
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 12.dp),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = if (enabled){
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        }else{
-            CardDefaults.cardColors(containerColor = Color.LightGray)
-        }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // 🖼 Product Image with gradient ring
-            Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(resId),
-                    contentDescription = product.name,
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                )
-            }
-
-            // 📋 Product Details
-            Column(
-                modifier = Modifier
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                AutoScrollingText(product.name?:"unknown", modifier = Modifier)
-
-                Text(
-                    text = nairaFormat(product.stringPrice?.toInt()?:0),
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 14.sp
-                    )
-                )
-
-                if (!enabled) {
-                    Text( text = "⚠️out of stock!",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 14.sp
-                        )
-                    )
-                }
-
-                //TOTAL
-                Column (Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End){
-                    // 🧮 Show Total if available
-                    AnimatedVisibility(
-                        visible = total > 0,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Text(
-                            text = nairaFormat(total),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF2E7D32) // deep green
-                            )
-                        )
-                    }
-                }
-            }
-
-            // 🔢 Quantity Input
-            if (enabled){
-                OutlinedTextField(
-                    value = quantity,
-                    onValueChange = { newValue ->
-                        val input = newValue.toDoubleOrNull()?:0.0
-
-                        viewModel.updateSoldProduct(
-                            product = product,
-                            stringQuantity = newValue,
-                            doubleQuantity = input
-                        )
-                    },
-                    label = { Text("Qty") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier
-                        .width(90.dp),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
-        }
-    }
-}
-```
-
-## File: app/build.gradle.kts
-```kotlin
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.google.gms.google.services)
-}
-
-android {
-    namespace = "com.guvnoh.boma"
-    compileSdk = 35
-
-    defaultConfig {
-        applicationId = "com.guvnoh.boma"
-        minSdk = 25
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
-    }
-}
-
-dependencies {
-
-    implementation(libs.ui) // or your Compose version
-
-
-
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.navigation.compose )
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.firebase.database)
-    implementation(libs.androidx.compose.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-}
-```
-
 ## File: app/src/main/java/com/guvnoh/boma/navigation/MainNavigation.kt
 ```kotlin
 package com.guvnoh.boma.navigation
@@ -6577,7 +6992,7 @@ import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.screens.addProduct.AddProduct
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
 import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangePage
-import com.guvnoh.boma.uidesigns.screens.ProductsPage
+import com.guvnoh.boma.uidesigns.screens.products.ProductsPage
 import com.guvnoh.boma.uidesigns.screens.addProduct.AddProductViewModel
 import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptPage
 import com.guvnoh.boma.uidesigns.screens.records.RecordDetails
@@ -6586,7 +7001,7 @@ import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangeViewmodel
 import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptViewmodel
 import com.guvnoh.boma.uidesigns.screens.records.RecordViewModel
 import com.guvnoh.boma.viewmodels.AppMetaViewModel
-import com.guvnoh.boma.viewmodels.ProductsViewModel
+import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
 import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
 
 
@@ -6736,418 +7151,4 @@ val brandData = mutableListOf(
     Products(name = "Pop cola (small)", stringPrice = "2600", imageName = "pop_cola", type = ProductType.PET),
     Products(name = "Pepsi", stringPrice = "4500", imageName = "pepsi", type = ProductType.PET),
 )
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/ProductsPage.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.guvnoh.boma.R
-import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.models.EmptyCompany
-import com.guvnoh.boma.models.ProductSplashScreen
-import com.guvnoh.boma.models.ProductType
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.uidesigns.cards.ProductCard
-import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptViewmodel
-import com.guvnoh.boma.viewmodels.ProductsViewModel
-
-@RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ProductsPage(
-    navController: NavController,
-    paddingValues: PaddingValues,
-    vm: ProductsViewModel,
-    receiptViewmodel: ReceiptViewmodel
-) {
-
-    var search: Boolean by rememberSaveable { mutableStateOf(false) }
-    var searchEntry by rememberSaveable { mutableStateOf("") }
-    val soldProducts by vm.soldProducts.collectAsState()
-    val customerName by vm.customerName
-    val productList by vm.products.collectAsState()
-    val grandTotal = soldProducts.sumOf { it.intTotal?:0 }
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
-
-    //vm.confirmSoldToday(productList)
-    //sendFullsDataToDB()
-
-    Scaffold(
-        modifier = Modifier
-            .padding(paddingValues)
-            .imePadding()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            TopAppBar(
-                scrollBehavior = scrollBehavior,
-                title = {
-                    Text(
-                        "New Order",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                    )
-                },
-                actions = {
-                    IconButton(
-                        onClick = { search = !search },
-                        ) {
-                        if (!search) Icon(Icons.Filled.Search, contentDescription = "Search")
-                    }
-                    if (search){
-                        OutlinedTextField(
-                            value = searchEntry,
-                            onValueChange = {
-                                    entry ->
-                                searchEntry = entry
-                            },
-                            label = { Text("Search products...") },
-                            modifier = Modifier
-                                .padding(start = 8.dp, bottom = 5.dp)
-                                .width(200.dp)
-                        )
-                    }
-
-                }
-            )
-        },
-        bottomBar = {
-            Surface(
-                tonalElevation = 4.dp,
-                shadowElevation = 8.dp
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    // Clear Button
-                    OutlinedButton(
-                        onClick = {
-                            if (searchEntry!="") {
-                                search = !search
-                                searchEntry = ""
-                            }
-                            //search text field is replaced by search icon
-                            vm.clearTotals()
-                            vm.clearName()
-                        },
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Icon(Icons.Filled.Clear, contentDescription = "Clear")
-                        Spacer(Modifier.width(6.dp))
-                        Text("Clear")
-                    }
-
-                    // Grand Total
-                    if (grandTotal > 0) {
-                        Text(
-                            nairaFormat(grandTotal),
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.ExtraBold
-                            ),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    // Done Button
-                    Button(
-                        onClick = {
-
-                            searchEntry = ""
-                            navController.navigate(Screen.Receipt.route)
-                            val receipt = vm.generateReceipt()
-                            receiptViewmodel.setCurrentReceipt(receipt)
-
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(Icons.Filled.Done, contentDescription = "Done")
-                        Spacer(Modifier.width(6.dp))
-                        Text("Done")
-                    }
-                }
-            }
-        }
-    ) { innerPadding ->
-        var showSplash by remember { mutableStateOf(true) }
-        if (showSplash){
-            ProductSplashScreen(
-                modifier = Modifier,
-                list = productList.toMutableList(),
-                onTimeOut = {showSplash = false}
-            )
-        }else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                // Customer Name
-                OutlinedTextField(
-                    value = customerName,
-                    onValueChange = {
-                        vm.setCustomerName(it)
-                                    },
-                    label = { Text("Customer Name") },
-                    leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = null) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                )
-
-                // Product List
-                if (!search) {
-                    LazyColumn(
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        val bottlesDisplay: MutableList<Products> = mutableListOf()
-                        val  unsortedBottles = productList.filter {
-                                it.type == ProductType.BOTTLE }
-                        unsortedBottles.forEach {
-                                bottlesDisplay.add(it)
-                        }
-
-                        val petsDisplay: MutableList<Products> = mutableListOf()
-                        val  unsortedPets = productList.filter {
-                            it.type == ProductType.PET }
-                        unsortedPets.forEach {
-                            petsDisplay.add(it)
-                        }
-                        val cansDisplay: MutableList<Products> = mutableListOf()
-                        val  unsortedCans = productList.filter {
-                            it.type == ProductType.CAN }
-                        unsortedCans.forEach {
-                            cansDisplay.add(it)
-                        }
-
-
-
-                        val coca_colaGroup = getDisplayGroup(bottlesDisplay,EmptyCompany.COCA_COLA)
-
-                        stickyHeader {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(40.dp)
-                                    .background(color = Color.White),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = "Coca_cola",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
-                        }
-
-                        items(coca_colaGroup.sortedBy {it.name}){ product ->
-
-                            ProductCard(
-                                product = product,
-                                viewModel = vm,
-                            )
-                        }
-
-                        val heroGroup = getDisplayGroup(bottlesDisplay, EmptyCompany.HERO)
-
-                        stickyHeader {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(40.dp)
-                                    .background(color = Color.White),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = "International Breweries",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.ExtraBold,
-                                )
-                            }
-                        }
-                        items(heroGroup.sortedBy { it.name }) { product ->
-
-                            ProductCard(
-                                product = product,
-                                viewModel = vm,
-                            )
-                        }
-
-                        val nblGroup =  getDisplayGroup(bottlesDisplay, EmptyCompany.NBL)
-                        stickyHeader {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(40.dp)
-                                    .background(color = Color.White),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-
-                                Text(
-                                    text = "Nigerian Breweries",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.ExtraBold,
-                                )
-                            }
-                        }
-                        items(nblGroup.sortedBy { it.name }) { product ->
-
-                            ProductCard(
-                                product = product,
-                                viewModel = vm,
-                            )
-                        }
-
-                        val guinnessGroup = getDisplayGroup(bottlesDisplay, EmptyCompany.GUINNESS)
-                        stickyHeader {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(40.dp)
-                                    .background(color = Color.White),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-
-                                Text(
-                                    text = "Guinness",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.ExtraBold,
-                                )
-
-                            }
-                        }
-                        items(guinnessGroup.sortedBy { it.name }) { product ->
-                            ProductCard(
-                                product = product,
-                                viewModel = vm,
-                            )
-                        }
-
-                        //pets
-                        stickyHeader {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(40.dp)
-                                    .background(color = Color.White),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = "Pets",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.ExtraBold,
-                                )
-                            }
-                        }
-                        items(petsDisplay.sortedBy { it.name }) { product ->
-
-                            ProductCard(
-                                product = product,
-                                viewModel = vm,
-                            )
-                        }
-
-
-                        //cans
-                        stickyHeader {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(40.dp)
-                                    .background(color = Color.White),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = "Cans",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    )
-                            }
-                        }
-                        items(cansDisplay.sortedBy { it.name }) { product ->
-                            val bottleImage = R.drawable.bottle
-                            val canImage = R.drawable.can_image
-                            if (product.image == bottleImage)product.image = canImage
-                            ProductCard(
-                                product = product,
-                                viewModel = vm,
-                            )
-                        }
-                    }
-                } else {
-                    LazyColumn(
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        val newList = mutableListOf<Products>()
-                        productList.forEach {
-                            if (it.name?.lowercase()?.contains(searchEntry) == true) {
-                                newList.add(it)
-                            }
-                        }
-                        items(newList.sortedBy { it.name}) { product ->
-                            ProductCard(
-                                product = product,
-                                viewModel = vm,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-fun getDisplayGroup(list: List<Products>, emptyCompany: EmptyCompany): List<Products>{
-    val group = mutableListOf<Products>()
-    list.forEach {
-        if (it.type == ProductType.BOTTLE && it.empties?.company == emptyCompany)
-            group.add(it)
-    }
-
-    return group
-
-}
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun ShowProducts() {
-   // ProductsPage(rememberNavController(), PaddingValues(), viewModel())
-}
 ```
