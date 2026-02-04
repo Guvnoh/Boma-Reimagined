@@ -1,5 +1,6 @@
 package com.guvnoh.boma.navigation
 
+import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
@@ -7,10 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.guvnoh.boma.MainActivity
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.screens.addProduct.AddProduct
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
@@ -33,6 +36,7 @@ import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
 fun Navigation(
     paddingValues: PaddingValues,
     navController: NavHostController,
+    startDestination: String? = null
     ){
 
     val records: RecordViewModel = viewModel()
@@ -43,6 +47,8 @@ fun Navigation(
     val addProductViewModel: AddProductViewModel = viewModel()
     val receiptViewmodel: ReceiptViewmodel = viewModel()
     val priceChangeViewmodel: PriceChangeViewmodel = viewModel()
+
+
 
 
 
@@ -62,7 +68,7 @@ fun Navigation(
 
 
     NavHost(
-        startDestination = Screen.Products.route,
+        startDestination = startDestination?:Screen.Products.route,
         navController = navController
 
     ){

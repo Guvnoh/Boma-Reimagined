@@ -1,7 +1,9 @@
 package com.guvnoh.boma.uidesigns.screens.priceChange
 
 import android.Manifest
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -11,6 +13,7 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.MainActivity
 import com.guvnoh.boma.R
 import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.nairaFormat
@@ -88,12 +91,26 @@ class PriceChangeViewmodel: ViewModel() {
         return  result
     }
 
-    private fun sendNotification(context: Context, content: String, id: Int){
+    private fun sendNotification(context: Context, content: String) {
+        val id = System.currentTimeMillis().toInt()
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("route", Screen.PriceChange.route)
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(context, "default_channel")
             .setSmallIcon(R.drawable.boma_logo)
             .setContentTitle("Price Update!")
             .setContentText(content)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT).build()
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.POST_NOTIFICATIONS
@@ -108,8 +125,10 @@ class PriceChangeViewmodel: ViewModel() {
             // for ActivityCompat#requestPermissions for more details.
             return
         }
+
         NotificationManagerCompat.from(context).notify(id, notification)
     }
+
 
     fun getPendingPrice(productId: String): String{
         val pendingPrice: String
@@ -123,7 +142,7 @@ class PriceChangeViewmodel: ViewModel() {
         context: Context,
         map: Map<String, String>,
         navController: NavController){
-        val notificationId = System.currentTimeMillis().toInt()
+
         map.keys.forEach { productId ->
             val productToUpdate = products.value.first { it.id == productId }
             val newPrice = map[productId]
@@ -131,8 +150,7 @@ class PriceChangeViewmodel: ViewModel() {
 
             sendNotification(
                 context = context,
-                content = "${productToUpdate.name}   ----->  ${nairaFormat(newPrice.toDouble())} ",
-                id = notificationId
+                content = "${productToUpdate.name}   ----->  ${nairaFormat(newPrice.toDouble())} "
             )
         }
         Toast.makeText(context, "Prices updated", Toast.LENGTH_SHORT).show()

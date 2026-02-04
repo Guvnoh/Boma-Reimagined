@@ -45,6 +45,8 @@ dependencies {
     implementation(libs.ui) // or your Compose version
 
 
+    implementation(libs.firebase.messaging)
+    implementation(platform(libs.firebase.bom))
 
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose )

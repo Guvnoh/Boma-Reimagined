@@ -466,7 +466,7 @@ open class Screen(
 
     data object PriceChange : Screen(
         route = "price_change",
-        title = "Change Price",
+        title = "Pricing",
         icon = MenuIcon.Resource(R.drawable.naira)
     )
 
@@ -699,179 +699,6 @@ enum class ProductParameters {
     NAME,
     PRICE,
     CATEGORY,
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/products/ProductCard.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens.products
-
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.models.AutoScrollingText
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.SoldProduct
-import com.guvnoh.boma.repositories.ProductsRepository
-import com.guvnoh.boma.uidesigns.screens.stock.Store
-
-@Composable
-fun ProductCard(
-    product: Products,
-    viewModel: ProductsViewModel,
-    soldProduct: SoldProduct?
-) {
-
-    val quantity = soldProduct?.stringQuantity?:""
-
-    val total = soldProduct?.intTotal?:0
-
-    val vmStore: Store = viewModel.selectedStore.value
-
-    val stock = when (vmStore){
-        Store.WAREHOUSE-> product.store?.warehouse?.closingStock?:0.0
-        Store.HEAD_OFFICE -> product.store?.headOffice?.closingStock?:0.0
-    }
-
-    //val stock =
-
-    val enabled: Boolean = stock > 0
-
-    val context = LocalContext.current
-    val resId = ProductsRepository().getImage(context,product.imageName?:"bottle.jpg", product.type!!)
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 12.dp),
-        shape = RoundedCornerShape(20.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = if (enabled){
-            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        }else{
-            CardDefaults.cardColors(containerColor = Color.LightGray)
-        }
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // 🖼 Product Image with gradient ring
-            Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(resId),
-                    contentDescription = product.name,
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
-                )
-            }
-
-            // 📋 Product Details
-            Column(
-                modifier = Modifier
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                AutoScrollingText(product.name?:"unknown", modifier = Modifier)
-
-                Text(
-                    text = nairaFormat(product.stringPrice?.toInt()?:0),
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 14.sp
-                    )
-                )
-
-                if (!enabled) {
-                    Text( text = "⚠️out of stock!",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 14.sp
-                        )
-                    )
-                }
-
-                //TOTAL
-                Column (Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End){
-                    // 🧮 Show Total if available
-                    AnimatedVisibility(
-                        visible = total > 0,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Text(
-                            text = nairaFormat(total),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF2E7D32) // deep green
-                            )
-                        )
-                    }
-                }
-            }
-
-            // 🔢 Quantity Input
-            if (enabled){
-                OutlinedTextField(
-                    value = quantity,
-                    onValueChange = { newValue ->
-                        val input = newValue.toDoubleOrNull()?:0.0
-
-                        viewModel.updateSoldProduct(
-                            product = product,
-                            stringQuantity = newValue,
-                            doubleQuantity = input
-                        )
-                    },
-                    label = { Text("Qty") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier
-                        .width(90.dp),
-                    shape = RoundedCornerShape(12.dp)
-                )
-            }
-        }
-    }
 }
 ```
 
@@ -2011,87 +1838,6 @@ rootProject.name = "BOMA"
 include(":app")
 ```
 
-## File: app/src/main/AndroidManifest.xml
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
-
-
-    <application
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.BOMA"
-        tools:targetApi="31">
-        <activity
-            android:name=".MainActivity"
-            android:windowSoftInputMode="adjustResize"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.BOMA">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-
-</manifest>
-```
-
-## File: app/src/main/java/com/guvnoh/boma/formatters/CurrencyFormatter.kt
-```kotlin
-package com.guvnoh.boma.formatters
-
-import java.text.DecimalFormat
-
-fun nairaFormat(num: Double): String {
-    val hasDecimal = num % 1 != 0.0
-    val absValue = kotlin.math.abs(num)
-
-    val format = if (hasDecimal) {
-        DecimalFormat("#,##0.00")
-    } else {
-        DecimalFormat("#,###")
-    }
-
-    val formatted = format.format(absValue)
-
-    return if (num < 0) {
-        "-₦$formatted"
-    } else {
-        "₦$formatted"
-    }
-}
-
-fun nairaFormat(num: Int): String {
-    val format = DecimalFormat("#,###")
-    val absValue = kotlin.math.abs(num)
-
-    return if (num < 0) {
-        "-₦${format.format(absValue)}"
-    } else {
-        "₦${format.format(absValue)}"
-    }
-}
-
-
-
-//fun nairaFormat(num: Int): String{
-//    val format = DecimalFormat("#,###")
-//    return if (num>0){"₦${format.format(num)}"}else{"₦0.00"}
-//}
-```
-
 ## File: app/src/main/java/com/guvnoh/boma/ui/theme/Color.kt
 ```kotlin
 package com.guvnoh.boma.ui.theme
@@ -2583,146 +2329,174 @@ class AddProductViewModel: ViewModel() {
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/products/ProductCard.kt
 ```kotlin
-package com.guvnoh.boma.uidesigns.screens.priceChange
+package com.guvnoh.boma.uidesigns.screens.products
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.lifecycle.ViewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.google.firebase.database.DatabaseReference
-import com.guvnoh.boma.R
-import com.guvnoh.boma.database.FirebaseRefs
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.models.AutoScrollingText
 import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.models.SoldProduct
 import com.guvnoh.boma.repositories.ProductsRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.guvnoh.boma.uidesigns.screens.stock.Store
 
-class PriceChangeViewmodel: ViewModel() {
+@Composable
+fun ProductCard(
+    product: Products,
+    viewModel: ProductsViewModel,
+    soldProduct: SoldProduct?
+) {
 
-    //product list
-    private val _products = MutableStateFlow<List<Products>>(emptyList())
-    val products: StateFlow<List<Products>> = _products
+    val quantity = soldProduct?.stringQuantity?:""
 
-    //price change products
-    private val _priceChangeProducts = MutableStateFlow<List<Products>>(emptyList())
-    val priceChangeProducts: StateFlow<List<Products>> = _priceChangeProducts
+    val total = soldProduct?.intTotal?:0
 
-    init {
-        observeProducts(FirebaseRefs.Products)
+    val vmStore: Store = viewModel.selectedStore.value
+
+    val stock = when (vmStore){
+        Store.WAREHOUSE-> product.store?.warehouse?.closingStock?:0.0
+        Store.HEAD_OFFICE -> product.store?.headOffice?.closingStock?:0.0
     }
 
-    private fun observeProducts(repo: DatabaseReference) {
-        val repository = ProductsRepository()
-        repository.observeProducts(repo) { list ->
-            _products.value = list
+    //val stock =
+
+    val enabled: Boolean = stock > 0
+
+    val context = LocalContext.current
+    val resId = ProductsRepository().getImage(context,product.imageName?:"bottle.jpg", product.type!!)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 12.dp),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = if (enabled){
+            CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        }else{
+            CardDefaults.cardColors(containerColor = Color.LightGray)
         }
-    }
-
-    fun addToPriceChangeList(product: Products){
-        val list = _priceChangeProducts.value.toMutableList()
-        list += product
-        _priceChangeProducts.value = list
-    }
-
-
-    private fun addToPriceChangeList(product: Products, newPrice: String ){
-        val current = _priceChangeProducts.value.toMutableList()
-        product.stringPrice = newPrice
-        current.add(product)
-        _priceChangeProducts.value = current
-    }
-
-
-    // Update price
-    fun updatePrice(product: Products) {
-        val productsRepo = FirebaseRefs.Products
-        // update string and double price of product parameter
-        productsRepo.child(product.id ?: "error")
-            .child("stringPrice")
-            .setValue(product.stringPrice)
-
-        productsRepo.child(product.id?:"error")
-            .child("doublePrice")
-            .setValue(product.doublePrice)
-
-    }
-
-    fun changePrices(newPrice: String, product: Products){
-        val parsedNewPrice = newPrice.filter { ch -> ch.isDigit() || ch == '.' }
-        val parsed = parsedNewPrice.toDoubleOrNull()
-        if (parsed != null && parsed > 0.0) {
-            product.stringPrice = newPrice
-            product.doublePrice = parsed
-            addToPriceChangeList(product, newPrice)
-        }
-    }
-
-    fun errorCheck(newPrice: String): String?{
-        val double = newPrice.toDoubleOrNull()
-        val result = when{
-            newPrice.isEmpty() -> "Empty Field"
-            double == null -> "Invalid Price"
-            double >= 0 -> null
-            else -> "Invalid Price"
-        }
-
-        return  result
-    }
-
-    fun sendNotification(context: Context, content: String, id: Int){
-        val notification = NotificationCompat.Builder(context, "default_channel")
-            .setSmallIcon(R.drawable.boma_logo)
-            .setContentTitle("Price Update!")
-            .setContentText(content)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT).build()
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
-        NotificationManagerCompat.from(context).notify(id, notification)
-    }
-
-    fun updatePrices(context: Context, list: List<Products>, navController: NavController){
-        val notificationId = System.currentTimeMillis().toInt()
-        list.forEach { product ->
-            if (product.id!=null && product.doublePrice!=null){
-                updatePrice(product)
-            }
-            sendNotification(
-                context,
-                "${product.name}   ----->  ${nairaFormat(product.doublePrice!!)} ",
-                notificationId
+            // 🖼 Product Image with gradient ring
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(CircleShape)
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(resId),
+                    contentDescription = product.name,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
                 )
-        }
-        Toast.makeText(context, "Prices updated", Toast.LENGTH_SHORT).show()
-
-        navController.navigate(Screen.Products.route) {
-            popUpTo(navController.graph.findStartDestination().id) {
-                saveState = true
             }
-            launchSingleTop = true
-            restoreState = true
 
+            // 📋 Product Details
+            Column(
+                modifier = Modifier
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                AutoScrollingText(product.name?:"unknown", modifier = Modifier)
+
+                Text(
+                    text = nairaFormat(product.stringPrice?.toDouble()?:0.0),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 14.sp
+                    )
+                )
+
+                if (!enabled) {
+                    Text( text = "⚠️out of stock!",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 14.sp
+                        )
+                    )
+                }
+
+                //TOTAL
+                Column (Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End){
+                    // 🧮 Show Total if available
+                    AnimatedVisibility(
+                        visible = total > 0,
+                        enter = fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Text(
+                            text = nairaFormat(total),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF2E7D32) // deep green
+                            )
+                        )
+                    }
+                }
+            }
+
+            // 🔢 Quantity Input
+            if (enabled){
+                OutlinedTextField(
+                    value = quantity,
+                    onValueChange = { newValue ->
+                        val input = newValue.toDoubleOrNull()?:0.0
+
+                        viewModel.updateSoldProduct(
+                            product = product,
+                            stringQuantity = newValue,
+                            doubleQuantity = input
+                        )
+                    },
+                    label = { Text("Qty") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier
+                        .width(90.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
         }
     }
 }
@@ -3995,84 +3769,6 @@ private fun ShowStock(){
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/viewmodels/AppMetaViewModel.kt
-```kotlin
-package com.guvnoh.boma.viewmodels
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.lifecycle.ViewModel
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.MutableData
-import com.google.firebase.database.Transaction
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.models.FullsStock
-import com.guvnoh.boma.repositories.AppMetaRepository
-
-class AppMetaViewModel : ViewModel() {
-
-    private val metaRepo = AppMetaRepository()
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun checkDailyReset(onReset: () -> Unit) {
-        metaRepo.checkNewDay {
-            onReset()
-        }
-    }
-    private fun resetStockData(ref: DatabaseReference){
-        ref.runTransaction(object : Transaction.Handler {
-            override fun doTransaction(data: MutableData): Transaction.Result {
-                val stock = data.getValue(FullsStock::class.java)
-                    ?: return Transaction.success(data)
-
-                val closing = stock.closingStock ?: 0.0
-
-                stock.openingStock = closing
-                stock.soldToday = 0.0
-
-                data.value = stock
-                return Transaction.success(data)
-            }
-
-            override fun onComplete(
-                error: DatabaseError?,
-                committed: Boolean,
-                currentData: DataSnapshot?
-            ) {}
-        })
-    }
-
-    fun resetSoldToday() {
-        val repo = FirebaseRefs.Products
-        repo.get().addOnSuccessListener { snapshot ->
-            snapshot.children.forEach { productSnap ->
-                val productId = productSnap.key ?: return@forEach
-
-                val warehouseStock = repo
-                    .child(productId)
-                    .child("store")
-                    .child("warehouse")
-
-                val headOfficeStock = repo
-                    .child(productId)
-                    .child("store")
-                    .child("headOffice")
-
-                resetStockData(warehouseStock)
-                resetStockData(headOfficeStock)
-
-            }
-        }
-    }
-
-    fun checkNewPrices(){
-
-    }
-}
-```
-
 ## File: app/src/main/res/drawable/ic_launcher_background.xml
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -4190,6 +3886,87 @@ zipStoreBase=GRADLE_USER_HOME
 zipStorePath=wrapper/dists
 ```
 
+## File: app/src/main/AndroidManifest.xml
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.BOMA"
+        tools:targetApi="31">
+        <activity
+            android:name=".MainActivity"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.BOMA">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
+
+## File: app/src/main/java/com/guvnoh/boma/formatters/CurrencyFormatter.kt
+```kotlin
+package com.guvnoh.boma.formatters
+
+import java.text.DecimalFormat
+
+fun nairaFormat(num: Double): String {
+    val hasDecimal = num % 1 != 0.0
+    val absValue = kotlin.math.abs(num)
+
+    val format = if (hasDecimal) {
+        DecimalFormat("#,##0.00")
+    } else {
+        DecimalFormat("#,###")
+    }
+
+    val formatted = format.format(absValue)
+
+    return if (num < 0) {
+        "-₦$formatted"
+    } else {
+        "₦$formatted"
+    }
+}
+
+fun nairaFormat(num: Int): String {
+    val format = DecimalFormat("#,###")
+    val absValue = kotlin.math.abs(num)
+
+    return if (num < 0) {
+        "-₦${format.format(absValue)}"
+    } else {
+        "₦${format.format(absValue)}"
+    }
+}
+
+
+
+//fun nairaFormat(num: Int): String{
+//    val format = DecimalFormat("#,###")
+//    return if (num>0){"₦${format.format(num)}"}else{"₦0.00"}
+//}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/functions/SendDummyData.kt
 ```kotlin
 package com.guvnoh.boma.functions
@@ -4234,63 +4011,6 @@ object SendDummyData {
     fun cleardb(){
         FirebaseRefs.Products.removeValue()
     }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/MainActivity.kt
-```kotlin
-package com.guvnoh.boma
-
-
-import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import com.guvnoh.boma.ui.theme.BOMATheme
-import com.guvnoh.boma.uidesigns.Boma
-
-class MainActivity : ComponentActivity() {
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
-            ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001
-            )
-        }
-        createNotificationChannel(this)
-
-        setContent {
-            BOMATheme {
-                Boma()
-            }
-        }
-    }
-    private fun createNotificationChannel(context: Context){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "default_channel",
-                "General Notifications",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "App notifications"
-            }
-            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
-                    as NotificationManager
-            manager.createNotificationChannel(channel)
-
-        }
-    }
-
 }
 ```
 
@@ -4653,6 +4373,159 @@ fun AddProduct(
 fun ShowAddScreen(){
     val avm: AddProductViewModel = viewModel()
     AddProduct(PaddingValues(5.dp), rememberNavController(),avm)
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.priceChange
+
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.R
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.repositories.ProductsRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+
+class PriceChangeViewmodel: ViewModel() {
+
+    //product list
+    private val _products = MutableStateFlow<List<Products>>(emptyList())
+    val products: StateFlow<List<Products>> = _products
+
+    //price change products
+    private val _priceChangeProducts = MutableStateFlow<Map<String, String>>(emptyMap())
+    val priceChangeProducts: StateFlow<Map<String, String>> = _priceChangeProducts
+
+    init {
+        observeProducts(FirebaseRefs.Products)
+    }
+
+    private fun observeProducts(repo: DatabaseReference) {
+        val repository = ProductsRepository()
+        repository.observeProducts(repo) { list ->
+            _products.value = list
+        }
+    }
+
+    fun clearPriceChangeList(){
+        _priceChangeProducts.value = emptyMap()
+    }
+
+
+     fun addToPriceChangeList(product: Products, newPrice: String ){
+        val validPrice = validateEntry(newPrice) //ensure entry is a valid double then convert to string
+        val pricesToUpdate = _priceChangeProducts.value.toMutableMap()
+        pricesToUpdate[product.id!!] = validPrice
+        _priceChangeProducts.value = pricesToUpdate
+    }
+
+
+    // Update price
+    fun updatePrice(product: Products, newPrice: String) {
+        val productsRepo = FirebaseRefs.Products
+        // update string and double price of product parameter
+        productsRepo.child(product.id ?: "error")
+            .child("stringPrice")
+            .setValue(newPrice)
+
+        productsRepo.child(product.id?:"error")
+            .child("doublePrice")
+            .setValue(newPrice.toDouble())
+
+    }
+
+    private fun validateEntry(newPrice: String): String{
+        val parsedNewPrice = newPrice.filter { ch -> ch.isDigit() || ch == '.' }
+        val parsed = parsedNewPrice.toDoubleOrNull()
+        if (parsed != null && parsed > 0.0) return parsed.toString()
+        return ""
+    }
+
+    fun errorCheck(newPrice: String): String?{
+        val double = newPrice.toDoubleOrNull()
+        val result = when{
+            newPrice.isEmpty() -> "Empty Field"
+            double == null -> "Invalid Price"
+            double >= 0 -> null
+            else -> "Invalid Price"
+        }
+
+        return  result
+    }
+
+    private fun sendNotification(context: Context, content: String, id: Int){
+        val notification = NotificationCompat.Builder(context, "default_channel")
+            .setSmallIcon(R.drawable.boma_logo)
+            .setContentTitle("Price Update!")
+            .setContentText(content)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT).build()
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
+        NotificationManagerCompat.from(context).notify(id, notification)
+    }
+
+    fun getPendingPrice(productId: String): String{
+        val pendingPrice: String
+        val map = priceChangeProducts.value
+        val pendingProductId = if (productId in map.keys){map.keys.first { productId == it }} else return ""
+        pendingPrice = map[pendingProductId]!!
+        return pendingPrice
+    }
+
+    fun updatePrices(
+        context: Context,
+        map: Map<String, String>,
+        navController: NavController){
+        val notificationId = System.currentTimeMillis().toInt()
+        map.keys.forEach { productId ->
+            val productToUpdate = products.value.first { it.id == productId }
+            val newPrice = map[productId]
+            updatePrice(productToUpdate, newPrice!!)
+
+            sendNotification(
+                context = context,
+                content = "${productToUpdate.name}   ----->  ${nairaFormat(newPrice.toDouble())} ",
+                id = notificationId
+            )
+        }
+        Toast.makeText(context, "Prices updated", Toast.LENGTH_SHORT).show()
+
+        navController.navigate(Screen.Products.route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+
+        }
+    }
 }
 ```
 
@@ -5198,6 +5071,141 @@ class StockViewModel(
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/viewmodels/AppMetaViewModel.kt
+```kotlin
+package com.guvnoh.boma.viewmodels
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.lifecycle.ViewModel
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.MutableData
+import com.google.firebase.database.Transaction
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.FullsStock
+import com.guvnoh.boma.repositories.AppMetaRepository
+
+class AppMetaViewModel : ViewModel() {
+
+    private val metaRepo = AppMetaRepository()
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun checkDailyReset(onReset: () -> Unit) {
+        metaRepo.checkNewDay {
+            onReset()
+        }
+    }
+    private fun resetStockData(ref: DatabaseReference){
+        ref.runTransaction(object : Transaction.Handler {
+            override fun doTransaction(data: MutableData): Transaction.Result {
+                val stock = data.getValue(FullsStock::class.java)
+                    ?: return Transaction.success(data)
+
+                val closing = stock.closingStock ?: 0.0
+
+                stock.openingStock = closing
+                stock.soldToday = 0.0
+
+                data.value = stock
+                return Transaction.success(data)
+            }
+
+            override fun onComplete(
+                error: DatabaseError?,
+                committed: Boolean,
+                currentData: DataSnapshot?
+            ) {}
+        })
+    }
+
+    fun resetSoldToday() {
+        val repo = FirebaseRefs.Products
+        repo.get().addOnSuccessListener { snapshot ->
+            snapshot.children.forEach { productSnap ->
+                val productId = productSnap.key ?: return@forEach
+
+                val warehouseStock = repo
+                    .child(productId)
+                    .child("store")
+                    .child("warehouse")
+
+                val headOfficeStock = repo
+                    .child(productId)
+                    .child("store")
+                    .child("headOffice")
+
+                resetStockData(warehouseStock)
+                resetStockData(headOfficeStock)
+
+            }
+        }
+    }
+
+    fun checkNewPrices(){
+
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/MainActivity.kt
+```kotlin
+package com.guvnoh.boma
+
+
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import com.guvnoh.boma.ui.theme.BOMATheme
+import com.guvnoh.boma.uidesigns.Boma
+
+class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001
+            )
+        }
+        createNotificationChannel(this)
+
+        setContent {
+            BOMATheme {
+                Boma()
+            }
+        }
+    }
+    private fun createNotificationChannel(context: Context){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "default_channel",
+                "General Notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "App notifications"
+            }
+            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
+                    as NotificationManager
+            manager.createNotificationChannel(channel)
+
+        }
+    }
+
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/models/Empties.kt
 ```kotlin
 package com.guvnoh.boma.models
@@ -5632,436 +5640,6 @@ private fun ShowDemo(){
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeCard.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens.priceChange
-
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.guvnoh.boma.R
-import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.brandData
-import com.guvnoh.boma.repositories.ProductsRepository
-import androidx.compose.runtime.collectAsState
-
-@Composable
-fun PriceChangeCard(
-    product: Products,
-    priceChangeViewmodel: PriceChangeViewmodel,
-) {
-    var newPrice by remember { mutableStateOf("") }
-    var priceError by remember { mutableStateOf<String?>(null) }
-    var isExpanded by remember { mutableStateOf(false) }
-
-    val context = LocalContext.current
-    val imageRes = ProductsRepository()
-        .getImage(context, product.imageName ?: "bottle.jpg", product.type!!)
-        .takeIf { it != 0 } ?: R.drawable.bottle
-
-    val currentPrice = product.stringPrice?.toDoubleOrNull() ?: 0.0
-    val displayCurrentPrice by remember { mutableDoubleStateOf(currentPrice) }
-    val pendingPrice = newPrice.toDoubleOrNull()?:0.0
-    val priceChange  = pendingPrice - displayCurrentPrice
-    val priceChangePercent  = if (displayCurrentPrice >0.0 && pendingPrice >0.0 ) {
-        ((pendingPrice - displayCurrentPrice) / displayCurrentPrice) * 100
-    } else 0.0
-    val priceChangeList = priceChangeViewmodel.priceChangeProducts.collectAsState().value
-
-
-    Card(
-        onClick = { isExpanded = !isExpanded },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isExpanded)
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.08f)
-            else
-                MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isExpanded) 4.dp else 2.dp
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            // Main Row: Image + Product Info + Price
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                // Product Image
-                Surface(
-                    modifier = Modifier.size(64.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                ) {
-                    Image(
-                        painter = painterResource(imageRes),
-                        contentDescription = product.name,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                }
-
-                // Product Name & Current Price
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = product.name ?: "Unknown",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
-                        ),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = nairaFormat(currentPrice),
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        if (priceError == null) {
-                            Icon(
-                                imageVector = Icons.Default.TrendingUp,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = if (priceChange > 0)
-                                    Color(0xFF4CAF50)
-                                else
-                                    Color(0xFFF44336)
-                            )
-                        }
-                    }
-                }
-
-                // New Price Badge
-                if (product in priceChangeList) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 4.dp)
-                    ) {
-                        Text(
-                            text = nairaFormat(newPrice.toDoubleOrNull()?:0.0),
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                            style = MaterialTheme.typography.labelLarge.copy(
-                                fontWeight = FontWeight.Bold
-                            ),
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                }
-            }
-
-            // Expanded Section: Input + Stats
-            AnimatedVisibility(
-                visible = isExpanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                    // Input Field
-                    OutlinedTextField(
-                        value = newPrice,
-                        onValueChange = { input ->
-                            val filtered = input.filter { it.isDigit() || it == '.' } //make sure input is either a number or "."
-                            if (filtered.count { it == '.' } <= 1) { //make sure there is only one "." if any
-                                newPrice = filtered //update variable after check
-                                if (newPrice.isNotEmpty()) {
-                                    priceChangeViewmodel.changePrices(
-                                        newPrice = newPrice,
-                                        product = product
-                                    )
-                                    priceChangeViewmodel.addToPriceChangeList(product)
-                                }
-                                priceError = priceChangeViewmodel.errorCheck(filtered)
-                            }
-                        },
-                        label = { Text("Enter New Price") },
-                        leadingIcon = {
-                            Text(
-                                "₦",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            )
-                        },
-                        trailingIcon = {
-                            if (newPrice.isNotEmpty()) {
-                                IconButton(onClick = {
-                                    newPrice = ""
-                                    priceError = null
-                                }) {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = "Clear",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        },
-                        placeholder = {
-                            Text(
-                                currentPrice.toString(),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                            )
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        isError = priceError != null,
-                        supportingText = {
-                            if (priceError != null) {
-                                Text(priceError!!, color = MaterialTheme.colorScheme.error)
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        )
-                    )
-
-                    // Price Change Stats
-                    if (priceError == null) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            // Change Amount
-                            Surface(
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "Change",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        text = "${if (priceChange > 0) "+" else ""}${nairaFormat(priceChange)}",
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = if (priceChange > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
-                                    )
-                                }
-                            }
-
-                            // Percentage Change
-
-                            Surface(
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(12.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "Percent",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        text = "${if (priceChangePercent > 0) "+" else ""}%.1f%%".format(priceChangePercent),
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        color = if (priceChangePercent > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Confirm Button
-                    if (priceError == null) {
-                        Button(
-                            onClick = {
-                                newPrice = ""
-                                isExpanded = false
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            )
-                        ) {
-                            Icon(Icons.Default.Check, contentDescription = null)
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "Confirm Price Change",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun ShowCard() {
-    MaterialTheme {
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            Column(
-                modifier = Modifier.padding(vertical = 16.dp)
-            ) {
-                PriceChangeCard(brandData[1], viewModel())
-            }
-        }
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangePage.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens.priceChange
-
-import android.widget.Toast
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.guvnoh.boma.models.Screen
-
-@Composable
-fun PriceChangePage(
-    navController: NavController,
-    paddingValues: PaddingValues,
-    priceChangeViewmodel: PriceChangeViewmodel
-){
-    val productList by priceChangeViewmodel.products.collectAsState()
-    val priceChangeList by priceChangeViewmodel.priceChangeProducts.collectAsState()
-    val context = LocalContext.current
-
-    Scaffold(
-        modifier = Modifier.padding(paddingValues),
-        bottomBar = {
-            Surface(
-                tonalElevation = 4.dp,
-                shadowElevation = 8.dp
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    Button(
-                        onClick = {
-                            priceChangeViewmodel.updatePrices(context,priceChangeList,navController)
-                        },
-                        enabled = priceChangeList.isNotEmpty(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(Icons.Filled.Done, contentDescription = "Save Changes")
-                        Spacer(Modifier.width(8.dp))
-                        Text("Save Changes")
-                    }
-                }
-            }
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            contentPadding = PaddingValues(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            items(productList.sortedBy { it.name }) { product ->
-                PriceChangeCard(product, priceChangeViewmodel)
-            }
-        }
-    }
-}
-```
-
 ## File: app/src/main/java/com/guvnoh/boma/formatters/TimeFormatter.kt
 ```kotlin
 package com.guvnoh.boma.formatters
@@ -6446,6 +6024,448 @@ class StockRepository() {
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeCard.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.priceChange
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.guvnoh.boma.R
+import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.models.brandData
+import com.guvnoh.boma.repositories.ProductsRepository
+import androidx.compose.runtime.collectAsState
+
+@Composable
+fun PriceChangeCard(
+    product: Products,
+    priceChangeViewmodel: PriceChangeViewmodel,
+) {
+    var newPrice by remember { mutableStateOf("") }
+    var priceError by remember { mutableStateOf<String?>(null) }
+    var isExpanded by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    val imageRes = ProductsRepository()
+        .getImage(context, product.imageName ?: "bottle.jpg", product.type!!)
+        .takeIf { it != 0 } ?: R.drawable.bottle
+
+    val currentPrice = product.stringPrice?.toDoubleOrNull() ?: 0.0
+    val displayCurrentPrice by remember { mutableDoubleStateOf(currentPrice) }
+    val id = product.id!!
+    val pendingPrice = priceChangeViewmodel.getPendingPrice(id).toDoubleOrNull()?:0.0
+    val priceChange  = pendingPrice - displayCurrentPrice
+    val priceChangePercent  = if (displayCurrentPrice >0.0 && pendingPrice >0.0 ) {
+        ((pendingPrice - displayCurrentPrice) / displayCurrentPrice) * 100
+    } else 0.0
+    val priceChangeList = priceChangeViewmodel.priceChangeProducts.collectAsState().value
+
+
+    Card(
+        onClick = { isExpanded = !isExpanded },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isExpanded)
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.08f)
+            else
+                MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isExpanded) 4.dp else 2.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Main Row: Image + Product Info + Price
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                // Product Image
+                Surface(
+                    modifier = Modifier.size(64.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                ) {
+                    Image(
+                        painter = painterResource(imageRes),
+                        contentDescription = product.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                }
+
+                // Product Name & Current Price
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = product.name ?: "Unknown",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = nairaFormat(currentPrice),
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        if (priceError == null) {
+                            Icon(
+                                imageVector = Icons.Default.TrendingUp,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = if (priceChange > 0)
+                                    Color(0xFF4CAF50)
+                                else
+                                    Color(0xFFF44336)
+                            )
+                        }
+                    }
+                }
+
+                // New Price Badge
+                if (product.id in priceChangeList.keys) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 4.dp)
+                    ) {
+                        val badge = nairaFormat( (priceChangeList[product.id]!!).toDouble())
+                        Text(
+                            text = badge,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            }
+
+            // Expanded Section: Input + Stats
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    // Input Field
+                    OutlinedTextField(
+                        value = newPrice,
+                        onValueChange = { input ->
+                            newPrice = input
+                            if (input.isNotEmpty()) {
+                                priceChangeViewmodel.addToPriceChangeList(
+                                    product = product,
+                                    newPrice = input,
+                                )
+                            }
+                                priceError = priceChangeViewmodel.errorCheck(input)
+                        },
+                        label = { Text("Enter New Price") },
+                        leadingIcon = {
+                            Text(
+                                "₦",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        },
+                        trailingIcon = {
+                            if (newPrice.isNotEmpty()) {
+                                IconButton(onClick = {
+                                    newPrice = ""
+                                    priceError = null
+                                }) {
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Clear",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        },
+                        placeholder = {
+                            Text(
+                                currentPrice.toString(),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            )
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        isError = priceError != null,
+                        supportingText = {
+                            if (priceError != null) {
+                                Text(priceError!!, color = MaterialTheme.colorScheme.error)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+
+                    // Price Change Stats
+                    if (priceError == null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Change Amount
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Change",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "${if (priceChange > 0) "+" else ""}${nairaFormat(priceChange)}",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = if (priceChange > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+                                    )
+                                }
+                            }
+
+                            // Percentage Change
+
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "Percent",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "${if (priceChangePercent > 0) "+" else ""}%.1f%%".format(priceChangePercent),
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        color = if (priceChangePercent > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Confirm Button
+                    if (priceError == null) {
+                        Button(
+                            onClick = {
+                                newPrice = ""
+                                isExpanded = false
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(Icons.Default.Check, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Confirm Price Change",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun ShowCard() {
+    MaterialTheme {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            Column(
+                modifier = Modifier.padding(vertical = 16.dp)
+            ) {
+                PriceChangeCard(brandData[1], viewModel())
+            }
+        }
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangePage.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.priceChange
+
+import android.widget.Toast
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.guvnoh.boma.models.Screen
+
+@Composable
+fun PriceChangePage(
+    navController: NavController,
+    paddingValues: PaddingValues,
+    priceChangeViewmodel: PriceChangeViewmodel
+){
+    val productList by priceChangeViewmodel.products.collectAsState()
+    val priceChangeList by priceChangeViewmodel.priceChangeProducts.collectAsState()
+    val context = LocalContext.current
+
+    Scaffold(
+        modifier = Modifier.padding(paddingValues),
+        bottomBar = {
+            Surface(
+                tonalElevation = 4.dp,
+                shadowElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Button(
+                        onClick = {
+                            priceChangeViewmodel.clearPriceChangeList()
+                        },
+                        enabled = priceChangeList.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(Icons.Filled.Done, contentDescription = "Clear")
+                        Spacer(Modifier.width(8.dp))
+                        Text("Clear")
+                    }
+                    Button(
+                        onClick = {
+                            priceChangeViewmodel.updatePrices(context,priceChangeList,navController)
+                            priceChangeViewmodel.clearPriceChangeList()
+                        },
+                        enabled = priceChangeList.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(Icons.Filled.Done, contentDescription = "Save Changes")
+                        Spacer(Modifier.width(8.dp))
+                        Text("Save Changes")
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            contentPadding = PaddingValues(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            items(productList.sortedBy { it.name }) { product ->
+                PriceChangeCard(product, priceChangeViewmodel)
+            }
+        }
+    }
+}
+```
+
 ## File: gradle/libs.versions.toml
 ```toml
 [versions]
@@ -6491,38 +6511,6 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
-```
-
-## File: app/src/main/java/com/guvnoh/boma/database/firebaseRefs.kt
-```kotlin
-package com.guvnoh.boma.database
-
-
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-
-object FirebaseRefs {
-
-    private val db = FirebaseDatabase.getInstance()
-
-    //database root folder
-    private val root: DatabaseReference = db.reference.child("Boma")
-
-    val Products = root.child("testProducts")
-
-    //val Products = root.child("Products")
-
-    //val testProducts = root.child("testProducts")
-
-    val bomaEmpties = root.child("Empties")
-
-    val empties = root.child("BomaStock").child("Empties")
-
-    val records = root.child("BomaDBRecords3")
-
-    // stores dates and is used for new day validation
-    val appMeta = root.child("appMeta")
-}
 ```
 
 ## File: app/src/main/java/com/guvnoh/boma/navigation/StockPageNavigation.kt
@@ -6717,6 +6705,38 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/database/firebaseRefs.kt
+```kotlin
+package com.guvnoh.boma.database
+
+
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+
+object FirebaseRefs {
+
+    private val db = FirebaseDatabase.getInstance()
+
+    //database root folder
+    private val root: DatabaseReference = db.reference.child("Boma")
+
+    val Products = root.child("testProducts")
+
+    //val Products = root.child("Products")
+
+    //val testProducts = root.child("testProducts")
+
+    val bomaEmpties = root.child("Empties")
+
+    val empties = root.child("BomaStock").child("Empties")
+
+    val records = root.child("BomaDBRecords3")
+
+    // stores dates and is used for new day validation
+    val appMeta = root.child("appMeta")
 }
 ```
 

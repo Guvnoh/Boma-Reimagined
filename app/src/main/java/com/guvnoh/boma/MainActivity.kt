@@ -27,10 +27,11 @@ class MainActivity : ComponentActivity() {
             )
         }
         createNotificationChannel(this)
+        val startDestination = intent.getStringExtra("route")
 
         setContent {
             BOMATheme {
-                Boma()
+                Boma(startDestination = startDestination)
             }
         }
     }
