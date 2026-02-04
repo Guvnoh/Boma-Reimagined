@@ -26,7 +26,7 @@ open class Screen(
 
     data object PriceChange : Screen(
         route = "price_change",
-        title = "Change Price",
+        title = "Pricing",
         icon = MenuIcon.Resource(R.drawable.naira)
     )
 

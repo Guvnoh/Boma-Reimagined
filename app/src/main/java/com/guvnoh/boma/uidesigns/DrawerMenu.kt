@@ -51,11 +51,10 @@ import com.guvnoh.boma.viewmodels.AppMetaViewModel
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Boma() {
+fun Boma(startDestination: String? = null) {
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val vm: AppMetaViewModel = viewModel()
     var selectedScreen by remember { mutableStateOf<Screen>(Products) }
 
     ModalNavigationDrawer(
@@ -181,7 +180,7 @@ fun Boma() {
                 )
             }
         ) { innerPadding ->
-            Navigation(innerPadding, navController)
+            Navigation(innerPadding, navController, startDestination)
         }
     }
 }
