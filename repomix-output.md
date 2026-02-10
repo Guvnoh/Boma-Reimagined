@@ -42,6 +42,7 @@ app/proguard-rules.pro
 app/src/androidTest/java/com/guvnoh/boma/ExampleInstrumentedTest.kt
 app/src/main/AndroidManifest.xml
 app/src/main/ic_launcher-playstore.png
+app/src/main/java/com/guvnoh/boma/database/FirebaseMessaging.kt
 app/src/main/java/com/guvnoh/boma/database/firebaseRefs.kt
 app/src/main/java/com/guvnoh/boma/dateProvider/DateProvider.kt
 app/src/main/java/com/guvnoh/boma/formatters/CurrencyFormatter.kt
@@ -170,6 +171,33 @@ settings.gradle.kts
 ```
 
 # Files
+
+## File: app/src/main/java/com/guvnoh/boma/database/FirebaseMessaging.kt
+```kotlin
+package com.guvnoh.boma.database
+
+import android.util.Log
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
+
+class MyFirebaseMessagingService : FirebaseMessagingService() {
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+
+        // VERY IMPORTANT
+        // Send this token to your database
+        Log.d("FCM", "New token: $token")
+    }
+
+    override fun onMessageReceived(message: RemoteMessage) {
+        super.onMessageReceived(message)
+
+        // This only runs when app is foreground
+        Log.d("FCM", "Message received: ${message.notification?.body}")
+    }
+}
+```
 
 ## File: .gitignore
 ```
@@ -433,71 +461,6 @@ fun vibratePhone(context: Context, duration: Long = 100L) {
             VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
         )
     }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/models/Screen.kt
-```kotlin
-package com.guvnoh.boma.models
-
-import androidx.annotation.DrawableRes
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.ui.graphics.vector.ImageVector
-import com.guvnoh.boma.R
-
-sealed class MenuIcon {
-    data class Resource(@DrawableRes val resId: Int): MenuIcon()
-    data class Vector( val imageVector: ImageVector): MenuIcon()
-}
-
-open class Screen(
-    val route: String,
-    val title: String,
-    val icon: MenuIcon? = null
-) {
-    data object Products : Screen(
-        route = "products",
-        title = "Products",
-        icon = MenuIcon.Vector(Icons.Default.ShoppingCart)
-    )
-
-    data object PriceChange : Screen(
-        route = "price_change",
-        title = "Pricing",
-        icon = MenuIcon.Resource(R.drawable.naira)
-    )
-
-    data object Receipt : Screen(route = "receipt", title = "Receipt",)
-    data object AddProduct : Screen(
-        route = "add_product",
-        title = "Add Products",
-        icon = MenuIcon.Vector(Icons.Default.AddCircle)
-    )
-
-    data object DeleteProduct : Screen(
-        route = "delete_product",
-        title = "Delete Products",
-        icon = MenuIcon.Vector(Icons.Default.Delete)
-    )
-
-    data object Stock :
-        Screen(route = "stock", title = "Stock", icon = MenuIcon.Resource(R.drawable.stock))
-
-    data object WarehouseStock :
-        Screen(route = "warehouseStock", title = "Warehouse Stock", icon = MenuIcon.Resource(R.drawable.stock))
-
-    data object HeadOfficeStock :
-        Screen(route = "headOfficeStock", title = "HeadOffice Stock", icon = MenuIcon.Resource(R.drawable.stock))
-
-    data object Records :
-        Screen(route = "records", title = "Records", icon = MenuIcon.Resource(R.drawable.record))
-
-    data object RecordDetails : Screen(route = "record_details", title = "Record")
-
-
 }
 ```
 
@@ -1838,6 +1801,71 @@ rootProject.name = "BOMA"
 include(":app")
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/models/Screen.kt
+```kotlin
+package com.guvnoh.boma.models
+
+import androidx.annotation.DrawableRes
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.guvnoh.boma.R
+
+sealed class MenuIcon {
+    data class Resource(@DrawableRes val resId: Int): MenuIcon()
+    data class Vector( val imageVector: ImageVector): MenuIcon()
+}
+
+open class Screen(
+    val route: String,
+    val title: String,
+    val icon: MenuIcon? = null
+) {
+    data object Products : Screen(
+        route = "products",
+        title = "Products",
+        icon = MenuIcon.Vector(Icons.Default.ShoppingCart)
+    )
+
+    data object PriceChange : Screen(
+        route = "price_change",
+        title = "Pricing",
+        icon = MenuIcon.Resource(R.drawable.naira)
+    )
+
+    data object Receipt : Screen(route = "receipt", title = "Receipt",)
+    data object AddProduct : Screen(
+        route = "add_product",
+        title = "Add Products",
+        icon = MenuIcon.Vector(Icons.Default.AddCircle)
+    )
+
+    data object DeleteProduct : Screen(
+        route = "delete_product",
+        title = "Delete Products",
+        icon = MenuIcon.Vector(Icons.Default.Delete)
+    )
+
+    data object Stock :
+        Screen(route = "stock", title = "Stock", icon = MenuIcon.Resource(R.drawable.stock))
+
+    data object WarehouseStock :
+        Screen(route = "warehouseStock", title = "Warehouse Stock", icon = MenuIcon.Resource(R.drawable.stock))
+
+    data object HeadOfficeStock :
+        Screen(route = "headOfficeStock", title = "HeadOffice Stock", icon = MenuIcon.Resource(R.drawable.stock))
+
+    data object Records :
+        Screen(route = "records", title = "Records", icon = MenuIcon.Resource(R.drawable.record))
+
+    data object RecordDetails : Screen(route = "record_details", title = "Record")
+
+
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/ui/theme/Color.kt
 ```kotlin
 package com.guvnoh.boma.ui.theme
@@ -1991,262 +2019,6 @@ fun BOMATheme(
         shapes = AppShapes,
         content = content
     )
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/DrawerMenu.kt
-```kotlin
-package com.guvnoh.boma.uidesigns
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.R
-import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.navigation.Navigation
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.navigation.compose.currentBackStackEntryAsState
-import com.guvnoh.boma.models.MenuIcon
-import com.guvnoh.boma.models.Screen.AddProduct
-import com.guvnoh.boma.models.Screen.DeleteProduct
-import com.guvnoh.boma.models.Screen.PriceChange
-import com.guvnoh.boma.models.Screen.Products
-import com.guvnoh.boma.models.Screen.Receipt
-import com.guvnoh.boma.models.Screen.RecordDetails
-import com.guvnoh.boma.models.Screen.Records
-import com.guvnoh.boma.models.Screen.Stock
-import com.guvnoh.boma.viewmodels.AppMetaViewModel
-
-
-@RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun Boma() {
-    val navController = rememberNavController()
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-    val vm: AppMetaViewModel = viewModel()
-    var selectedScreen by remember { mutableStateOf<Screen>(Products) }
-
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .background(MaterialTheme.colorScheme.surface)
-            ) {
-                // Drawer Header
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.primary)
-                        .padding(vertical = 32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.boma_logo),
-                            contentDescription = "Boma Logo",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .size(120.dp)
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(12.dp))
-
-                // Drawer Items with ripple + hover
-                DrawerItem(
-                    screen = Products,
-                    scope = scope,
-                    isSelected = selectedScreen == Products,
-                    drawerState = drawerState,
-                    navController = navController,
-                    onItemSelected = {selectedScreen = it}
-                )
-
-
-                DrawerItem(
-                    screen = PriceChange,
-                    scope = scope,
-                    isSelected = selectedScreen == PriceChange,
-                    drawerState = drawerState,
-                    navController = navController,
-                    onItemSelected = {selectedScreen = it}
-                )
-
-                DrawerItem(
-                    screen = Stock,
-                    scope = scope,
-                    isSelected = selectedScreen == Stock,
-                    drawerState = drawerState,
-                    navController = navController,
-                    onItemSelected = {selectedScreen = it}
-                )
-
-                DrawerItem(
-                    screen = Records,
-                    scope = scope,
-                    isSelected = selectedScreen == Records,
-                    drawerState = drawerState,
-                    navController = navController,
-                    onItemSelected = {selectedScreen = it}
-                )
-
-                DrawerItem(
-                    screen = AddProduct,
-                    scope = scope,
-                    isSelected = selectedScreen == AddProduct,
-                    drawerState = drawerState,
-                    navController = navController,
-                    onItemSelected = {selectedScreen = it}
-                )
-
-                DrawerItem(
-                    screen = DeleteProduct,
-                    scope = scope,
-                    isSelected = selectedScreen == DeleteProduct,
-                    drawerState = drawerState,
-                    navController = navController,
-                    onItemSelected = {
-                        selectedScreen = it
-
-                    }
-                )
-            }
-        }
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        val navBackEntry by navController.currentBackStackEntryAsState()
-                        val currentRoute = navBackEntry?.destination?.route
-                        val screenList: List<Screen> = listOf(
-                            Products, PriceChange, Records, Receipt, RecordDetails, AddProduct, DeleteProduct, Stock
-                        )
-                        var currentTitle = ""
-                        screenList.forEach {
-                            if (it.route == currentRoute) currentTitle = it.title
-                        }
-                        Text(
-                            text = currentTitle,
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    },
-                    navigationIcon = {
-
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Menu")
-                        }
-                    }
-                )
-            }
-        ) { innerPadding ->
-            Navigation(innerPadding, navController)
-        }
-    }
-}
-
-@Composable
-fun DrawerItem(
-    screen: Screen,
-    scope: CoroutineScope,
-    isSelected: Boolean = false,
-    drawerState: DrawerState,
-    navController: NavController,
-    onItemSelected: (Screen) -> Unit = {}
-){
-    val interactionSource = remember { MutableInteractionSource() }
-    val bg = if (isSelected)
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-    else
-        MaterialTheme.colorScheme.surface
-
-    val tint = if (isSelected)
-        MaterialTheme.colorScheme.primary
-    else
-        MaterialTheme.colorScheme.onSurface
-    Row(
-        modifier = Modifier
-
-            .fillMaxWidth()
-            .background(bg)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = {
-                    scope.launch{ drawerState.close() }
-                    navController.navigate(screen.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-
-                        }
-                        launchSingleTop = true
-                    }
-                    onItemSelected(screen)
-                }
-            )
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        when(val icon = screen.icon){
-            is MenuIcon.Resource -> Icon(painterResource( icon.resId), "", tint = tint)
-            is MenuIcon.Vector -> Icon(imageVector = icon.imageVector, "", tint = tint)
-            null -> Icon(Icons.Default.Info, "", tint = tint)
-        }
-//        Icon(screen.icon, contentDescription = screen.title, tint = MaterialTheme.colorScheme.primary)
-        Spacer(Modifier.width(16.dp))
-        Text(
-            text = screen.title,
-            color = tint,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontWeight = FontWeight.Medium
-            )
-        )
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun DrawerPreview() {
-    Boma()
 }
 ```
 
@@ -3906,12 +3678,22 @@ zipStorePath=wrapper/dists
         android:supportsRtl="true"
         android:theme="@style/Theme.BOMA"
         tools:targetApi="31">
+
+        <service
+            android:name=".database.MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".MainActivity"
             android:windowSoftInputMode="adjustResize"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.BOMA">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -4097,6 +3879,261 @@ fun AutoScrollingText(
             direction *= -1
         }
     }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/DrawerMenu.kt
+```kotlin
+package com.guvnoh.boma.uidesigns
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.rememberNavController
+import com.guvnoh.boma.R
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.navigation.Navigation
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.guvnoh.boma.models.MenuIcon
+import com.guvnoh.boma.models.Screen.AddProduct
+import com.guvnoh.boma.models.Screen.DeleteProduct
+import com.guvnoh.boma.models.Screen.PriceChange
+import com.guvnoh.boma.models.Screen.Products
+import com.guvnoh.boma.models.Screen.Receipt
+import com.guvnoh.boma.models.Screen.RecordDetails
+import com.guvnoh.boma.models.Screen.Records
+import com.guvnoh.boma.models.Screen.Stock
+import com.guvnoh.boma.viewmodels.AppMetaViewModel
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Boma(startDestination: String? = null) {
+    val navController = rememberNavController()
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+    var selectedScreen by remember { mutableStateOf<Screen>(Products) }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.surface)
+            ) {
+                // Drawer Header
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primary)
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.boma_logo),
+                            contentDescription = "Boma Logo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .size(120.dp)
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                // Drawer Items with ripple + hover
+                DrawerItem(
+                    screen = Products,
+                    scope = scope,
+                    isSelected = selectedScreen == Products,
+                    drawerState = drawerState,
+                    navController = navController,
+                    onItemSelected = {selectedScreen = it}
+                )
+
+
+                DrawerItem(
+                    screen = PriceChange,
+                    scope = scope,
+                    isSelected = selectedScreen == PriceChange,
+                    drawerState = drawerState,
+                    navController = navController,
+                    onItemSelected = {selectedScreen = it}
+                )
+
+                DrawerItem(
+                    screen = Stock,
+                    scope = scope,
+                    isSelected = selectedScreen == Stock,
+                    drawerState = drawerState,
+                    navController = navController,
+                    onItemSelected = {selectedScreen = it}
+                )
+
+                DrawerItem(
+                    screen = Records,
+                    scope = scope,
+                    isSelected = selectedScreen == Records,
+                    drawerState = drawerState,
+                    navController = navController,
+                    onItemSelected = {selectedScreen = it}
+                )
+
+                DrawerItem(
+                    screen = AddProduct,
+                    scope = scope,
+                    isSelected = selectedScreen == AddProduct,
+                    drawerState = drawerState,
+                    navController = navController,
+                    onItemSelected = {selectedScreen = it}
+                )
+
+                DrawerItem(
+                    screen = DeleteProduct,
+                    scope = scope,
+                    isSelected = selectedScreen == DeleteProduct,
+                    drawerState = drawerState,
+                    navController = navController,
+                    onItemSelected = {
+                        selectedScreen = it
+
+                    }
+                )
+            }
+        }
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        val navBackEntry by navController.currentBackStackEntryAsState()
+                        val currentRoute = navBackEntry?.destination?.route
+                        val screenList: List<Screen> = listOf(
+                            Products, PriceChange, Records, Receipt, RecordDetails, AddProduct, DeleteProduct, Stock
+                        )
+                        var currentTitle = ""
+                        screenList.forEach {
+                            if (it.route == currentRoute) currentTitle = it.title
+                        }
+                        Text(
+                            text = currentTitle,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    },
+                    navigationIcon = {
+
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Default.Menu, contentDescription = "Menu")
+                        }
+                    }
+                )
+            }
+        ) { innerPadding ->
+            Navigation(innerPadding, navController, startDestination)
+        }
+    }
+}
+
+@Composable
+fun DrawerItem(
+    screen: Screen,
+    scope: CoroutineScope,
+    isSelected: Boolean = false,
+    drawerState: DrawerState,
+    navController: NavController,
+    onItemSelected: (Screen) -> Unit = {}
+){
+    val interactionSource = remember { MutableInteractionSource() }
+    val bg = if (isSelected)
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+    else
+        MaterialTheme.colorScheme.surface
+
+    val tint = if (isSelected)
+        MaterialTheme.colorScheme.primary
+    else
+        MaterialTheme.colorScheme.onSurface
+    Row(
+        modifier = Modifier
+
+            .fillMaxWidth()
+            .background(bg)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {
+                    scope.launch{ drawerState.close() }
+                    navController.navigate(screen.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+
+                        }
+                        launchSingleTop = true
+                    }
+                    onItemSelected(screen)
+                }
+            )
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        when(val icon = screen.icon){
+            is MenuIcon.Resource -> Icon(painterResource( icon.resId), "", tint = tint)
+            is MenuIcon.Vector -> Icon(imageVector = icon.imageVector, "", tint = tint)
+            null -> Icon(Icons.Default.Info, "", tint = tint)
+        }
+//        Icon(screen.icon, contentDescription = screen.title, tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.width(16.dp))
+        Text(
+            text = screen.title,
+            color = tint,
+            style = MaterialTheme.typography.bodyLarge.copy(
+                fontWeight = FontWeight.Medium
+            )
+        )
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview(showBackground = true)
+@Composable
+fun DrawerPreview() {
+    Boma()
 }
 ```
 
@@ -4373,159 +4410,6 @@ fun AddProduct(
 fun ShowAddScreen(){
     val avm: AddProductViewModel = viewModel()
     AddProduct(PaddingValues(5.dp), rememberNavController(),avm)
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens.priceChange
-
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.lifecycle.ViewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.google.firebase.database.DatabaseReference
-import com.guvnoh.boma.R
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.repositories.ProductsRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
-
-class PriceChangeViewmodel: ViewModel() {
-
-    //product list
-    private val _products = MutableStateFlow<List<Products>>(emptyList())
-    val products: StateFlow<List<Products>> = _products
-
-    //price change products
-    private val _priceChangeProducts = MutableStateFlow<Map<String, String>>(emptyMap())
-    val priceChangeProducts: StateFlow<Map<String, String>> = _priceChangeProducts
-
-    init {
-        observeProducts(FirebaseRefs.Products)
-    }
-
-    private fun observeProducts(repo: DatabaseReference) {
-        val repository = ProductsRepository()
-        repository.observeProducts(repo) { list ->
-            _products.value = list
-        }
-    }
-
-    fun clearPriceChangeList(){
-        _priceChangeProducts.value = emptyMap()
-    }
-
-
-     fun addToPriceChangeList(product: Products, newPrice: String ){
-        val validPrice = validateEntry(newPrice) //ensure entry is a valid double then convert to string
-        val pricesToUpdate = _priceChangeProducts.value.toMutableMap()
-        pricesToUpdate[product.id!!] = validPrice
-        _priceChangeProducts.value = pricesToUpdate
-    }
-
-
-    // Update price
-    fun updatePrice(product: Products, newPrice: String) {
-        val productsRepo = FirebaseRefs.Products
-        // update string and double price of product parameter
-        productsRepo.child(product.id ?: "error")
-            .child("stringPrice")
-            .setValue(newPrice)
-
-        productsRepo.child(product.id?:"error")
-            .child("doublePrice")
-            .setValue(newPrice.toDouble())
-
-    }
-
-    private fun validateEntry(newPrice: String): String{
-        val parsedNewPrice = newPrice.filter { ch -> ch.isDigit() || ch == '.' }
-        val parsed = parsedNewPrice.toDoubleOrNull()
-        if (parsed != null && parsed > 0.0) return parsed.toString()
-        return ""
-    }
-
-    fun errorCheck(newPrice: String): String?{
-        val double = newPrice.toDoubleOrNull()
-        val result = when{
-            newPrice.isEmpty() -> "Empty Field"
-            double == null -> "Invalid Price"
-            double >= 0 -> null
-            else -> "Invalid Price"
-        }
-
-        return  result
-    }
-
-    private fun sendNotification(context: Context, content: String, id: Int){
-        val notification = NotificationCompat.Builder(context, "default_channel")
-            .setSmallIcon(R.drawable.boma_logo)
-            .setContentTitle("Price Update!")
-            .setContentText(content)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT).build()
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
-        NotificationManagerCompat.from(context).notify(id, notification)
-    }
-
-    fun getPendingPrice(productId: String): String{
-        val pendingPrice: String
-        val map = priceChangeProducts.value
-        val pendingProductId = if (productId in map.keys){map.keys.first { productId == it }} else return ""
-        pendingPrice = map[pendingProductId]!!
-        return pendingPrice
-    }
-
-    fun updatePrices(
-        context: Context,
-        map: Map<String, String>,
-        navController: NavController){
-        val notificationId = System.currentTimeMillis().toInt()
-        map.keys.forEach { productId ->
-            val productToUpdate = products.value.first { it.id == productId }
-            val newPrice = map[productId]
-            updatePrice(productToUpdate, newPrice!!)
-
-            sendNotification(
-                context = context,
-                content = "${productToUpdate.name}   ----->  ${nairaFormat(newPrice.toDouble())} ",
-                id = notificationId
-            )
-        }
-        Toast.makeText(context, "Prices updated", Toast.LENGTH_SHORT).show()
-
-        navController.navigate(Screen.Products.route) {
-            popUpTo(navController.graph.findStartDestination().id) {
-                saveState = true
-            }
-            launchSingleTop = true
-            restoreState = true
-
-        }
-    }
 }
 ```
 
@@ -5149,63 +5033,6 @@ class AppMetaViewModel : ViewModel() {
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/MainActivity.kt
-```kotlin
-package com.guvnoh.boma
-
-
-import android.Manifest
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import com.guvnoh.boma.ui.theme.BOMATheme
-import com.guvnoh.boma.uidesigns.Boma
-
-class MainActivity : ComponentActivity() {
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
-            ActivityCompat.requestPermissions(
-                this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001
-            )
-        }
-        createNotificationChannel(this)
-
-        setContent {
-            BOMATheme {
-                Boma()
-            }
-        }
-    }
-    private fun createNotificationChannel(context: Context){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "default_channel",
-                "General Notifications",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "App notifications"
-            }
-            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
-                    as NotificationManager
-            manager.createNotificationChannel(channel)
-
-        }
-    }
-
-}
-```
-
 ## File: app/src/main/java/com/guvnoh/boma/models/Empties.kt
 ```kotlin
 package com.guvnoh.boma.models
@@ -5640,6 +5467,177 @@ private fun ShowDemo(){
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.priceChange
+
+import android.Manifest
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.ViewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.MainActivity
+import com.guvnoh.boma.R
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.repositories.ProductsRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+
+class PriceChangeViewmodel: ViewModel() {
+
+    //product list
+    private val _products = MutableStateFlow<List<Products>>(emptyList())
+    val products: StateFlow<List<Products>> = _products
+
+    //price change products
+    private val _priceChangeProducts = MutableStateFlow<Map<String, String>>(emptyMap())
+    val priceChangeProducts: StateFlow<Map<String, String>> = _priceChangeProducts
+
+    init {
+        observeProducts(FirebaseRefs.Products)
+    }
+
+    private fun observeProducts(repo: DatabaseReference) {
+        val repository = ProductsRepository()
+        repository.observeProducts(repo) { list ->
+            _products.value = list
+        }
+    }
+
+    fun clearPriceChangeList(){
+        _priceChangeProducts.value = emptyMap()
+    }
+
+
+     fun addToPriceChangeList(product: Products, newPrice: String ){
+        val validPrice = validateEntry(newPrice) //ensure entry is a valid double then convert to string
+        val pricesToUpdate = _priceChangeProducts.value.toMutableMap()
+        pricesToUpdate[product.id!!] = validPrice
+        _priceChangeProducts.value = pricesToUpdate
+    }
+
+
+    // Update price
+    fun updatePrice(product: Products, newPrice: String) {
+        val productsRepo = FirebaseRefs.Products
+        // update string and double price of product parameter
+        productsRepo.child(product.id ?: "error")
+            .child("stringPrice")
+            .setValue(newPrice)
+
+        productsRepo.child(product.id?:"error")
+            .child("doublePrice")
+            .setValue(newPrice.toDouble())
+
+    }
+
+    private fun validateEntry(newPrice: String): String{
+        val parsedNewPrice = newPrice.filter { ch -> ch.isDigit() || ch == '.' }
+        val parsed = parsedNewPrice.toDoubleOrNull()
+        if (parsed != null && parsed > 0.0) return parsed.toString()
+        return ""
+    }
+
+    fun errorCheck(newPrice: String): String?{
+        val double = newPrice.toDoubleOrNull()
+        val result = when{
+            newPrice.isEmpty() -> "Empty Field"
+            double == null -> "Invalid Price"
+            double >= 0 -> null
+            else -> "Invalid Price"
+        }
+
+        return  result
+    }
+
+    private fun sendNotification(context: Context, content: String) {
+        val id = System.currentTimeMillis().toInt()
+        val intent = Intent(context, MainActivity::class.java)
+            .putExtra("route", Screen.PriceChange.route)
+
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, "default_channel")
+            .setSmallIcon(R.drawable.boma_logo)
+            .setContentTitle("Price Update!")
+            .setContentText(content)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return
+        }
+
+        NotificationManagerCompat.from(context).notify(id, notification)
+    }
+
+
+    fun getPendingPrice(productId: String): String{
+        val pendingPrice: String
+        val map = priceChangeProducts.value
+        val pendingProductId = if (productId in map.keys){map.keys.first { productId == it }} else return ""
+        pendingPrice = map[pendingProductId]!!
+        return pendingPrice
+    }
+
+    fun updatePrices(
+        context: Context,
+        map: Map<String, String>,
+        navController: NavController){
+
+        map.keys.forEach { productId ->
+            val productToUpdate = products.value.first { it.id == productId }
+            val newPrice = map[productId]
+            updatePrice(productToUpdate, newPrice!!)
+
+            sendNotification(
+                context = context,
+                content = "${productToUpdate.name}   ----->  ${nairaFormat(newPrice.toDouble())} "
+            )
+        }
+        Toast.makeText(context, "Prices updated", Toast.LENGTH_SHORT).show()
+
+        navController.navigate(Screen.Products.route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+
+        }
+    }
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/formatters/TimeFormatter.kt
 ```kotlin
 package com.guvnoh.boma.formatters
@@ -5680,6 +5678,64 @@ fun checkIfSoldToday(timeSold: String): Boolean {
 //    val formattedTimeToday = todayString.replace("[, ]", "")
 
     return (timeSold.lowercase() == timeNow.lowercase())
+
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/MainActivity.kt
+```kotlin
+package com.guvnoh.boma
+
+
+import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import com.guvnoh.boma.ui.theme.BOMATheme
+import com.guvnoh.boma.uidesigns.Boma
+
+class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001
+            )
+        }
+        createNotificationChannel(this)
+        val startDestination = intent.getStringExtra("route")
+
+        setContent {
+            BOMATheme {
+                Boma(startDestination = startDestination)
+            }
+        }
+    }
+    private fun createNotificationChannel(context: Context){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "default_channel",
+                "General Notifications",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "App notifications"
+            }
+            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
+                    as NotificationManager
+            manager.createNotificationChannel(channel)
+
+        }
+    }
 
 }
 ```
@@ -6024,6 +6080,221 @@ class StockRepository() {
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangePage.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.priceChange
+
+import android.widget.Toast
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.guvnoh.boma.models.Screen
+
+@Composable
+fun PriceChangePage(
+    navController: NavController,
+    paddingValues: PaddingValues,
+    priceChangeViewmodel: PriceChangeViewmodel
+){
+    val productList by priceChangeViewmodel.products.collectAsState()
+    val priceChangeList by priceChangeViewmodel.priceChangeProducts.collectAsState()
+    val context = LocalContext.current
+
+    Scaffold(
+        modifier = Modifier.padding(paddingValues),
+        bottomBar = {
+            Surface(
+                tonalElevation = 4.dp,
+                shadowElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Button(
+                        onClick = {
+                            priceChangeViewmodel.clearPriceChangeList()
+                        },
+                        enabled = priceChangeList.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(Icons.Filled.Done, contentDescription = "Clear")
+                        Spacer(Modifier.width(8.dp))
+                        Text("Clear")
+                    }
+                    Button(
+                        onClick = {
+                            priceChangeViewmodel.updatePrices(context,priceChangeList,navController)
+                            priceChangeViewmodel.clearPriceChangeList()
+                        },
+                        enabled = priceChangeList.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(Icons.Filled.Done, contentDescription = "Save Changes")
+                        Spacer(Modifier.width(8.dp))
+                        Text("Save Changes")
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            contentPadding = PaddingValues(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            items(productList.sortedBy { it.name }) { product ->
+                PriceChangeCard(product, priceChangeViewmodel)
+            }
+        }
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/navigation/StockPageNavigation.kt
+```kotlin
+package com.guvnoh.boma.navigation
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.Composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.guvnoh.boma.uidesigns.screens.stock.BottomBarItem
+import com.guvnoh.boma.uidesigns.screens.stock.StockEmptiesScreen
+import com.guvnoh.boma.uidesigns.screens.stock.StockFullsScreen
+import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun StockPageNav(
+    vm: StockViewModel,
+    paddingValues: PaddingValues
+){
+    val navController = rememberNavController()
+
+    NavHost(
+        startDestination = BottomBarItem.Fulls.route,
+        navController = navController
+    ){
+        composable(BottomBarItem.Empties.route){ StockEmptiesScreen(paddingValues, vm, navController) }
+        composable(BottomBarItem.Fulls.route){
+            StockFullsScreen(
+                paddingValues = paddingValues,
+                stockViewModel = vm,
+                navController = navController
+            ) }
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/DeleteProduct.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.wear.compose.material.Icon
+import com.guvnoh.boma.uidesigns.cards.SwipeableProductCard
+import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
+
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DeleteProduct(
+    navController: NavController,
+    paddingValues: PaddingValues,
+    productsViewModel: ProductsViewModel
+) {
+    val productList by productsViewModel.products.collectAsState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    Scaffold(
+        modifier = Modifier
+            .padding(paddingValues)
+            .imePadding()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            TopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = {
+                    Icon(Icons.Filled.Info, "")
+                    Text(
+                        text = "Remove Product from Database",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    )
+
+                }
+            )
+        }
+    ){
+        innerPadding ->
+        Column (Modifier.padding(innerPadding)){
+            // Product List
+            LazyColumn(
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(productList.sortedBy { it.name }) { product ->
+                    SwipeableProductCard(
+                        product = product,
+                        navController = navController,
+                        productsViewModel
+                    )
+                }
+            }
+        }
+    }
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeCard.kt
 ```kotlin
 package com.guvnoh.boma.uidesigns.screens.priceChange
@@ -6040,6 +6311,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.TrendingUp
@@ -6159,7 +6431,7 @@ fun PriceChangeCard(
 
                         if (priceError == null) {
                             Icon(
-                                imageVector = Icons.Default.TrendingUp,
+                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
                                 tint = if (priceChange > 0)
@@ -6374,102 +6646,11 @@ fun ShowCard() {
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangePage.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens.priceChange
-
-import android.widget.Toast
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.guvnoh.boma.models.Screen
-
-@Composable
-fun PriceChangePage(
-    navController: NavController,
-    paddingValues: PaddingValues,
-    priceChangeViewmodel: PriceChangeViewmodel
-){
-    val productList by priceChangeViewmodel.products.collectAsState()
-    val priceChangeList by priceChangeViewmodel.priceChangeProducts.collectAsState()
-    val context = LocalContext.current
-
-    Scaffold(
-        modifier = Modifier.padding(paddingValues),
-        bottomBar = {
-            Surface(
-                tonalElevation = 4.dp,
-                shadowElevation = 8.dp
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Button(
-                        onClick = {
-                            priceChangeViewmodel.clearPriceChangeList()
-                        },
-                        enabled = priceChangeList.isNotEmpty(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(Icons.Filled.Done, contentDescription = "Clear")
-                        Spacer(Modifier.width(8.dp))
-                        Text("Clear")
-                    }
-                    Button(
-                        onClick = {
-                            priceChangeViewmodel.updatePrices(context,priceChangeList,navController)
-                            priceChangeViewmodel.clearPriceChangeList()
-                        },
-                        enabled = priceChangeList.isNotEmpty(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Icon(Icons.Filled.Done, contentDescription = "Save Changes")
-                        Spacer(Modifier.width(8.dp))
-                        Text("Save Changes")
-                    }
-                }
-            }
-        }
-    ) { innerPadding ->
-        LazyColumn(
-            contentPadding = PaddingValues(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            items(productList.sortedBy { it.name }) { product ->
-                PriceChangeCard(product, priceChangeViewmodel)
-            }
-        }
-    }
-}
-```
-
 ## File: gradle/libs.versions.toml
 ```toml
 [versions]
 agp = "8.8.0"
+firebaseBom = "32.7.0"
 kotlin = "2.0.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -6489,6 +6670,8 @@ ui = "1.9.4"
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -6513,201 +6696,6 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/navigation/StockPageNavigation.kt
-```kotlin
-package com.guvnoh.boma.navigation
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.Composable
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.uidesigns.screens.stock.BottomBarItem
-import com.guvnoh.boma.uidesigns.screens.stock.StockEmptiesScreen
-import com.guvnoh.boma.uidesigns.screens.stock.StockFullsScreen
-import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun StockPageNav(
-    vm: StockViewModel,
-    paddingValues: PaddingValues
-){
-    val navController = rememberNavController()
-
-    NavHost(
-        startDestination = BottomBarItem.Fulls.route,
-        navController = navController
-    ){
-        composable(BottomBarItem.Empties.route){ StockEmptiesScreen(paddingValues, vm, navController) }
-        composable(BottomBarItem.Fulls.route){
-            StockFullsScreen(
-                paddingValues = paddingValues,
-                stockViewModel = vm,
-                navController = navController
-            ) }
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/DeleteProduct.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.wear.compose.material.Icon
-import com.guvnoh.boma.uidesigns.cards.SwipeableProductCard
-import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
-
-@RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DeleteProduct(
-    navController: NavController,
-    paddingValues: PaddingValues,
-    productsViewModel: ProductsViewModel
-) {
-    val productList by productsViewModel.products.collectAsState()
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    Scaffold(
-        modifier = Modifier
-            .padding(paddingValues)
-            .imePadding()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            TopAppBar(
-                scrollBehavior = scrollBehavior,
-                title = {
-                    Icon(Icons.Filled.Info, "")
-                    Text(
-                        text = "Remove Product from Database",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                    )
-
-                }
-            )
-        }
-    ){
-        innerPadding ->
-        Column (Modifier.padding(innerPadding)){
-            // Product List
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(productList.sortedBy { it.name }) { product ->
-                    SwipeableProductCard(
-                        product = product,
-                        navController = navController,
-                        productsViewModel
-                    )
-                }
-            }
-        }
-    }
-}
-```
-
-## File: app/build.gradle.kts
-```kotlin
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.google.gms.google.services)
-}
-
-android {
-    namespace = "com.guvnoh.boma"
-    compileSdk = 35
-
-    defaultConfig {
-        applicationId = "com.guvnoh.boma"
-        minSdk = 25
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
-    }
-}
-
-dependencies {
-
-    implementation(libs.ui) // or your Compose version
-
-
-
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.navigation.compose )
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.firebase.database)
-    implementation(libs.androidx.compose.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-}
-```
-
 ## File: app/src/main/java/com/guvnoh/boma/database/firebaseRefs.kt
 ```kotlin
 package com.guvnoh.boma.database
@@ -6724,6 +6712,7 @@ object FirebaseRefs {
     private val root: DatabaseReference = db.reference.child("Boma")
 
     val Products = root.child("testProducts")
+    val users = root.child("users")
 
     //val Products = root.child("Products")
 
@@ -6993,89 +6982,77 @@ fun DeleteProductCard(
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/navigation/MainNavigation.kt
+## File: app/build.gradle.kts
 ```kotlin
-package com.guvnoh.boma.navigation
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.gms.google.services)
+}
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.uidesigns.screens.addProduct.AddProduct
-import com.guvnoh.boma.uidesigns.screens.DeleteProduct
-import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangePage
-import com.guvnoh.boma.uidesigns.screens.products.ProductsPage
-import com.guvnoh.boma.uidesigns.screens.addProduct.AddProductViewModel
-import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptPage
-import com.guvnoh.boma.uidesigns.screens.records.RecordDetails
-import com.guvnoh.boma.uidesigns.screens.records.RecordsScreen
-import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangeViewmodel
-import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptViewmodel
-import com.guvnoh.boma.uidesigns.screens.records.RecordViewModel
-import com.guvnoh.boma.viewmodels.AppMetaViewModel
-import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
-import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
+android {
+    namespace = "com.guvnoh.boma"
+    compileSdk = 35
 
+    defaultConfig {
+        applicationId = "com.guvnoh.boma"
+        minSdk = 25
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
 
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun Navigation(
-    paddingValues: PaddingValues,
-    navController: NavHostController,
-    ){
-
-    val records: RecordViewModel = viewModel()
-    val record by records.record.collectAsState()
-    val productsViewModel: ProductsViewModel = viewModel()
-    val bomaViewModel: AppMetaViewModel = viewModel()
-    val stockViewModel: StockViewModel = viewModel()
-    val addProductViewModel: AddProductViewModel = viewModel()
-    val receiptViewmodel: ReceiptViewmodel = viewModel()
-    val priceChangeViewmodel: PriceChangeViewmodel = viewModel()
-
-
-
-    LaunchedEffect(Unit) {
-        bomaViewModel.checkDailyReset{
-            AppMetaViewModel().resetSoldToday()
-        }
-    }
-//    val products by productsViewModel.products.collectAsState()
-//    LaunchedEffect (products){
-//        val test =  FirebaseRefs.root.child("testProducts")
-//        products.forEach {
-//            test.child(it.id.toString()).setValue(it)
-//        }
-//    }
-
-
-
-    NavHost(
-        startDestination = Screen.Products.route,
-        navController = navController
-
-    ){
-        composable(Screen.Products.route){ ProductsPage(navController, paddingValues, productsViewModel, receiptViewmodel) }
-        composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, priceChangeViewmodel) }
-        composable(Screen.Receipt.route){ ReceiptPage(stockViewModel, receiptViewmodel) }
-        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController, addProductViewModel) }
-        composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, productsViewModel) }
-        composable(Screen.Stock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
-        composable(Screen.WarehouseStock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
-        composable(Screen.Records.route){ RecordsScreen(records, navController, paddingValues) }
-        composable(Screen.RecordDetails.route){
-            record?.let { selectedRecord -> RecordDetails(selectedRecord) }
-        }
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+
+    implementation(libs.ui) // or your Compose version
+
+
+    implementation(libs.firebase.messaging)
+    implementation(platform(libs.firebase.bom))
+
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.navigation.compose )
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+    implementation(libs.firebase.database)
+    implementation(libs.androidx.compose.material)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
 }
 ```
 
@@ -7171,4 +7148,115 @@ val brandData = mutableListOf(
     Products(name = "Pop cola (small)", stringPrice = "2600", imageName = "pop_cola", type = ProductType.PET),
     Products(name = "Pepsi", stringPrice = "4500", imageName = "pepsi", type = ProductType.PET),
 )
+```
+
+## File: app/src/main/java/com/guvnoh/boma/navigation/MainNavigation.kt
+```kotlin
+package com.guvnoh.boma.navigation
+
+import android.content.Intent
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import com.google.firebase.messaging.FirebaseMessaging
+import com.guvnoh.boma.MainActivity
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.uidesigns.screens.addProduct.AddProduct
+import com.guvnoh.boma.uidesigns.screens.DeleteProduct
+import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangePage
+import com.guvnoh.boma.uidesigns.screens.products.ProductsPage
+import com.guvnoh.boma.uidesigns.screens.addProduct.AddProductViewModel
+import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptPage
+import com.guvnoh.boma.uidesigns.screens.records.RecordDetails
+import com.guvnoh.boma.uidesigns.screens.records.RecordsScreen
+import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangeViewmodel
+import com.guvnoh.boma.uidesigns.screens.receipt.ReceiptViewmodel
+import com.guvnoh.boma.uidesigns.screens.records.RecordViewModel
+import com.guvnoh.boma.viewmodels.AppMetaViewModel
+import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
+import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun Navigation(
+    paddingValues: PaddingValues,
+    navController: NavHostController,
+    startDestination: String? = null
+    ){
+
+    val records: RecordViewModel = viewModel()
+    val record by records.record.collectAsState()
+    val productsViewModel: ProductsViewModel = viewModel()
+    val bomaViewModel: AppMetaViewModel = viewModel()
+    val stockViewModel: StockViewModel = viewModel()
+    val addProductViewModel: AddProductViewModel = viewModel()
+    val receiptViewmodel: ReceiptViewmodel = viewModel()
+    val priceChangeViewmodel: PriceChangeViewmodel = viewModel()
+
+
+
+
+
+    LaunchedEffect(Unit) {
+        bomaViewModel.checkDailyReset{
+            AppMetaViewModel().resetSoldToday()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        FirebaseMessaging.getInstance().token
+            .addOnSuccessListener { token ->
+                Log.d("FCM", "Device token: $token")
+
+                // Save token to Firebase DB under this user/device
+                // Example:
+                // users/{userId}/fcmToken = token
+                FirebaseRefs
+                    .users
+                    .child(System.currentTimeMillis().toString())
+                    .setValue(token)
+            }
+
+    }
+//    val products by productsViewModel.products.collectAsState()
+//    LaunchedEffect (products){
+//        val test =  FirebaseRefs.root.child("testProducts")
+//        products.forEach {
+//            test.child(it.id.toString()).setValue(it)
+//        }
+//    }
+
+
+
+    NavHost(
+        startDestination = startDestination?:Screen.Products.route,
+        navController = navController
+
+    ){
+        composable(Screen.Products.route){ ProductsPage(navController, paddingValues, productsViewModel, receiptViewmodel) }
+        composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, priceChangeViewmodel) }
+        composable(Screen.Receipt.route){ ReceiptPage(stockViewModel, receiptViewmodel) }
+        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController, addProductViewModel) }
+        composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, productsViewModel) }
+        composable(Screen.Stock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
+        composable(Screen.WarehouseStock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
+        composable(Screen.Records.route){ RecordsScreen(records, navController, paddingValues) }
+        composable(Screen.RecordDetails.route){
+            record?.let { selectedRecord -> RecordDetails(selectedRecord) }
+        }
+    }
+
+}
 ```
