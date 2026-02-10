@@ -17,6 +17,7 @@ import com.guvnoh.boma.MainActivity
 import com.guvnoh.boma.R
 import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.formatters.nairaFormat
+import com.guvnoh.boma.models.PreferenceManager
 import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.repositories.ProductsRepository
@@ -24,11 +25,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 
-class PriceChangeViewmodel: ViewModel() {
+class PriceChangeViewmodel( val preferences: PreferenceManager): ViewModel() {
 
     //product list
     private val _products = MutableStateFlow<List<Products>>(emptyList())
     val products: StateFlow<List<Products>> = _products
+
+    //user id
+    private val _userId = MutableStateFlow(preferences.getUserId("userId"))
+    val userId =_userId
 
     //price change products
     private val _priceChangeProducts = MutableStateFlow<Map<String, String>>(emptyMap())
@@ -36,7 +41,9 @@ class PriceChangeViewmodel: ViewModel() {
 
     init {
         observeProducts(FirebaseRefs.Products)
+        preferences.getUserId("userId")
     }
+
 
     private fun observeProducts(repo: DatabaseReference) {
         val repository = ProductsRepository()
@@ -59,7 +66,7 @@ class PriceChangeViewmodel: ViewModel() {
 
 
     // Update price
-    fun updatePrice(product: Products, newPrice: String) {
+    private fun updatePrice(product: Products, newPrice: String) {
         val productsRepo = FirebaseRefs.Products
         // update string and double price of product parameter
         productsRepo.child(product.id ?: "error")
@@ -91,43 +98,43 @@ class PriceChangeViewmodel: ViewModel() {
         return  result
     }
 
-    private fun sendNotification(context: Context, content: String) {
-        val id = System.currentTimeMillis().toInt()
-        val intent = Intent(context, MainActivity::class.java)
-            .putExtra("route", Screen.PriceChange.route)
-
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            id,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = NotificationCompat.Builder(context, "default_channel")
-            .setSmallIcon(R.drawable.boma_logo)
-            .setContentTitle("Price Update!")
-            .setContentText(content)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .build()
-
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
-
-        NotificationManagerCompat.from(context).notify(id, notification)
-    }
+//    private fun sendNotification(context: Context, content: String) {
+//        val id = System.currentTimeMillis().toInt()
+//        val intent = Intent(context, MainActivity::class.java)
+//            .putExtra("route", Screen.PriceChange.route)
+//
+//        val pendingIntent = PendingIntent.getActivity(
+//            context,
+//            id,
+//            intent,
+//            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//        )
+//
+//        val notification = NotificationCompat.Builder(context, "default_channel")
+//            .setSmallIcon(R.drawable.boma_logo)
+//            .setContentTitle("Price Update!")
+//            .setContentText(content)
+//            .setContentIntent(pendingIntent)
+//            .setAutoCancel(true)
+//            .build()
+//
+//        if (ActivityCompat.checkSelfPermission(
+//                context,
+//                Manifest.permission.POST_NOTIFICATIONS
+//            ) != PackageManager.PERMISSION_GRANTED
+//        ) {
+//            // TODO: Consider calling
+//            //    ActivityCompat#requestPermissions
+//            // here to request the missing permissions, and then overriding
+//            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+//            //                                          int[] grantResults)
+//            // to handle the case where the user grants the permission. See the documentation
+//            // for ActivityCompat#requestPermissions for more details.
+//            return
+//        }
+//
+//        NotificationManagerCompat.from(context).notify(id, notification)
+//    }
 
 
     fun getPendingPrice(productId: String): String{
@@ -148,10 +155,10 @@ class PriceChangeViewmodel: ViewModel() {
             val newPrice = map[productId]
             updatePrice(productToUpdate, newPrice!!)
 
-            sendNotification(
-                context = context,
-                content = "${productToUpdate.name}   ----->  ${nairaFormat(newPrice.toDouble())} "
-            )
+//            sendNotification(
+//                context = context,
+//                content = "${productToUpdate.name}   ----->  ${nairaFormat(newPrice.toDouble())} "
+//            )
         }
         Toast.makeText(context, "Prices updated", Toast.LENGTH_SHORT).show()
 

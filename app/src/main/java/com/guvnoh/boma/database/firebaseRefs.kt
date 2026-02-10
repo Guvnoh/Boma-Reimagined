@@ -12,6 +12,7 @@ object FirebaseRefs {
     private val root: DatabaseReference = db.reference.child("Boma")
 
     val Products = root.child("testProducts")
+    val Tokens = root.child("users")
 
     //val Products = root.child("Products")
 
