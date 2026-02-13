@@ -122,6 +122,7 @@ app/src/main/res/drawable/life.jpg
 app/src/main/res/drawable/maltina.jpg
 app/src/main/res/drawable/naira.xml
 app/src/main/res/drawable/naira1.png
+app/src/main/res/drawable/notification_icon.png
 app/src/main/res/drawable/nutri_choco.jpg
 app/src/main/res/drawable/nutri_milk.png
 app/src/main/res/drawable/nutri_yo.jpg
@@ -318,75 +319,6 @@ class ExampleInstrumentedTest {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("com.guvnoh.boma", appContext.packageName)
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/database/FirebaseMessaging.kt
-```kotlin
-package com.guvnoh.boma.database
-
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.os.Build
-import androidx.core.app.NotificationCompat
-import com.google.firebase.messaging.FirebaseMessagingService
-import com.google.firebase.messaging.RemoteMessage
-import com.guvnoh.boma.R
-
-class MyFirebaseMessagingService : FirebaseMessagingService() {
-
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-
-        // save token to database
-        FirebaseRefs.Tokens.child(token).setValue(true)
-    }
-
-    override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        super.onMessageReceived(remoteMessage)
-
-        remoteMessage.notification?.let {
-            val title = it.title ?: "Price Update"
-            val body = it.body ?: ""
-            sendNotification(title, body)
-        }
-
-        // Handle data payload for price change notifications
-        remoteMessage.data.isNotEmpty().let {
-            val title = remoteMessage.data["title"] ?: "Price Update"
-            val body = remoteMessage.data["body"] ?: ""
-            if (body.isNotEmpty()) {
-                sendNotification(title, body)
-            }
-        }
-    }
-
-    private fun sendNotification(title: String, body: String) {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "price_updates_channel"
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                channelId,
-                "Price Updates",
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Notifications for product price changes"
-            }
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle(title)
-            .setContentText(body)
-            .setSmallIcon(R.drawable.boma_logo)
-            .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .build()
-
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
     }
 }
 ```
@@ -3738,6 +3670,75 @@ zipStoreBase=GRADLE_USER_HOME
 zipStorePath=wrapper/dists
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/database/FirebaseMessaging.kt
+```kotlin
+package com.guvnoh.boma.database
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
+import com.guvnoh.boma.R
+
+class MyFirebaseMessagingService : FirebaseMessagingService() {
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+
+        // save token to database
+        FirebaseRefs.Tokens.child(token).setValue(true)
+    }
+
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        super.onMessageReceived(remoteMessage)
+
+        remoteMessage.notification?.let {
+            val title = it.title ?: "Price Update"
+            val body = it.body ?: ""
+            sendNotification(title, body)
+        }
+
+        // Handle data payload for price change notifications
+        remoteMessage.data.isNotEmpty().let {
+            val title = remoteMessage.data["title"] ?: "Price Update"
+            val body = remoteMessage.data["body"] ?: ""
+            if (body.isNotEmpty()) {
+                sendNotification(title, body)
+            }
+        }
+    }
+
+    private fun sendNotification(title: String, body: String) {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "price_updates_channel"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Price Updates",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notifications for product price changes"
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setSmallIcon(R.drawable.notification_icon)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+
+        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+    }
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/formatters/CurrencyFormatter.kt
 ```kotlin
 package com.guvnoh.boma.formatters
@@ -5989,6 +5990,129 @@ class StockRepository() {
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/navigation/StockPageNavigation.kt
+```kotlin
+package com.guvnoh.boma.navigation
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.Composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.guvnoh.boma.uidesigns.screens.stock.BottomBarItem
+import com.guvnoh.boma.uidesigns.screens.stock.StockEmptiesScreen
+import com.guvnoh.boma.uidesigns.screens.stock.StockFullsScreen
+import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun StockPageNav(
+    vm: StockViewModel,
+    paddingValues: PaddingValues
+){
+    val navController = rememberNavController()
+
+    NavHost(
+        startDestination = BottomBarItem.Fulls.route,
+        navController = navController
+    ){
+        composable(BottomBarItem.Empties.route){ StockEmptiesScreen(paddingValues, vm, navController) }
+        composable(BottomBarItem.Fulls.route){
+            StockFullsScreen(
+                paddingValues = paddingValues,
+                stockViewModel = vm,
+                navController = navController
+            ) }
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/DeleteProduct.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens
+
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.wear.compose.material.Icon
+import com.guvnoh.boma.uidesigns.cards.SwipeableProductCard
+import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
+
+@RequiresApi(Build.VERSION_CODES.O)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DeleteProduct(
+    navController: NavController,
+    paddingValues: PaddingValues,
+    productsViewModel: ProductsViewModel
+) {
+    val productList by productsViewModel.products.collectAsState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    Scaffold(
+        modifier = Modifier
+            .padding(paddingValues)
+            .imePadding()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            TopAppBar(
+                scrollBehavior = scrollBehavior,
+                title = {
+                    Icon(Icons.Filled.Info, "")
+                    Text(
+                        text = "Remove Product from Database",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    )
+
+                }
+            )
+        }
+    ){
+        innerPadding ->
+        Column (Modifier.padding(innerPadding)){
+            // Product List
+            LazyColumn(
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(productList.sortedBy { it.name }) { product ->
+                    SwipeableProductCard(
+                        product = product,
+                        navController = navController,
+                        productsViewModel
+                    )
+                }
+            }
+        }
+    }
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangePage.kt
 ```kotlin
 package com.guvnoh.boma.uidesigns.screens.priceChange
@@ -6261,127 +6385,54 @@ class PriceChangeViewmodel(private val preferences: PreferenceManager? = null) :
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/navigation/StockPageNavigation.kt
-```kotlin
-package com.guvnoh.boma.navigation
+## File: gradle/libs.versions.toml
+```toml
+[versions]
+agp = "8.8.0"
+firebaseBom = "32.7.0"
+kotlin = "2.0.0"
+coreKtx = "1.13.1"
+junit = "4.13.2"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+lifecycleRuntimeKtx = "2.9.4"
+activityCompose = "1.9.2"
+composeBom = "2024.04.01"
+navigationCompose = "2.9.4"
+googleGmsGoogleServices = "4.4.3"
+firebaseDatabase = "22.0.1"
+composeMaterial = "1.5.2"
+ui = "1.9.4"
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.runtime.Composable
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.guvnoh.boma.uidesigns.screens.stock.BottomBarItem
-import com.guvnoh.boma.uidesigns.screens.stock.StockEmptiesScreen
-import com.guvnoh.boma.uidesigns.screens.stock.StockFullsScreen
-import com.guvnoh.boma.uidesigns.screens.stock.StockViewModel
 
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun StockPageNav(
-    vm: StockViewModel,
-    paddingValues: PaddingValues
-){
-    val navController = rememberNavController()
+[libraries]
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
+androidx-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
+ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 
-    NavHost(
-        startDestination = BottomBarItem.Fulls.route,
-        navController = navController
-    ){
-        composable(BottomBarItem.Empties.route){ StockEmptiesScreen(paddingValues, vm, navController) }
-        composable(BottomBarItem.Fulls.route){
-            StockFullsScreen(
-                paddingValues = paddingValues,
-                stockViewModel = vm,
-                navController = navController
-            ) }
-    }
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/DeleteProduct.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens
-
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.wear.compose.material.Icon
-import com.guvnoh.boma.uidesigns.cards.SwipeableProductCard
-import com.guvnoh.boma.uidesigns.screens.products.ProductsViewModel
-
-@RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DeleteProduct(
-    navController: NavController,
-    paddingValues: PaddingValues,
-    productsViewModel: ProductsViewModel
-) {
-    val productList by productsViewModel.products.collectAsState()
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    Scaffold(
-        modifier = Modifier
-            .padding(paddingValues)
-            .imePadding()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            TopAppBar(
-                scrollBehavior = scrollBehavior,
-                title = {
-                    Icon(Icons.Filled.Info, "")
-                    Text(
-                        text = "Remove Product from Database",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.ExtraBold
-                        )
-                    )
-
-                }
-            )
-        }
-    ){
-        innerPadding ->
-        Column (Modifier.padding(innerPadding)){
-            // Product List
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(productList.sortedBy { it.name }) { product ->
-                    SwipeableProductCard(
-                        product = product,
-                        navController = navController,
-                        productsViewModel
-                    )
-                }
-            }
-        }
-    }
-}
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
 ```
 
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeCard.kt
@@ -6745,54 +6796,78 @@ fun ShowCard() {
 }
 ```
 
-## File: gradle/libs.versions.toml
-```toml
-[versions]
-agp = "8.8.0"
-firebaseBom = "32.7.0"
-kotlin = "2.0.0"
-coreKtx = "1.13.1"
-junit = "4.13.2"
-junitVersion = "1.3.0"
-espressoCore = "3.7.0"
-lifecycleRuntimeKtx = "2.9.4"
-activityCompose = "1.9.2"
-composeBom = "2024.04.01"
-navigationCompose = "2.9.4"
-googleGmsGoogleServices = "4.4.3"
-firebaseDatabase = "22.0.1"
-composeMaterial = "1.5.2"
-ui = "1.9.4"
+## File: app/build.gradle.kts
+```kotlin
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.gms.google.services)
+}
+
+android {
+    namespace = "com.guvnoh.boma"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.guvnoh.boma"
+        minSdk = 25
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+    buildFeatures {
+        compose = true
+    }
+}
+
+dependencies {
+
+    implementation(libs.ui) // or your Compose version
 
 
-[libraries]
-androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
-androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
-firebase-messaging = { module = "com.google.firebase:firebase-messaging" }
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
-androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
-androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
-androidx-ui = { group = "androidx.compose.ui", name = "ui" }
-androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
-androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
-androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
-androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
-androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
-firebase-database = { group = "com.google.firebase", name = "firebase-database", version.ref = "firebaseDatabase" }
-androidx-compose-material = { group = "androidx.wear.compose", name = "compose-material", version.ref = "composeMaterial" }
-ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
+    implementation(libs.firebase.messaging)
+    implementation(platform(libs.firebase.bom))
 
-[plugins]
-android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
+    implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.navigation.compose )
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+    implementation(libs.firebase.database)
+    implementation(libs.androidx.compose.material)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    debugImplementation(libs.androidx.ui.tooling)
+    debugImplementation(libs.androidx.ui.test.manifest)
+}
 ```
 
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/cards/SwipableProductCard.kt
@@ -7036,7 +7111,7 @@ fun DeleteProductCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = nairaFormat(product.stringPrice?.toInt()?:0),
+                    text = nairaFormat(product.stringPrice?.toDoubleOrNull()?:0.0),
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp
@@ -7045,80 +7120,6 @@ fun DeleteProductCard(
             }
         }
     }
-}
-```
-
-## File: app/build.gradle.kts
-```kotlin
-plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.google.gms.google.services)
-}
-
-android {
-    namespace = "com.guvnoh.boma"
-    compileSdk = 35
-
-    defaultConfig {
-        applicationId = "com.guvnoh.boma"
-        minSdk = 25
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
-    }
-}
-
-dependencies {
-
-    implementation(libs.ui) // or your Compose version
-
-
-    implementation(libs.firebase.messaging)
-    implementation(platform(libs.firebase.bom))
-
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.navigation.compose )
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.firebase.database)
-    implementation(libs.androidx.compose.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
 }
 ```
 
