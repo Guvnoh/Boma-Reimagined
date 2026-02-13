@@ -237,7 +237,7 @@ fun DeleteProductCard(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = nairaFormat(product.stringPrice?.toInt()?:0),
+                    text = nairaFormat(product.stringPrice?.toDoubleOrNull()?:0.0),
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp
