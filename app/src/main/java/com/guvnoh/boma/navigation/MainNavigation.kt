@@ -1,6 +1,5 @@
 package com.guvnoh.boma.navigation
 
-import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -15,8 +14,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.google.firebase.messaging.FirebaseMessaging
-import com.guvnoh.boma.MainActivity
 import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.PreferenceManager
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.screens.addProduct.AddProduct
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
@@ -40,7 +39,8 @@ fun Navigation(
     paddingValues: PaddingValues,
     navController: NavHostController,
     startDestination: String? = null
-    ){
+) {
+    val context = LocalContext.current
 
     val records: RecordViewModel = viewModel()
     val record by records.record.collectAsState()
@@ -49,14 +49,15 @@ fun Navigation(
     val stockViewModel: StockViewModel = viewModel()
     val addProductViewModel: AddProductViewModel = viewModel()
     val receiptViewmodel: ReceiptViewmodel = viewModel()
-    val priceChangeViewmodel: PriceChangeViewmodel = viewModel()
 
-
-
-
+    // Create PriceChangeViewmodel with PreferenceManager using factory
+    val preferenceManager = PreferenceManager(context)
+    val priceChangeViewmodel: PriceChangeViewmodel = viewModel(
+        factory = PriceChangeViewmodel.Factory(preferenceManager)
+    )
 
     LaunchedEffect(Unit) {
-        bomaViewModel.checkDailyReset{
+        bomaViewModel.checkDailyReset {
             AppMetaViewModel().resetSoldToday()
         }
     }
@@ -67,41 +68,43 @@ fun Navigation(
                 Log.d("FCM", "Device token: $token")
 
                 // Save token to Firebase DB under this user/device
-                // Example:
-                // users/{userId}/fcmToken = token
                 FirebaseRefs
                     .Tokens
                     .child(System.currentTimeMillis().toString())
                     .setValue(token)
             }
-
     }
-//    val products by productsViewModel.products.collectAsState()
-//    LaunchedEffect (products){
-//        val test =  FirebaseRefs.root.child("testProducts")
-//        products.forEach {
-//            test.child(it.id.toString()).setValue(it)
-//        }
-//    }
-
-
 
     NavHost(
-        startDestination = startDestination?:Screen.Products.route,
+        startDestination = startDestination ?: Screen.Products.route,
         navController = navController
-
-    ){
-        composable(Screen.Products.route){ ProductsPage(navController, paddingValues, productsViewModel, receiptViewmodel) }
-        composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, priceChangeViewmodel) }
-        composable(Screen.Receipt.route){ ReceiptPage(stockViewModel, receiptViewmodel) }
-        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController, addProductViewModel) }
-        composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, productsViewModel) }
-        composable(Screen.Stock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
-        composable(Screen.WarehouseStock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
-        composable(Screen.Records.route){ RecordsScreen(records, navController, paddingValues) }
-        composable(Screen.RecordDetails.route){
+    ) {
+        composable(Screen.Products.route) {
+            ProductsPage(navController, paddingValues, productsViewModel, receiptViewmodel)
+        }
+        composable(Screen.PriceChange.route) {
+            PriceChangePage(navController, paddingValues, priceChangeViewmodel)
+        }
+        composable(Screen.Receipt.route) {
+            ReceiptPage(stockViewModel, receiptViewmodel)
+        }
+        composable(Screen.AddProduct.route) {
+            AddProduct(paddingValues, navController, addProductViewModel)
+        }
+        composable(Screen.DeleteProduct.route) {
+            DeleteProduct(navController, paddingValues, productsViewModel)
+        }
+        composable(Screen.Stock.route) {
+            StockPageNav(vm = stockViewModel, paddingValues = paddingValues)
+        }
+        composable(Screen.WarehouseStock.route) {
+            StockPageNav(vm = stockViewModel, paddingValues = paddingValues)
+        }
+        composable(Screen.Records.route) {
+            RecordsScreen(records, navController, paddingValues)
+        }
+        composable(Screen.RecordDetails.route) {
             record?.let { selectedRecord -> RecordDetails(selectedRecord) }
         }
     }
-
 }
