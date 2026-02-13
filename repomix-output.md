@@ -55,6 +55,7 @@ app/src/main/java/com/guvnoh/boma/MainActivity.kt
 app/src/main/java/com/guvnoh/boma/models/AutoScrollingText.kt
 app/src/main/java/com/guvnoh/boma/models/Empties.kt
 app/src/main/java/com/guvnoh/boma/models/FullsStock.kt
+app/src/main/java/com/guvnoh/boma/models/PreferenceManager.kt
 app/src/main/java/com/guvnoh/boma/models/Product.kt
 app/src/main/java/com/guvnoh/boma/models/Screen.kt
 app/src/main/java/com/guvnoh/boma/models/selectableCard.kt
@@ -171,33 +172,6 @@ settings.gradle.kts
 ```
 
 # Files
-
-## File: app/src/main/java/com/guvnoh/boma/database/FirebaseMessaging.kt
-```kotlin
-package com.guvnoh.boma.database
-
-import android.util.Log
-import com.google.firebase.messaging.FirebaseMessagingService
-import com.google.firebase.messaging.RemoteMessage
-
-class MyFirebaseMessagingService : FirebaseMessagingService() {
-
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-
-        // VERY IMPORTANT
-        // Send this token to your database
-        Log.d("FCM", "New token: $token")
-    }
-
-    override fun onMessageReceived(message: RemoteMessage) {
-        super.onMessageReceived(message)
-
-        // This only runs when app is foreground
-        Log.d("FCM", "Message received: ${message.notification?.body}")
-    }
-}
-```
 
 ## File: .gitignore
 ```
@@ -348,6 +322,75 @@ class ExampleInstrumentedTest {
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/database/FirebaseMessaging.kt
+```kotlin
+package com.guvnoh.boma.database
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import com.google.firebase.messaging.FirebaseMessagingService
+import com.google.firebase.messaging.RemoteMessage
+import com.guvnoh.boma.R
+
+class MyFirebaseMessagingService : FirebaseMessagingService() {
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+
+        // save token to database
+        FirebaseRefs.Tokens.child(token).setValue(true)
+    }
+
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
+        super.onMessageReceived(remoteMessage)
+
+        remoteMessage.notification?.let {
+            val title = it.title ?: "Price Update"
+            val body = it.body ?: ""
+            sendNotification(title, body)
+        }
+
+        // Handle data payload for price change notifications
+        remoteMessage.data.isNotEmpty().let {
+            val title = remoteMessage.data["title"] ?: "Price Update"
+            val body = remoteMessage.data["body"] ?: ""
+            if (body.isNotEmpty()) {
+                sendNotification(title, body)
+            }
+        }
+    }
+
+    private fun sendNotification(title: String, body: String) {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "price_updates_channel"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Price Updates",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Notifications for product price changes"
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setSmallIcon(R.drawable.boma_logo)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
+
+        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+    }
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/dateProvider/DateProvider.kt
 ```kotlin
 package com.guvnoh.boma.dateProvider
@@ -436,30 +479,37 @@ fun saveBitmapToGallery(context: Context, bitmap: Bitmap) {
 }
 ```
 
-## File: app/src/main/java/com/guvnoh/boma/functions/VibratePhone.kt
+## File: app/src/main/java/com/guvnoh/boma/models/PreferenceManager.kt
 ```kotlin
-package com.guvnoh.boma.functions
+package com.guvnoh.boma.models
 
 import android.content.Context
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
-import android.os.Build
-import androidx.annotation.RequiresApi
+import android.content.SharedPreferences
 
-@RequiresApi(Build.VERSION_CODES.O)
-fun vibratePhone(context: Context, duration: Long = 100L) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-        val vibrator = vibratorManager.defaultVibrator
-        vibrator.vibrate(
-            VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
-        )
-    } else {
-        val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        vibrator.vibrate(
-            VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
-        )
+class PreferenceManager(context: Context) {
+
+    private val sharedPreferences: SharedPreferences =
+        context.getSharedPreferences("userId", Context.MODE_PRIVATE)
+
+    fun saveId(key:String, value:String){
+        sharedPreferences.edit().putString(key, value).apply()
+    }
+    fun getUserId(key:String, defaultValue: String = ""): String{
+        return sharedPreferences.getString(key, defaultValue)?: defaultValue
+    }
+
+    fun clearKey(key:String){
+        with(sharedPreferences.edit()){
+            remove(key)
+            apply()
+        }
+    }
+
+    fun clearAll(){
+        with(sharedPreferences.edit()){
+            clear()
+            apply()
+        }
     }
 }
 ```
@@ -1799,6 +1849,36 @@ dependencyResolutionManagement {
 
 rootProject.name = "BOMA"
 include(":app")
+```
+
+## File: app/src/main/java/com/guvnoh/boma/functions/VibratePhone.kt
+```kotlin
+package com.guvnoh.boma.functions
+
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
+
+fun vibratePhone(context: Context, duration: Long = 100L) {
+    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        vibratorManager.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        vibrator.vibrate(
+            VibrationEffect.createOneShot(duration, VibrationEffect.DEFAULT_AMPLITUDE)
+        )
+    } else {
+        @Suppress("DEPRECATION")
+        vibrator.vibrate(duration)
+    }
+}
 ```
 
 ## File: app/src/main/java/com/guvnoh/boma/models/Screen.kt
@@ -3658,53 +3738,6 @@ zipStoreBase=GRADLE_USER_HOME
 zipStorePath=wrapper/dists
 ```
 
-## File: app/src/main/AndroidManifest.xml
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-
-
-
-    <application
-        android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.BOMA"
-        tools:targetApi="31">
-
-        <service
-            android:name=".database.MyFirebaseMessagingService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-            </intent-filter>
-        </service>
-
-        <activity
-            android:name=".MainActivity"
-            android:windowSoftInputMode="adjustResize"
-            android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.BOMA">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-
-</manifest>
-```
-
 ## File: app/src/main/java/com/guvnoh/boma/formatters/CurrencyFormatter.kt
 ```kotlin
 package com.guvnoh.boma.formatters
@@ -5033,6 +5066,53 @@ class AppMetaViewModel : ViewModel() {
 }
 ```
 
+## File: app/src/main/AndroidManifest.xml
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.BOMA"
+        tools:targetApi="31">
+
+        <service
+            android:name=".database.MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <activity
+            android:name=".MainActivity"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.BOMA">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/models/Empties.kt
 ```kotlin
 package com.guvnoh.boma.models
@@ -5464,177 +5544,6 @@ fun UpdateStockCard(padding: PaddingValues,product: Products){
 @Composable
 private fun ShowDemo(){
     UpdateStockCard(padding = PaddingValues(), product = brandData[1])
-}
-```
-
-## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
-```kotlin
-package com.guvnoh.boma.uidesigns.screens.priceChange
-
-import android.Manifest
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
-import androidx.lifecycle.ViewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.google.firebase.database.DatabaseReference
-import com.guvnoh.boma.MainActivity
-import com.guvnoh.boma.R
-import com.guvnoh.boma.database.FirebaseRefs
-import com.guvnoh.boma.formatters.nairaFormat
-import com.guvnoh.boma.models.Products
-import com.guvnoh.boma.models.Screen
-import com.guvnoh.boma.repositories.ProductsRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
-
-class PriceChangeViewmodel: ViewModel() {
-
-    //product list
-    private val _products = MutableStateFlow<List<Products>>(emptyList())
-    val products: StateFlow<List<Products>> = _products
-
-    //price change products
-    private val _priceChangeProducts = MutableStateFlow<Map<String, String>>(emptyMap())
-    val priceChangeProducts: StateFlow<Map<String, String>> = _priceChangeProducts
-
-    init {
-        observeProducts(FirebaseRefs.Products)
-    }
-
-    private fun observeProducts(repo: DatabaseReference) {
-        val repository = ProductsRepository()
-        repository.observeProducts(repo) { list ->
-            _products.value = list
-        }
-    }
-
-    fun clearPriceChangeList(){
-        _priceChangeProducts.value = emptyMap()
-    }
-
-
-     fun addToPriceChangeList(product: Products, newPrice: String ){
-        val validPrice = validateEntry(newPrice) //ensure entry is a valid double then convert to string
-        val pricesToUpdate = _priceChangeProducts.value.toMutableMap()
-        pricesToUpdate[product.id!!] = validPrice
-        _priceChangeProducts.value = pricesToUpdate
-    }
-
-
-    // Update price
-    fun updatePrice(product: Products, newPrice: String) {
-        val productsRepo = FirebaseRefs.Products
-        // update string and double price of product parameter
-        productsRepo.child(product.id ?: "error")
-            .child("stringPrice")
-            .setValue(newPrice)
-
-        productsRepo.child(product.id?:"error")
-            .child("doublePrice")
-            .setValue(newPrice.toDouble())
-
-    }
-
-    private fun validateEntry(newPrice: String): String{
-        val parsedNewPrice = newPrice.filter { ch -> ch.isDigit() || ch == '.' }
-        val parsed = parsedNewPrice.toDoubleOrNull()
-        if (parsed != null && parsed > 0.0) return parsed.toString()
-        return ""
-    }
-
-    fun errorCheck(newPrice: String): String?{
-        val double = newPrice.toDoubleOrNull()
-        val result = when{
-            newPrice.isEmpty() -> "Empty Field"
-            double == null -> "Invalid Price"
-            double >= 0 -> null
-            else -> "Invalid Price"
-        }
-
-        return  result
-    }
-
-    private fun sendNotification(context: Context, content: String) {
-        val id = System.currentTimeMillis().toInt()
-        val intent = Intent(context, MainActivity::class.java)
-            .putExtra("route", Screen.PriceChange.route)
-
-        val pendingIntent = PendingIntent.getActivity(
-            context,
-            id,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = NotificationCompat.Builder(context, "default_channel")
-            .setSmallIcon(R.drawable.boma_logo)
-            .setContentTitle("Price Update!")
-            .setContentText(content)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .build()
-
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
-
-        NotificationManagerCompat.from(context).notify(id, notification)
-    }
-
-
-    fun getPendingPrice(productId: String): String{
-        val pendingPrice: String
-        val map = priceChangeProducts.value
-        val pendingProductId = if (productId in map.keys){map.keys.first { productId == it }} else return ""
-        pendingPrice = map[pendingProductId]!!
-        return pendingPrice
-    }
-
-    fun updatePrices(
-        context: Context,
-        map: Map<String, String>,
-        navController: NavController){
-
-        map.keys.forEach { productId ->
-            val productToUpdate = products.value.first { it.id == productId }
-            val newPrice = map[productId]
-            updatePrice(productToUpdate, newPrice!!)
-
-            sendNotification(
-                context = context,
-                content = "${productToUpdate.name}   ----->  ${nairaFormat(newPrice.toDouble())} "
-            )
-        }
-        Toast.makeText(context, "Prices updated", Toast.LENGTH_SHORT).show()
-
-        navController.navigate(Screen.Products.route) {
-            popUpTo(navController.graph.findStartDestination().id) {
-                saveState = true
-            }
-            launchSingleTop = true
-            restoreState = true
-
-        }
-    }
 }
 ```
 
@@ -6084,11 +5993,11 @@ class StockRepository() {
 ```kotlin
 package com.guvnoh.boma.uidesigns.screens.priceChange
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -6099,15 +6008,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import com.guvnoh.boma.models.Screen
 
 @Composable
 fun PriceChangePage(
     navController: NavController,
     paddingValues: PaddingValues,
     priceChangeViewmodel: PriceChangeViewmodel
-){
+) {
     val productList by priceChangeViewmodel.products.collectAsState()
     val priceChangeList by priceChangeViewmodel.priceChangeProducts.collectAsState()
     val context = LocalContext.current
@@ -6132,16 +6039,20 @@ fun PriceChangePage(
                         },
                         enabled = priceChangeList.isNotEmpty(),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
+                            containerColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Icon(Icons.Filled.Done, contentDescription = "Clear")
+                        Icon(Icons.Filled.Clear, contentDescription = "Clear")
                         Spacer(Modifier.width(8.dp))
                         Text("Clear")
                     }
                     Button(
                         onClick = {
-                            priceChangeViewmodel.updatePrices(context,priceChangeList,navController)
+                            priceChangeViewmodel.updatePrices(
+                                context = context,
+                                map = priceChangeList,
+                                navController = navController,
+                            )
                             priceChangeViewmodel.clearPriceChangeList()
                         },
                         enabled = priceChangeList.isNotEmpty(),
@@ -6157,16 +6068,194 @@ fun PriceChangePage(
             }
         }
     ) { innerPadding ->
-        LazyColumn(
-            contentPadding = PaddingValues(10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            items(productList.sortedBy { it.name }) { product ->
-                PriceChangeCard(product, priceChangeViewmodel)
+        if (productList.isEmpty()) {
+            // Show loading state
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
             }
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                items(productList.sortedBy { it.name }) { product ->
+                    PriceChangeCard(product, priceChangeViewmodel)
+                }
+            }
+        }
+    }
+}
+```
+
+## File: app/src/main/java/com/guvnoh/boma/uidesigns/screens/priceChange/PriceChangeViewmodel.kt
+```kotlin
+package com.guvnoh.boma.uidesigns.screens.priceChange
+
+import android.content.Context
+import android.widget.Toast
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import com.google.firebase.database.DatabaseReference
+import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.PreferenceManager
+import com.guvnoh.boma.models.Products
+import com.guvnoh.boma.models.Screen
+import com.guvnoh.boma.repositories.ProductsRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+/**
+ * ViewModel for handling price changes.
+ *
+ * Note: Push notifications are now handled server-side via Firebase Cloud Functions.
+ * When a price is updated in the database, the Cloud Function automatically
+ * sends notifications to all registered devices.
+ */
+class PriceChangeViewmodel(private val preferences: PreferenceManager? = null) : ViewModel() {
+
+    // Product list
+    private val _products = MutableStateFlow<List<Products>>(emptyList())
+    val products: StateFlow<List<Products>> = _products
+
+    // User id
+    private val _userId = MutableStateFlow(preferences?.getUserId("userId") ?: "")
+    val userId = _userId
+
+    // Price change products - map of productId to new price
+    private val _priceChangeProducts = MutableStateFlow<Map<String, String>>(emptyMap())
+    val priceChangeProducts: StateFlow<Map<String, String>> = _priceChangeProducts
+
+    init {
+        observeProducts(FirebaseRefs.Products)
+        preferences?.getUserId("userId")
+    }
+
+    private fun observeProducts(repo: DatabaseReference) {
+        val repository = ProductsRepository()
+        repository.observeProducts(repo) { list ->
+            _products.value = list
+        }
+    }
+
+    fun clearPriceChangeList() {
+        _priceChangeProducts.value = emptyMap()
+    }
+
+    /**
+     * Remove a single product from the price change list
+     */
+    fun removeFromPriceChangeList(productId: String) {
+        val updated = _priceChangeProducts.value.toMutableMap()
+        updated.remove(productId)
+        _priceChangeProducts.value = updated
+    }
+
+    fun addToPriceChangeList(product: Products, newPrice: String) {
+        val validPrice = validateEntry(newPrice)
+        if (validPrice.isNotEmpty()) {
+            val pricesToUpdate = _priceChangeProducts.value.toMutableMap()
+            pricesToUpdate[product.id!!] = validPrice
+            _priceChangeProducts.value = pricesToUpdate
+        }
+    }
+
+    /**
+     * Update price in Firebase.
+     * The Cloud Function will automatically detect this change and
+     * send push notifications to all registered devices.
+     */
+    private fun updatePrice(product: Products, newPrice: String) {
+        val productsRepo = FirebaseRefs.Products
+        val productRef = productsRepo.child(product.id ?: return)
+
+        // Update both string and double price
+        productRef.child("stringPrice").setValue(newPrice)
+        productRef.child("doublePrice").setValue(newPrice.toDouble())
+    }
+
+    private fun validateEntry(newPrice: String): String {
+        val parsedNewPrice = newPrice.filter { ch -> ch.isDigit() || ch == '.' }
+        val parsed = parsedNewPrice.toDoubleOrNull()
+        if (parsed != null && parsed > 0.0) return parsed.toString()
+        return ""
+    }
+
+    fun errorCheck(newPrice: String): String? {
+        val double = newPrice.toDoubleOrNull()
+        return when {
+            newPrice.isEmpty() -> "Empty Field"
+            double == null -> "Invalid Price"
+            double >= 0 -> null
+            else -> "Invalid Price"
+        }
+    }
+
+    fun getPendingPrice(productId: String): String {
+        val map = priceChangeProducts.value
+        return map[productId] ?: ""
+    }
+
+    /**
+     * Update all prices in the pending list.
+     * Each price update will trigger the Firebase Cloud Function,
+     * which will send push notifications to all devices.
+     */
+    fun updatePrices(
+        context: Context,
+        map: Map<String, String>,
+        navController: NavController
+    ) {
+        if (map.isEmpty()) {
+            Toast.makeText(context, "No prices to update", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        var updateCount = 0
+        map.forEach { (productId, newPrice) ->
+            val productToUpdate = products.value.find { it.id == productId }
+            if (productToUpdate != null) {
+                updatePrice(productToUpdate, newPrice)
+                updateCount++
+            }
+        }
+
+        val message = if (updateCount == 1) {
+            "Price updated successfully"
+        } else {
+            "$updateCount prices updated successfully"
+        }
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+
+        // Navigate back to products screen
+        navController.navigate(Screen.Products.route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
+
+    /**
+     * Factory for creating PriceChangeViewmodel with dependencies
+     */
+    class Factory(private val preferences: PreferenceManager? = null) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(PriceChangeViewmodel::class.java)) {
+                return PriceChangeViewmodel(preferences) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }
@@ -6311,10 +6400,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -6334,7 +6424,6 @@ import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.brandData
 import com.guvnoh.boma.repositories.ProductsRepository
-import androidx.compose.runtime.collectAsState
 
 @Composable
 fun PriceChangeCard(
@@ -6353,13 +6442,13 @@ fun PriceChangeCard(
     val currentPrice = product.stringPrice?.toDoubleOrNull() ?: 0.0
     val displayCurrentPrice by remember { mutableDoubleStateOf(currentPrice) }
     val id = product.id!!
-    val pendingPrice = priceChangeViewmodel.getPendingPrice(id).toDoubleOrNull()?:0.0
-    val priceChange  = pendingPrice - displayCurrentPrice
-    val priceChangePercent  = if (displayCurrentPrice >0.0 && pendingPrice >0.0 ) {
+    val pendingPrice = priceChangeViewmodel.getPendingPrice(id).toDoubleOrNull() ?: 0.0
+    val priceChange = pendingPrice - displayCurrentPrice
+    val priceChangePercent = if (displayCurrentPrice > 0.0 && pendingPrice > 0.0) {
         ((pendingPrice - displayCurrentPrice) / displayCurrentPrice) * 100
     } else 0.0
-    val priceChangeList = priceChangeViewmodel.priceChangeProducts.collectAsState().value
-
+    val priceChangeList by priceChangeViewmodel.priceChangeProducts.collectAsState()
+    val isInPriceChangeList = product.id in priceChangeList.keys
 
     Card(
         onClick = { isExpanded = !isExpanded },
@@ -6429,28 +6518,33 @@ fun PriceChangeCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        if (priceError == null) {
+                        if (isInPriceChangeList && priceError == null) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                imageVector = if (priceChange >= 0)
+                                    Icons.AutoMirrored.Filled.TrendingUp
+                                else
+                                    Icons.AutoMirrored.Filled.TrendingDown,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
                                 tint = if (priceChange > 0)
                                     Color(0xFF4CAF50)
-                                else
+                                else if (priceChange < 0)
                                     Color(0xFFF44336)
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 }
 
                 // New Price Badge
-                if (product.id in priceChangeList.keys) {
+                if (isInPriceChangeList) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(start = 4.dp)
                     ) {
-                        val badge = nairaFormat( (priceChangeList[product.id]!!).toDouble())
+                        val badge = nairaFormat((priceChangeList[product.id]!!).toDouble())
                         Text(
                             text = badge,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -6488,7 +6582,7 @@ fun PriceChangeCard(
                                     newPrice = input,
                                 )
                             }
-                                priceError = priceChangeViewmodel.errorCheck(input)
+                            priceError = priceChangeViewmodel.errorCheck(input)
                         },
                         label = { Text("Enter New Price") },
                         leadingIcon = {
@@ -6505,6 +6599,8 @@ fun PriceChangeCard(
                                 IconButton(onClick = {
                                     newPrice = ""
                                     priceError = null
+                                    // Remove from price change list when cleared
+                                    priceChangeViewmodel.clearPriceChangeList()
                                 }) {
                                     Icon(
                                         Icons.Default.Close,
@@ -6537,7 +6633,7 @@ fun PriceChangeCard(
                     )
 
                     // Price Change Stats
-                    if (priceError == null) {
+                    if (priceError == null && isInPriceChangeList && pendingPrice > 0.0) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -6562,13 +6658,14 @@ fun PriceChangeCard(
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold
                                         ),
-                                        color = if (priceChange > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+                                        color = if (priceChange > 0) Color(0xFF4CAF50)
+                                        else if (priceChange < 0) Color(0xFFF44336)
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
 
                             // Percentage Change
-
                             Surface(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(12.dp),
@@ -6588,7 +6685,9 @@ fun PriceChangeCard(
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold
                                         ),
-                                        color = if (priceChangePercent > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+                                        color = if (priceChangePercent > 0) Color(0xFF4CAF50)
+                                        else if (priceChangePercent < 0) Color(0xFFF44336)
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -6596,7 +6695,7 @@ fun PriceChangeCard(
                     }
 
                     // Confirm Button
-                    if (priceError == null) {
+                    if (priceError == null && newPrice.isNotEmpty()) {
                         Button(
                             onClick = {
                                 newPrice = ""
@@ -6694,39 +6793,6 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }
-```
-
-## File: app/src/main/java/com/guvnoh/boma/database/firebaseRefs.kt
-```kotlin
-package com.guvnoh.boma.database
-
-
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-
-object FirebaseRefs {
-
-    private val db = FirebaseDatabase.getInstance()
-
-    //database root folder
-    private val root: DatabaseReference = db.reference.child("Boma")
-
-    val Products = root.child("testProducts")
-    val users = root.child("users")
-
-    //val Products = root.child("Products")
-
-    //val testProducts = root.child("testProducts")
-
-    val bomaEmpties = root.child("Empties")
-
-    val empties = root.child("BomaStock").child("Empties")
-
-    val records = root.child("BomaDBRecords3")
-
-    // stores dates and is used for new day validation
-    val appMeta = root.child("appMeta")
-}
 ```
 
 ## File: app/src/main/java/com/guvnoh/boma/uidesigns/cards/SwipableProductCard.kt
@@ -7056,6 +7122,39 @@ dependencies {
 }
 ```
 
+## File: app/src/main/java/com/guvnoh/boma/database/firebaseRefs.kt
+```kotlin
+package com.guvnoh.boma.database
+
+
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+
+object FirebaseRefs {
+
+    private val db = FirebaseDatabase.getInstance()
+
+    //database root folder
+    private val root: DatabaseReference = db.reference.child("Boma")
+
+    //val Products = root.child("testProducts")
+    val Tokens = root.child("users")
+
+    val Products = root.child("Products")
+
+    //val testProducts = root.child("testProducts")
+
+    val bomaEmpties = root.child("Empties")
+
+    val empties = root.child("BomaStock").child("Empties")
+
+    val records = root.child("BomaDBRecords3")
+
+    // stores dates and is used for new day validation
+    val appMeta = root.child("appMeta")
+}
+```
+
 ## File: app/src/main/java/com/guvnoh/boma/models/Product.kt
 ```kotlin
 package com.guvnoh.boma.models
@@ -7154,7 +7253,6 @@ val brandData = mutableListOf(
 ```kotlin
 package com.guvnoh.boma.navigation
 
-import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -7169,8 +7267,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.google.firebase.messaging.FirebaseMessaging
-import com.guvnoh.boma.MainActivity
 import com.guvnoh.boma.database.FirebaseRefs
+import com.guvnoh.boma.models.PreferenceManager
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.screens.addProduct.AddProduct
 import com.guvnoh.boma.uidesigns.screens.DeleteProduct
@@ -7194,7 +7292,8 @@ fun Navigation(
     paddingValues: PaddingValues,
     navController: NavHostController,
     startDestination: String? = null
-    ){
+) {
+    val context = LocalContext.current
 
     val records: RecordViewModel = viewModel()
     val record by records.record.collectAsState()
@@ -7203,14 +7302,15 @@ fun Navigation(
     val stockViewModel: StockViewModel = viewModel()
     val addProductViewModel: AddProductViewModel = viewModel()
     val receiptViewmodel: ReceiptViewmodel = viewModel()
-    val priceChangeViewmodel: PriceChangeViewmodel = viewModel()
 
-
-
-
+    // Create PriceChangeViewmodel with PreferenceManager using factory
+    val preferenceManager = PreferenceManager(context)
+    val priceChangeViewmodel: PriceChangeViewmodel = viewModel(
+        factory = PriceChangeViewmodel.Factory(preferenceManager)
+    )
 
     LaunchedEffect(Unit) {
-        bomaViewModel.checkDailyReset{
+        bomaViewModel.checkDailyReset {
             AppMetaViewModel().resetSoldToday()
         }
     }
@@ -7221,42 +7321,44 @@ fun Navigation(
                 Log.d("FCM", "Device token: $token")
 
                 // Save token to Firebase DB under this user/device
-                // Example:
-                // users/{userId}/fcmToken = token
                 FirebaseRefs
-                    .users
+                    .Tokens
                     .child(System.currentTimeMillis().toString())
                     .setValue(token)
             }
-
     }
-//    val products by productsViewModel.products.collectAsState()
-//    LaunchedEffect (products){
-//        val test =  FirebaseRefs.root.child("testProducts")
-//        products.forEach {
-//            test.child(it.id.toString()).setValue(it)
-//        }
-//    }
-
-
 
     NavHost(
-        startDestination = startDestination?:Screen.Products.route,
+        startDestination = startDestination ?: Screen.Products.route,
         navController = navController
-
-    ){
-        composable(Screen.Products.route){ ProductsPage(navController, paddingValues, productsViewModel, receiptViewmodel) }
-        composable(Screen.PriceChange.route){ PriceChangePage(navController, paddingValues, priceChangeViewmodel) }
-        composable(Screen.Receipt.route){ ReceiptPage(stockViewModel, receiptViewmodel) }
-        composable(Screen.AddProduct.route){ AddProduct(paddingValues, navController, addProductViewModel) }
-        composable(Screen.DeleteProduct.route){ DeleteProduct(navController, paddingValues, productsViewModel) }
-        composable(Screen.Stock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
-        composable(Screen.WarehouseStock.route){ StockPageNav(vm = stockViewModel, paddingValues = paddingValues) }
-        composable(Screen.Records.route){ RecordsScreen(records, navController, paddingValues) }
-        composable(Screen.RecordDetails.route){
+    ) {
+        composable(Screen.Products.route) {
+            ProductsPage(navController, paddingValues, productsViewModel, receiptViewmodel)
+        }
+        composable(Screen.PriceChange.route) {
+            PriceChangePage(navController, paddingValues, priceChangeViewmodel)
+        }
+        composable(Screen.Receipt.route) {
+            ReceiptPage(stockViewModel, receiptViewmodel)
+        }
+        composable(Screen.AddProduct.route) {
+            AddProduct(paddingValues, navController, addProductViewModel)
+        }
+        composable(Screen.DeleteProduct.route) {
+            DeleteProduct(navController, paddingValues, productsViewModel)
+        }
+        composable(Screen.Stock.route) {
+            StockPageNav(vm = stockViewModel, paddingValues = paddingValues)
+        }
+        composable(Screen.WarehouseStock.route) {
+            StockPageNav(vm = stockViewModel, paddingValues = paddingValues)
+        }
+        composable(Screen.Records.route) {
+            RecordsScreen(records, navController, paddingValues)
+        }
+        composable(Screen.RecordDetails.route) {
             record?.let { selectedRecord -> RecordDetails(selectedRecord) }
         }
     }
-
 }
 ```

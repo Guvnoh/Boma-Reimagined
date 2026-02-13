@@ -1,4 +1,3 @@
-
 package com.guvnoh.boma.uidesigns.screens.priceChange
 
 import androidx.compose.animation.AnimatedVisibility
@@ -13,10 +12,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.TrendingDown
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.TrendingUp
+import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,7 +36,6 @@ import com.guvnoh.boma.formatters.nairaFormat
 import com.guvnoh.boma.models.Products
 import com.guvnoh.boma.models.brandData
 import com.guvnoh.boma.repositories.ProductsRepository
-import androidx.compose.runtime.collectAsState
 
 @Composable
 fun PriceChangeCard(
@@ -55,13 +54,13 @@ fun PriceChangeCard(
     val currentPrice = product.stringPrice?.toDoubleOrNull() ?: 0.0
     val displayCurrentPrice by remember { mutableDoubleStateOf(currentPrice) }
     val id = product.id!!
-    val pendingPrice = priceChangeViewmodel.getPendingPrice(id).toDoubleOrNull()?:0.0
-    val priceChange  = pendingPrice - displayCurrentPrice
-    val priceChangePercent  = if (displayCurrentPrice >0.0 && pendingPrice >0.0 ) {
+    val pendingPrice = priceChangeViewmodel.getPendingPrice(id).toDoubleOrNull() ?: 0.0
+    val priceChange = pendingPrice - displayCurrentPrice
+    val priceChangePercent = if (displayCurrentPrice > 0.0 && pendingPrice > 0.0) {
         ((pendingPrice - displayCurrentPrice) / displayCurrentPrice) * 100
     } else 0.0
-    val priceChangeList = priceChangeViewmodel.priceChangeProducts.collectAsState().value
-
+    val priceChangeList by priceChangeViewmodel.priceChangeProducts.collectAsState()
+    val isInPriceChangeList = product.id in priceChangeList.keys
 
     Card(
         onClick = { isExpanded = !isExpanded },
@@ -131,28 +130,33 @@ fun PriceChangeCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
-                        if (priceError == null) {
+                        if (isInPriceChangeList && priceError == null) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.TrendingUp,
+                                imageVector = if (priceChange >= 0)
+                                    Icons.AutoMirrored.Filled.TrendingUp
+                                else
+                                    Icons.AutoMirrored.Filled.TrendingDown,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp),
                                 tint = if (priceChange > 0)
                                     Color(0xFF4CAF50)
-                                else
+                                else if (priceChange < 0)
                                     Color(0xFFF44336)
+                                else
+                                    MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 }
 
                 // New Price Badge
-                if (product.id in priceChangeList.keys) {
+                if (isInPriceChangeList) {
                     Surface(
                         shape = RoundedCornerShape(12.dp),
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(start = 4.dp)
                     ) {
-                        val badge = nairaFormat( (priceChangeList[product.id]!!).toDouble())
+                        val badge = nairaFormat((priceChangeList[product.id]!!).toDouble())
                         Text(
                             text = badge,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -190,7 +194,7 @@ fun PriceChangeCard(
                                     newPrice = input,
                                 )
                             }
-                                priceError = priceChangeViewmodel.errorCheck(input)
+                            priceError = priceChangeViewmodel.errorCheck(input)
                         },
                         label = { Text("Enter New Price") },
                         leadingIcon = {
@@ -207,6 +211,8 @@ fun PriceChangeCard(
                                 IconButton(onClick = {
                                     newPrice = ""
                                     priceError = null
+                                    // Remove from price change list when cleared
+                                    priceChangeViewmodel.clearPriceChangeList()
                                 }) {
                                     Icon(
                                         Icons.Default.Close,
@@ -239,7 +245,7 @@ fun PriceChangeCard(
                     )
 
                     // Price Change Stats
-                    if (priceError == null) {
+                    if (priceError == null && isInPriceChangeList && pendingPrice > 0.0) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -264,13 +270,14 @@ fun PriceChangeCard(
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold
                                         ),
-                                        color = if (priceChange > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+                                        color = if (priceChange > 0) Color(0xFF4CAF50)
+                                        else if (priceChange < 0) Color(0xFFF44336)
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
 
                             // Percentage Change
-
                             Surface(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(12.dp),
@@ -290,7 +297,9 @@ fun PriceChangeCard(
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold
                                         ),
-                                        color = if (priceChangePercent > 0) Color(0xFF4CAF50) else Color(0xFFF44336)
+                                        color = if (priceChangePercent > 0) Color(0xFF4CAF50)
+                                        else if (priceChangePercent < 0) Color(0xFFF44336)
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
@@ -298,7 +307,7 @@ fun PriceChangeCard(
                     }
 
                     // Confirm Button
-                    if (priceError == null) {
+                    if (priceError == null && newPrice.isNotEmpty()) {
                         Button(
                             onClick = {
                                 newPrice = ""
