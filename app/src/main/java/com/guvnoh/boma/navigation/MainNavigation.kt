@@ -1,7 +1,6 @@
 package com.guvnoh.boma.navigation
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
@@ -13,12 +12,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.google.firebase.messaging.FirebaseMessaging
-import com.guvnoh.boma.database.FirebaseRefs
 import com.guvnoh.boma.models.PreferenceManager
 import com.guvnoh.boma.models.Screen
 import com.guvnoh.boma.uidesigns.screens.addProduct.AddProduct
-import com.guvnoh.boma.uidesigns.screens.DeleteProduct
+import com.guvnoh.boma.uidesigns.screens.deleteProducts.DeleteProduct
 import com.guvnoh.boma.uidesigns.screens.priceChange.PriceChangePage
 import com.guvnoh.boma.uidesigns.screens.products.ProductsPage
 import com.guvnoh.boma.uidesigns.screens.addProduct.AddProductViewModel
@@ -62,18 +59,18 @@ fun Navigation(
         }
     }
 
-    LaunchedEffect(Unit) {
-        FirebaseMessaging.getInstance().token
-            .addOnSuccessListener { token ->
-                Log.d("FCM", "Device token: $token")
-
-                // Save token to Firebase DB under this user/device
-                FirebaseRefs
-                    .Tokens
-                    .child(System.currentTimeMillis().toString())
-                    .setValue(token)
-            }
-    }
+//    LaunchedEffect(Unit) {
+//        FirebaseMessaging.getInstance().token
+//            .addOnSuccessListener { token ->
+//                Log.d("FCM", "Device token: $token")
+//
+//                // Save token to Firebase DB under this user/device
+//                FirebaseRefs
+//                    .Tokens
+//                    .child(System.currentTimeMillis().toString())
+//                    .setValue(token)
+//            }
+//    }
 
     NavHost(
         startDestination = startDestination ?: Screen.Products.route,
@@ -92,7 +89,7 @@ fun Navigation(
             AddProduct(paddingValues, navController, addProductViewModel)
         }
         composable(Screen.DeleteProduct.route) {
-            DeleteProduct(navController, paddingValues, productsViewModel)
+            DeleteProduct(paddingValues, productsViewModel)
         }
         composable(Screen.Stock.route) {
             StockPageNav(vm = stockViewModel, paddingValues = paddingValues)

@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.guvnoh.boma.models.Empties
 import com.guvnoh.boma.models.EmptyCompany
 import com.guvnoh.boma.models.ProductType
 
@@ -36,12 +37,13 @@ fun AddProduct(
     var productPrice by remember { mutableStateOf(newProduct.stringPrice?:"") }
     //var emptiesType by remember { mutableStateOf<EmptyType?>(null) }
     var emptiesCompany by remember { mutableStateOf<EmptyCompany?>(newProduct.empties?.company?:EmptyCompany.HERO) }
+    newProduct.empties = Empties(company = emptiesCompany)
     var productType by remember { mutableStateOf(newProduct.type?:ProductType.BOTTLE) }
+    newProduct.type = productType
     var categoryExpanded by remember { mutableStateOf(false) }
     var emptiesExpanded by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-
 
     var nameError by remember { mutableStateOf<String?>(null) }
     var priceError by remember { mutableStateOf<String?>(null) }
@@ -50,16 +52,16 @@ fun AddProduct(
 
     Scaffold(
         modifier = Modifier.padding(padding),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Add Product",
-                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
-                    )
-                }
-            )
-        }
+//        topBar = {
+//            CenterAlignedTopAppBar(
+//                title = {
+//                    Text(
+//                        "Add Product",
+//                        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+//                    )
+//                }
+//            )
+//        }
     ) { innerPadding ->
         Box(
             modifier = Modifier
@@ -217,28 +219,14 @@ fun AddProduct(
                                             //setup empties company via dropdown e.g nbl, cocacola
                                             newProduct.empties?.company = selected
 
-                                            //setup empty type
-                                            when (selected) {
-                                                EmptyCompany.COCA_COLA -> {
-                                                    newProduct.empties?.company = EmptyCompany.COCA_COLA
-                                                }
-                                                EmptyCompany.HERO -> {
-                                                    newProduct.empties?.company = EmptyCompany.HERO
-                                                }
-                                                EmptyCompany.NBL -> {
-                                                    newProduct.empties?.company = EmptyCompany.NBL
-                                                }
-                                                EmptyCompany.GUINNESS -> {
-                                                    newProduct.empties?.company = EmptyCompany.GUINNESS
-                                                }
-                                            }
-
                                         }
                                     )
                                 }
                             }
                         }
 
+                    }else{
+                        newProduct.empties = null
                     }
 
                     // Done Button

@@ -33,7 +33,7 @@ open class Screen(
     data object Receipt : Screen(route = "receipt", title = "Receipt",)
     data object AddProduct : Screen(
         route = "add_product",
-        title = "Add Products",
+        title = "Add Product",
         icon = MenuIcon.Vector(Icons.Default.AddCircle)
     )
 
