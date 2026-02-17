@@ -144,7 +144,7 @@ fun AddProduct(
                                 //the text field collects the text of the selected option
                                 // and checks which product type matches that text
 
-                                productType = ProductType.entries.first{it.name.equals(categoryString, ignoreCase = true)}
+                                productType = ProductType.valueOf(categoryString)
                                 //new product category displayed on screen is set here
                                 newProduct.type = productType
                             },

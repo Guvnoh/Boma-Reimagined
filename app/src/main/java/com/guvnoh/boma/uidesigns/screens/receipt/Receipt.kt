@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.guvnoh.boma.formatters.getTime
@@ -61,26 +62,32 @@ fun ReceiptPage(stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmod
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
+                    .padding(horizontal = 10.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 //copy button
-                Button(onClick = {
-                    val nonNullReceipt = receipt?: Receipt()
-                    receiptViewmodel.copy(nonNullReceipt, context)
-                }) {
+                Button(
+                    onClick = {
+                        val nonNullReceipt = receipt?: Receipt()
+                        receiptViewmodel.copy(nonNullReceipt, context)
+                              },
+                    modifier = Modifier.weight(0.6f).padding(0.dp)
+                ) {
                     Icon(Icons.Filled.Menu, contentDescription = "Copy")
                     Spacer(Modifier.width(6.dp))
-                    Text("Copy")
+                    Text("Copy", maxLines = 1)
                 }
                 //screenshot button
-                Button(onClick = {
-                    vibratePhone(context, 100L)
-                    saveBitmapToGallery(context, captureScreen(view))
-                }) {
+                Button(
+                    onClick = {
+                        vibratePhone(context, 100L)
+                        saveBitmapToGallery(context, captureScreen(view))
+                              },
+                    modifier = Modifier.weight(1f)
+                ) {
                     Icon(Icons.Filled.Share, contentDescription = "Screenshot")
                     Spacer(Modifier.width(6.dp))
-                    Text("Screenshot")
+                    Text("Screenshot",)
                 }
                 //save button
                 Button(
@@ -98,6 +105,7 @@ fun ReceiptPage(stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmod
                             receiptViewmodel.saveRecord(it)
                         }
                     },
+                    modifier = Modifier.weight(0.6f),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
                 ) {
                     Icon(Icons.Filled.CheckCircle, contentDescription = "Save")
@@ -178,7 +186,12 @@ fun ReceiptPage(stockViewModel: StockViewModel, receiptViewmodel: ReceiptViewmod
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Grand Total", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "Grand Total",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
                 Text(
                     nairaFormat(receiptViewmodel.getGrandTotal()),
                     style = MaterialTheme.typography.titleLarge,

@@ -152,7 +152,7 @@ fun ProductsPage(
                                 modifier = Modifier.padding(horizontal = BomaDimens.spacingSm)
                             )
                         }
-                        items(filteredProducts.sortedBy { it.name }) { product ->
+                        items(filteredProducts.sortedBy { it.name?.lowercase() }) { product ->
                             val soldProduct = soldProducts.find { it.product?.id == product.id }
                             ProductCard(product, vm, soldProduct)
                         }
@@ -160,7 +160,7 @@ fun ProductsPage(
                         // Coca-Cola
                         if (cocacolaGroup.isNotEmpty()) {
                             item { SectionHeader("Coca-Cola", BomaColors.cocaCola, cocacolaGroup.size) }
-                            items(cocacolaGroup.sortedBy { it.name }) { product ->
+                            items(cocacolaGroup.sortedBy { it.name?.lowercase() }) { product ->
                                 ProductCard(product, vm, soldProducts.find { it.product?.id == product.id })
                             }
                         }
@@ -168,7 +168,7 @@ fun ProductsPage(
                         // Hero
                         if (heroGroup.isNotEmpty()) {
                             item { SectionHeader("Hero", BomaColors.hero, heroGroup.size) }
-                            items(heroGroup.sortedBy { it.name }) { product ->
+                            items(heroGroup.sortedBy { it.name?.lowercase() }) { product ->
                                 ProductCard(product, vm, soldProducts.find { it.product?.id == product.id })
                             }
                         }
@@ -176,7 +176,7 @@ fun ProductsPage(
                         // NBL
                         if (nblGroup.isNotEmpty()) {
                             item { SectionHeader("Nigerian Breweries", BomaColors.nbl, nblGroup.size) }
-                            items(nblGroup.sortedBy { it.name }) { product ->
+                            items(nblGroup.sortedBy { it.name?.lowercase() }) { product ->
                                 ProductCard(product, vm, soldProducts.find { it.product?.id == product.id })
                             }
                         }
@@ -184,7 +184,7 @@ fun ProductsPage(
                         // Guinness
                         if (guinnessGroup.isNotEmpty()) {
                             item { SectionHeader("Guinness", BomaColors.guinness, guinnessGroup.size) }
-                            items(guinnessGroup.sortedBy { it.name }) { product ->
+                            items(guinnessGroup.sortedBy { it.name?.lowercase() }) { product ->
                                 ProductCard(product, vm, soldProducts.find { it.product?.id == product.id })
                             }
                         }
@@ -192,7 +192,7 @@ fun ProductsPage(
                         // PET Bottles
                         if (petsDisplay.isNotEmpty()) {
                             item { SectionHeader("PET Bottles", BomaColors.pets, petsDisplay.size) }
-                            items(petsDisplay.sortedBy { it.name }) { product ->
+                            items(petsDisplay.sortedBy { it.name?.lowercase() }) { product ->
                                 ProductCard(product, vm, soldProducts.find { it.product?.id == product.id })
                             }
                         }
@@ -202,7 +202,7 @@ fun ProductsPage(
                         // Cans
                         if (cansDisplay.isNotEmpty()) {
                             item { SectionHeader("Cans", BomaColors.cans, cansDisplay.size) }
-                            items(cansDisplay.sortedBy { it.name }) { product ->
+                            items(cansDisplay.sortedBy { it.name?.lowercase() }) { product ->
                                 ProductCard(product, vm, soldProducts.find { it.product?.id == product.id })
                             }
                         }
